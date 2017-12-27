@@ -1553,7 +1553,12 @@ rate1['REFSTN'] = to_numeric(rate1['REFSTN'], 'coerce')
 rate2 = rate1[rate1.STATION == site]
 rate2.sort_values('SDATE')
 
+#########################################
+### pint tests
 
+from pint import UnitRegistry
+ureg = UnitRegistry()
+Q_ = ureg.Quantity
 
 
 

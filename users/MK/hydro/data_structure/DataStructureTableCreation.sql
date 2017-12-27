@@ -20,61 +20,65 @@ CREATE TABLE Hydro.dbo.SiteMaster (
 
 CREATE TABLE Hydro.dbo.FeatureMaster (
        FeatureID int identity(1, 1) NOT NULL,
-       Feature varchar(79) NOT NULL,
+       FeatureLongName varchar(79) NOT NULL,
+       FeatureShortName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL
        PRIMARY KEY (FeatureID),
-       UNIQUE (Feature)
+       UNIQUE (FeatureLongName)
 )
 
 CREATE TABLE Hydro.dbo.MtypeMaster (
        MtypeID int identity(1, 1) NOT NULL,
-       Mtype varchar(79) NOT NULL,
+       MtypeLongName varchar(79) NOT NULL,
+       MtypeShortName varchar(79) NOT NULL,
        MtypeGroup varchar(29) NOT NULL,
        Units varchar(89) NOT NULL,
        Description varchar(99) NOT NULL
        PRIMARY KEY (MtypeID),
-       UNIQUE (Mtype)
+       UNIQUE (MtypeLongName)
 )
 
-CREATE TABLE Hydro.dbo.MeasurementSourceMaster (
-       MeasurementSourceID int identity(1, 1) NOT NULL,
-       MeasurementSource varchar(79) NOT NULL,
+CREATE TABLE Hydro.dbo.MSourceMaster (
+       MSourceID int identity(1, 1) NOT NULL,
+       MSourceLongName varchar(79) NOT NULL,
+       MSourceShortName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL
-       PRIMARY KEY (MeasurementSourceID),
-       UNIQUE (MeasurementSource)
+       PRIMARY KEY (MSourceID),
+       UNIQUE (MSourceLongName)
 )
 
 CREATE TABLE Hydro.dbo.QualityStateMaster (
        QualityStateID int identity(1, 1) NOT NULL,
-       QualityState varchar(79) NOT NULL,
+       QualityStateLongName varchar(79) NOT NULL,
+       QualityStateShortName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL
        PRIMARY KEY (QualityStateID),
-       UNIQUE (QualityState)
+       UNIQUE (QualityStateLongName)
 )
 	
 CREATE TABLE Hydro.dbo.LoggingMethodMaster (
        LoggingMethodID int identity(1, 1) NOT NULL,
-       LoggingMethod varchar(79) NOT NULL,
+       LoggingMethodName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL
        PRIMARY KEY (LoggingMethodID),
-       UNIQUE (LoggingMethod)
+       UNIQUE (LoggingMethodName)
 )	
 
 CREATE TABLE Hydro.dbo.TSParamMaster (
        TSParamID int identity(1, 1) NOT NULL,
-       TSParam varchar(79) NOT NULL,
+       TSParamName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL
        PRIMARY KEY (TSParamID),
-       UNIQUE (TSParam)
+       UNIQUE (TSParamName)
 )
 	
 CREATE TABLE Hydro.dbo.FeatureAttrMaster (
        FeatureAttrID int identity(1, 1) NOT NULL,
        FeatureID int NOT NULL FOREIGN KEY REFERENCES FeatureMaster(FeatureID),
-       FeatureAttr varchar(79) NOT NULL,
+       FeatureAttrName varchar(79) NOT NULL,
        Description varchar(99) NOT NULL,
        PRIMARY KEY (FeatureAttrID),
-       UNIQUE (FeatureID, FeatureAttr)
+       UNIQUE (FeatureID, FeatureAttrName)
 )	
 
 CREATE TABLE Hydro.dbo.FeatureMtype (
@@ -123,7 +127,7 @@ CREATE TABLE Hydro.dbo.TSDataSite (
 	   UNIQUE (SiteFeatureID, MtypeID, MeasurementSourceID, QualityStateID)
 )
 
-/*
+
 CREATE TABLE Hydro.dbo.TSDataPrimaryNumeric (
 	   TSDataSiteID int NOT NULL FOREIGN KEY REFERENCES TSDataSite(TSDataSiteID),
 	   Time DATETIME NOT NULL,
@@ -131,7 +135,23 @@ CREATE TABLE Hydro.dbo.TSDataPrimaryNumeric (
 	   QualityCode smallint,
 	   PRIMARY KEY (TSDataSiteID, Time)
 )
-*/
+
+CREATE TABLE Hydro.dbo.TSDataPrimaryNumericDaily (
+	   TSDataSiteID int NOT NULL FOREIGN KEY REFERENCES TSDataSite(TSDataSiteID),
+	   Time DATE NOT NULL,
+	   Value float,
+	   QualityCode smallint,
+	   PRIMARY KEY (TSDataSiteID, Time)
+)
+
+CREATE TABLE Hydro.dbo.TSDataPrimaryNumericHourly (
+	   TSDataSiteID int NOT NULL FOREIGN KEY REFERENCES TSDataSite(TSDataSiteID),
+	   Time DATETIME NOT NULL,
+	   Value float,
+	   QualityCode smallint,
+	   PRIMARY KEY (TSDataSiteID, Time)
+)
+
 
 CREATE TABLE Hydro.dbo.TSDataPrimary (
 	   TSDataSiteID int NOT NULL FOREIGN KEY REFERENCES TSDataSite(TSDataSiteID),
