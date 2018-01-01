@@ -238,7 +238,7 @@ def rd_sql_ts(server, database, table, groupby_cols, date_col, values_cols, resa
 #    return (site_geo3.set_index('site'))
 
 
-def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreign_keys=None, foreign_table=None, create_table=True, drop_table=False, output_stmt=False):
+def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreign_keys=None, foreign_table=None, create_table=True, drop_table=False, del_rows_dict=None, output_stmt=False):
     """
     Function to write pandas dataframes to mssql server tables. Must have write permissions to database!
 
@@ -285,8 +285,7 @@ def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreig
     """
 
     #### Parameters and functions
-    py_sql = {'NUMERIC': float, 'DATE': str, 'DATETIME': str, 'INT': 'int32', 'VARCHAR': str, 'FLOAT': float,
-              'smalldatetime': str, 'decimal': float}
+    py_sql = {'NUMERIC': float, 'DATE': str, 'DATETIME': str, 'INT': 'int32', 'smallint': 'int32', 'date': str, 'varchar': str, 'float': float, 'datetime': str, 'VARCHAR': str, 'FLOAT': float, 'smalldatetime': str, 'decimal': float}
 
     def chunker(seq, size):
         return ([seq[pos:pos + size] for pos in range(0, len(seq), size)])
@@ -302,7 +301,7 @@ def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreig
     for i in df.columns:
         dtype1 = dtype_dict[i]
         if (dtype1 == 'DATE') | (dtype1 == 'DATETIME'):
-            time1 = to_datetime(df[i]).astype(str)
+            time1 = to_datetime(df[i]).dt.isoformat(' ')
             df1.loc[:, i] = time1
         elif 'VARCHAR' in dtype1:
             try:
@@ -343,7 +342,8 @@ def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreig
     d1 = [str(i) + ' ' + dtype_dict[i] for i in df.columns]
     d2 = ', '.join(d1)
     tab_create_stmt = "create table " + table + " (" + d2 + key_stmt + fkey_stmt + ")"
-    insert_stmt1 = "insert into " + table + " values "
+    columns1 = str(tuple(df1.columns.tolist())).replace('\'', '')
+    insert_stmt1 = "insert into " + table + " " + columns1 + " values "
 
     conn = connect(server, database=database)
     cursor = conn.cursor()
@@ -362,6 +362,13 @@ def write_sql(df, server, database, table, dtype_dict, primary_keys=None, foreig
             cursor.execute(tab_create_stmt)
             conn.commit()
             stmt_dict.update({'tab_create_stmt': tab_create_stmt})
+
+        #### Delete rows
+        if isinstance(del_rows_dict, dict):
+            del_where_list = sql_where_stmts(**del_rows_dict)
+            del_rows_stmt = "DELETE FROM " + table + " WHERE " + " AND ".join(del_where_list)
+            cursor.execute(del_rows_stmt)
+            conn.commit()
 
         #### Insert data into table
         for i in range(len(tup2)):
@@ -425,7 +432,7 @@ def sql_where_stmts(where_col=None, where_val=None, where_op='AND', from_date=No
     if isinstance(from_date, str):
         from_date1 = to_datetime(from_date, errors='coerce')
         if isinstance(from_date1, Timestamp):
-            from_date2 = from_date1.strftime('%Y-%m-%d')
+            from_date2 = from_date1.isoformat().split('T')[0]
             where_from_date = date_col + " >= " + from_date2.join(['\'', '\''])
         else:
             where_from_date = ''
@@ -435,7 +442,7 @@ def sql_where_stmts(where_col=None, where_val=None, where_op='AND', from_date=No
     if isinstance(to_date, str):
         to_date1 = to_datetime(to_date, errors='coerce')
         if isinstance(to_date1, Timestamp):
-            to_date2 = to_date1.strftime('%Y-%m-%d')
+            to_date2 = to_date1.isoformat().split('T')[0]
             where_to_date = date_col + " <= " + to_date2.join(['\'', '\''])
         else:
             where_to_date = ''

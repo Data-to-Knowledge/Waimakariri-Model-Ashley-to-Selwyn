@@ -6,13 +6,134 @@ import ctypes
 import os
 import contextlib
 from numpy import array_split, ceil, array
-from pandas import to_numeric, to_datetime, concat, DataFrame, Timestamp, merge, to_timedelta, HDFStore
+from pandas import to_numeric, to_datetime, concat, DataFrame, Timestamp, merge, to_timedelta, HDFStore, DateOffset
 from datetime import date
 from core.misc.misc import select_sites, save_df
-from core.ecan_io import rd_sql
+from core.ecan_io import rd_sql, write_sql
 from pint import UnitRegistry
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
+
+
+def rd_hydstra(varto, sites=None, data_source='A', from_date=None, to_date=None, from_mod_date=None, to_mod_date=None, interval='day', qual_codes=[30, 20, 10, 11, 21, 18], concat_data=True, export=None):
+    """
+    Function to read in data from Hydstra's database using HYDLLP. This function extracts all sites with a specific variable code (varto).
+
+    Parameters
+    ----------
+    varto : int or float
+        The hydstra conversion data variable (140.00 is flow).
+    sites: list of str
+        List of sites to be returned. None includes all sites.
+    data_source : str
+        Hydstra datasource code (usually 'A').
+    from_date: str
+        The starting date for the returned data given other constraints.
+    to_date: str
+        The ending date for the returned data given other constraints.
+    from_mod_date: str
+        The starting date when the data has been modified.
+    to_mod_date: str
+        The ending date when the data has been modified.
+    interval : str
+        The frequency of the output data (year, month, day, hour, minute, second, period). If data_type is 'point', then interval cannot be 'period' (use anything else, it doesn't matter).
+    qual_codes : list of int
+        The quality codes for output.
+    export_path: str
+        Path string where the data should be saved, or None to not save the data.
+
+    Return
+    ------
+    DataFrame
+        In long format with site and time as a MultiIndex and data, qual_code, and hydstra_var_code as columns.
+    """
+    ### Parameters
+    device_data_type = {100: 'mean', 140: 'mean', 143: 'mean', 450: 'mean', 110: 'mean', 130: 'mean', 10: 'tot'}
+
+    today1 = date.today()
+    dtype_dict = {'Site': 'varchar', 'HydstraCode': 'smallint', 'Time': 'date', 'Value': 'float', 'QualityCode': 'smallint', 'ModDate': 'date'}
+
+    ### Determine the period lengths for all sites and variables
+    sites_var_period = hydstra_sites_var_periods(varto=varto, sites=sites, data_source=data_source)
+#    sites_list = sites_var_period.site.unique().tolist()
+    varto_list = sites_var_period.varto.unique().astype('int32').tolist()
+
+    ### Restrict period ranges - optional
+    if isinstance(from_date, str):
+        from_date1 = Timestamp(from_date)
+        from_date_df = sites_var_period.from_date.apply(lambda x: x if x > from_date1 else from_date1)
+        sites_var_period['from_date'] = from_date_df
+    if isinstance(to_date, str):
+        to_date1 = Timestamp(to_date)
+        to_date_df = sites_var_period.to_date.apply(lambda x: x if x > to_date1 else to_date1)
+        sites_var_period['to_date'] = to_date_df
+
+    ### Only pull out data according to the modifcation date ranges - optional
+    if isinstance(from_mod_date, str):
+        sites_block = sites_var_period[sites_var_period.varfrom == sites_var_period.varto]
+        varto_block = sites_block.varto.unique().astype('int32').tolist()
+
+        chg1 = hydstra_data_changes(varto_block, sites_block.site.unique(), from_mod_date=from_mod_date, to_mod_date=to_mod_date).drop('to_date', axis=1)
+        if 140 in varto_list:
+            sites_flow = sites_var_period[(sites_var_period.varfrom != sites_var_period.varto) & (sites_var_period.varto == 140)]
+            chg2 = rating_changes(sites_flow.site.unique().tolist(), from_mod_date=from_mod_date, to_mod_date=to_mod_date)
+            chg1 = concat([chg1, chg2])
+
+        chg1.rename(columns={'from_date': 'mod_date'}, inplace=True)
+        chg3 = merge(sites_var_period, chg1, on=['site', 'varfrom', 'varto'])
+        chg4 = chg3[chg3.to_date > chg3.mod_date].copy()
+        chg4['from_date'] = chg4['mod_date']
+        sites_var_period = chg4.drop('mod_date', axis=1).copy()
+
+    ### Convert datetime to date as str
+    sites_var_period2 = sites_var_period.copy()
+    sites_var_period2['from_date'] = sites_var_period2['from_date'].dt.date.astype(str)
+    sites_var_period2['to_date'] = sites_var_period2['to_date'].dt.date.astype(str)
+
+    site_str_len = sites_var_period2.site.str.len().max()
+
+    if isinstance(export, str):
+            if export.endswith('.h5'):
+                store = HDFStore(export, mode='a')
+
+    data = DataFrame()
+    for tup in sites_var_period2.itertuples(index=False):
+        print('Processing site: ' + str(tup.site))
+        varto = tup.varto
+        data_type = device_data_type[varto]
+
+        df = rd_hydstra_db([tup.site], data_type=data_type, start=tup.from_date, end=tup.to_date, varfrom=tup.varfrom, varto=varto, interval=interval, qual_codes=qual_codes)
+        if df.empty:
+            continue
+        df['HydstraCode'] = varto
+        if varto == 143:
+            df.loc[:, 'data'] = df.loc[:, 'data'] * 0.001
+            df['HydstraCode'] = 140
+        ### Make sure the data types are correct
+        df.rename(columns={'data': 'Value', 'qual_code': 'QualityCode'}, inplace=True)
+        df.index.rename(['Site', 'Time'], inplace=True)
+        df.loc[:, 'QualityCode'] = df['QualityCode'].astype('int32')
+        df.loc[:, 'HydstraCode'] = df['HydstraCode'].astype('int32')
+        df.loc[:, 'ModDate'] = today1
+        if isinstance(export, dict):
+            df = df.reset_index()
+            from_date1 = str(df.Time.min().date())
+            to_date1 = str(df.Time.max())
+            del_rows_dict = {'where_col': {'Site': [str(tup.site)], 'HydstraCode': [str(df['HydstraCode'][0])]}, 'from_date':from_date1, 'to_date': to_date1, 'date_col': 'Time'}
+            write_sql(df, dtype_dict=dtype_dict, del_rows_dict=del_rows_dict, drop_table=False, create_table=False, **export)
+        elif isinstance(export, str):
+            if export.endswith('.h5'):
+                try:
+                    store.append(key='var_' + str(varto), value=df, min_itemsize={'site': site_str_len})
+                except Exception as err:
+                    store.close()
+                    raise err
+        if concat_data:
+            data = concat([data, df])
+    if isinstance(export, str):
+        store.close()
+    if concat_data:
+        return data
 
 
 def rating_changes(sites=None, from_mod_date=None, to_mod_date=None):
@@ -213,110 +334,6 @@ def hydstra_sites_var_periods(varto=None, sites=None, data_source='A', server='S
         sites_var_period = sites_var_period[['site', 'varfrom', 'varto', 'from_date', 'to_date']]
 
     return sites_var_period.reset_index(drop=True)
-
-
-def rd_hydstra(varto, sites=None, data_source='A', from_date=None, to_date=None, from_mod_date=None, to_mod_date=None, interval='day', qual_codes=[30, 20, 10, 11, 21, 18], concat_data=True, export=None):
-    """
-    Function to read in data from Hydstra's database using HYDLLP. This function extracts all sites with a specific variable code (varto).
-
-    Parameters
-    ----------
-    varto : int or float
-        The hydstra conversion data variable (140.00 is flow).
-    sites: list of str
-        List of sites to be returned. None includes all sites.
-    data_source : str
-        Hydstra datasource code (usually 'A').
-    from_date: str
-        The starting date for the returned data given other constraints.
-    to_date: str
-        The ending date for the returned data given other constraints.
-    from_mod_date: str
-        The starting date when the data has been modified.
-    to_mod_date: str
-        The ending date when the data has been modified.
-    interval : str
-        The frequency of the output data (year, month, day, hour, minute, second, period). If data_type is 'point', then interval cannot be 'period' (use anything else, it doesn't matter).
-    qual_codes : list of int
-        The quality codes for output.
-    export_path: str
-        Path string where the data should be saved, or None to not save the data.
-
-    Return
-    ------
-    DataFrame
-        In long format with site and time as a MultiIndex and data, qual_code, and hydstra_var_code as columns.
-    """
-    ### Parameters
-    device_data_type = {100: 'mean', 140: 'mean', 143: 'mean', 450: 'mean', 110: 'mean', 130: 'mean', 10: 'tot'}
-
-    ### Determine the period lengths for all sites and variables
-    sites_var_period = hydstra_sites_var_periods(varto=varto, sites=sites, data_source=data_source)
-#    sites_list = sites_var_period.site.unique().tolist()
-    varto_list = sites_var_period.varto.unique().astype('int32').tolist()
-
-    ### Restrict period ranges - optional
-    if isinstance(from_date, str):
-        from_date1 = Timestamp(from_date)
-        from_date_df = sites_var_period.from_date.apply(lambda x: x if x > from_date1 else from_date1)
-        sites_var_period['from_date'] = from_date_df
-    if isinstance(to_date, str):
-        to_date1 = Timestamp(to_date)
-        to_date_df = sites_var_period.to_date.apply(lambda x: x if x > to_date1 else to_date1)
-        sites_var_period['to_date'] = to_date_df
-
-    ### Only pull out data according to the modifcation date ranges - optional
-    if isinstance(from_mod_date, str):
-        sites_block = sites_var_period[sites_var_period.varfrom == sites_var_period.varto]
-        varto_block = sites_block.varto.unique().astype('int32').tolist()
-
-        chg1 = hydstra_data_changes(varto_block, sites_block.site.unique(), from_mod_date=from_mod_date, to_mod_date=to_mod_date).drop('to_date', axis=1)
-        if 140 in varto_list:
-            sites_flow = sites_var_period[(sites_var_period.varfrom != sites_var_period.varto) & (sites_var_period.varto == 140)]
-            chg2 = rating_changes(sites_flow.site.unique().tolist(), from_mod_date=from_mod_date, to_mod_date=to_mod_date)
-            chg1 = concat([chg1, chg2])
-
-        chg1.rename(columns={'from_date': 'mod_date'}, inplace=True)
-        chg3 = merge(sites_var_period, chg1, on=['site', 'varfrom', 'varto'])
-        chg4 = chg3[chg3.to_date > chg3.mod_date].copy()
-        chg4['from_date'] = chg4['mod_date']
-        sites_var_period = chg4.drop('mod_date', axis=1).copy()
-
-    ### Convert datetime to date as str
-    sites_var_period2 = sites_var_period.copy()
-    sites_var_period2['from_date'] = sites_var_period2['from_date'].dt.date.astype(str)
-    sites_var_period2['to_date'] = sites_var_period2['to_date'].dt.date.astype(str)
-
-    site_str_len = sites_var_period2.site.str.len().max()
-
-    if isinstance(export, str):
-            if export.endswith('.h5'):
-                store = HDFStore(export, mode='a')
-    data = DataFrame()
-    for tup in sites_var_period2.itertuples(index=False):
-        varto = tup.varto
-        data_type = device_data_type[varto]
-
-        df = rd_hydstra_db([tup.site], data_type=data_type, start=tup.from_date, end=tup.to_date, varfrom=tup.varfrom, varto=varto, interval=interval, qual_codes=qual_codes)
-        df['hydstra_var_code'] = varto
-        if varto == 143:
-            df.loc[:, 'data'] = df.loc[:, 'data'] * 0.001
-            df['hydstra_var_code'] = 140
-        ### Make sure the data types are correct
-        df.loc[:, 'qual_code'] = df.qual_code.astype('int32')
-        df.loc[:, 'hydstra_var_code'] = df['hydstra_var_code'].astype('int32')
-        if isinstance(export, str):
-            if export.endswith('.h5'):
-                try:
-                    store.append(key='var_' + str(varto), value=df, min_itemsize={'site': site_str_len})
-                except Exception as err:
-                    store.close()
-                    raise err
-        if concat_data:
-            data = concat([data, df])
-    store.close()
-    if concat_data:
-        return data
 
 
 def rd_blocklist(sites, datasources=['A'], variables=['100', '10', '110', '140', '130', '143', '450'], start='1900-01-01', end='2100-01-01', start_modified='1900-01-01', end_modified='2100-01-01'):

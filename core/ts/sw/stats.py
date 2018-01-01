@@ -372,8 +372,7 @@ def gauge_proc(gauge_flow, day_win=3, min_gauge=15, export=False, export_path='g
     return ([flow3, count_tot])
 
 
-def flow_reg(x, y, min_obs=10, p_val=0.05, logs=False, make_ts=False, cut_y=False, below_median=False, export=False,
-             export_ts='est_flow.csv', export_reg='est_reg.csv'):
+def flow_reg(x, y, min_obs=10, p_val=0.05, logs=False, make_ts=False, cut_y=False, below_median=False, export=False, export_ts='est_flow.csv', export_reg='est_reg.csv'):
     """
     Function to make a regression between recorders and gaugings and optionally create a time series for the gaugings.
 
