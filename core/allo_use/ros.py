@@ -2,7 +2,7 @@
 """
 Reliability of Supply and min flow restrictions functions.
 """
-from numpy import ndarray, in1d, nan, array, where
+from numpy import ndarray, in1d, nan, array, where, arange
 from ast import literal_eval, parse
 from pandas import read_csv, DataFrame, merge, concat, Series, MultiIndex, to_datetime, DateOffset, to_numeric
 from datetime import date, datetime
@@ -263,7 +263,7 @@ def min_max_trig(SiteID=None, is_active=True):
     periods['from_mon'] = periods['from_date'].dt.month
     periods['to_mon'] = periods['to_date'].dt.month
 
-    periods1 = periods.groupby(['SiteID', 'band_num', 'period']).apply(lambda x: Series(range(x.from_mon, x.to_mon + 1)))
+    periods1 = periods.groupby(['SiteID', 'band_num', 'period']).apply(lambda x: Series(list(range(x.from_mon, x.to_mon + 1))))
     periods1.index = periods1.index.droplevel(3)
     periods1.name = 'mon'
     periods1 = periods1.reset_index().drop_duplicates(['SiteID', 'band_num', 'mon'])
@@ -357,8 +357,8 @@ def low_flow_restr(sites_num=None, from_date=None, to_date=None):
 
     sites = rd_sql(server1, database1, sites_table, sites_fields, {'isActive': [is_active]}, rename_cols=sites_names)
 
-    allo_values = range(100)
-    allo_values.extend(range(103, 110))
+    allo_values = list(range(100))
+    allo_values.extend(list(range(103, 110)))
 
     restr_day = rd_sql_ts(server=server1, database=database1, table=restr_table, groupby_cols=['SiteID', 'BandNo'], date_col='RestrictionDate',  values_cols=['AsmtFlow', 'BandAllocation'], from_date=from_date, to_date=to_date, where_col={'BandAllocation': allo_values})
     restr_day = restr_day.reset_index()

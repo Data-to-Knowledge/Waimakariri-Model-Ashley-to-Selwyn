@@ -63,7 +63,7 @@ def rd_sql(server, database, table=None, col_names=None, where_col=None, where_v
         if col_names is not None:
             if isinstance(col_names, str):
                 col_names = [col_names]
-            col_names1 = ['[' + i.encode('ascii', 'ignore') + ']' for i in col_names]
+            col_names1 = ['[' + i.encode('ascii', 'ignore').decode() + ']' for i in col_names]
             col_stmt = ', '.join(col_names1)
         else:
             col_stmt = '*'
@@ -157,7 +157,7 @@ def rd_sql_ts(server, database, table, groupby_cols, date_col, values_cols, resa
     ## Create ts statement and append earlier where statement
     if isinstance(groupby_cols, str):
         groupby_cols = [groupby_cols]
-    col_names1 = ['[' + i.encode('ascii', 'ignore') + ']' for i in groupby_cols]
+    col_names1 = ['[' + i.encode('ascii', 'ignore').decode() + ']' for i in groupby_cols]
     col_stmt = ', '.join(col_names1)
 
     ## Create sql stmt

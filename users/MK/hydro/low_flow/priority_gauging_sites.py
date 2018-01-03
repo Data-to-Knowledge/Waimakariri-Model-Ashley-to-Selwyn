@@ -4,6 +4,10 @@ Created on Tue Dec 05 09:34:22 2017
 
 @author: MichaelEK
 """
+import sys
+new_path = r'E:\ecan\git\Ecan.Science.Python.Base'
+sys.path.insert(0, new_path)
+
 from os.path import join
 from core.allo_use.ros import priority_gaugings
 #from core.misc.misc import save_df
