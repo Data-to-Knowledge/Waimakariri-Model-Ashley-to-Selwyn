@@ -72,7 +72,7 @@ def calc_stream_dep(model_path, ss_sy_version, sd_version='sd150'):
         outdata += -999
     else:
         outdata *= 1 / abs_vol * 100
-    return outdata, abs_vol / (spv['perlen'] * spv['nstp'])
+    return outdata, abs_vol / (spv['perlen'] * spv['nper'])
 
 
 def calc_str_dep_all_wells(out_path, base_path, sd_version='sd150', ss_sy_version=1):
@@ -124,9 +124,9 @@ def calc_str_dep_all_wells(out_path, base_path, sd_version='sd150', ss_sy_versio
     header = (
         'SD_values for model: {}. spv: {} modflow units m and day.'
         'all sd values are relative to model_abs_vol (%); though nwt sometimes reduces a wells pumping rate if it goes dry;'
-        'the abstracted volume is noted in model_abs_vol(m3) the flag -999 means the abstraction volume for the model '
+        'the abstracted volume is noted in model_abs_vol divded by the simulation length (m3/day) the flag -999 means the abstraction volume for the model '
         'was calculated at less than zero.  m(x;y) (e.g. modelx) and nztm(z;y) are in nztm. '
-        'mid_screen_elv; mz are in m lyttleton; hor_misloc and vert_misloc are in m and vert_misloc is mz - mid_screen_elv'
+        'mid_screen_elv; mz are in m lyttleton; hor_misloc and vert_misloc are in m and vert_misloc is mz - mid_screen_elv '
         'flux is in m3/day\n'.format(model_id, str(spv).replace(',', ';')))
     with open(out_path, 'w') as f:
         f.write(str(header))
