@@ -26,7 +26,7 @@ if __name__ == '__main__':
     #### inputs to define for each run####
     safemode = True
     run_modelses = [True,True]
-    model_ids = ['NsmcBase', 'StrOpt']
+    model_ids = ['NsmcBase', 'AshOpt']
     date = '2017_11_07'
     base_dir = r"D:\mh_waimak_models" # path on gw02
 

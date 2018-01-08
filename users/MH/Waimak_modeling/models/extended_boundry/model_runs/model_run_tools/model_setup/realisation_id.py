@@ -162,7 +162,12 @@ def get_model_name_path(model_id):
 
         # optimisation revieved on 25/10/2017 which is the previous iteration to NsmcBase.  NsmcBase was quite unstable,
         # which is why we are considering the previous optimisation
-        'NsmcBaseB': "{}/from_gns/NsmcBaseB/AW20171024_2_i1_optver/i1/mf_aw_ex.nam".format(smt.sdp)
+        'NsmcBaseB': "{}/from_gns/NsmcBaseB/AW20171024_2_i1_optver/i1/mf_aw_ex.nam".format(smt.sdp),
+
+        # optimisation recieved on 8/01/2018 which was run over xmas to address concerns over the amount of flow lost
+        # in the upper ashley basin e.g. near oxford the model may be overfit and it is quite unstable as such is has
+        # been suggested as a sensitivity analysis for this concern
+        'AshOpt': "{}/from_gns/AshOpt/AW20180103_Ash0_Opt/AW20180103_Ash0_Opt/mf_aw_ex.nam".format(smt.sdp)
     }
     if '_' in model_id:
         raise ValueError(

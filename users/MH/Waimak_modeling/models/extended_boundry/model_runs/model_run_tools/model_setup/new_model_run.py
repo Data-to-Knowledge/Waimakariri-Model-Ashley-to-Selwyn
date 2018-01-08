@@ -10,7 +10,7 @@ import os
 
 if __name__ == '__main__':
     # a script to pull through all of the pickles needed for a new model_id
-    model_id = 'NsmcBase'
+    model_id = 'AshOpt'
 
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import \
         get_full_consent, get_max_rate
