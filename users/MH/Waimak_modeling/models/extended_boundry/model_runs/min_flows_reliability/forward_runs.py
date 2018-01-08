@@ -176,6 +176,25 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     }
     runs.append(full_allo)
 
+    # full allocation current usage pc5
+    pc5_80_full_allo = {
+        'model_id': model_id,
+        'name': 'pc5_80_full_allo_cur_usage',
+        'base_dir': None,
+        'cc_inputs': None,
+        'pc5': True,
+        'pc5_well_reduction': True,
+        'pc5_to_waimak_only': True,
+        'wil_eff': 1,
+        'naturalised': False,
+        'full_abs': False,
+        'pumping_well_scale': 1,
+        'org_efficency': 80,
+        'full_allo': True
+    }
+    runs.append(pc5_80_full_allo)
+
+
     # pc5
     pc5_80 = {
         'model_id': model_id,

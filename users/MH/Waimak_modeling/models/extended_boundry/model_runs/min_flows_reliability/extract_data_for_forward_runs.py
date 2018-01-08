@@ -21,6 +21,8 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 import matplotlib.pyplot as plt
 from visualise_data_from_fruns import gw_site_groups
 import itertools
+import netCDF4 as nc
+import sys
 
 
 def extract_forward_run(name_file_path):
@@ -257,6 +259,82 @@ def plt_drawdown(meta_data_path, outdir,raise_non_converged=True):
             fig.savefig(os.path.join(plt_out_dir, 'drawdown_layer_{:02d}.png'.format(layer)))
             plt.close(fig)
 
+def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
+
+    meta_data = pd.read_csv(meta_data_path, index_col=0)
+    data = {}
+    for name in meta_data.index:
+        converged = meta_data.loc[name, 'converged']
+        if pd.isnull(converged):
+            continue
+        ref_name = get_baseline_name(meta_data, name, raise_non_converged)
+        mod_per_hds_path =meta_data.loc[ref_name, 'path'].replace('.nam', '.hds')
+        mod_per_hds = flopy.utils.HeadFile(mod_per_hds_path).get_data((0, 0))
+        mod_per_hds[mod_per_hds > 1e20] = np.nan
+        mod_per_hds[mod_per_hds < -666] = np.nan
+
+        hd_file_path = meta_data.loc[name, 'path'].replace('.nam', '.hds')
+        hds = flopy.utils.HeadFile(hd_file_path).get_data((0, 0))
+        # set no flow and dry cells to nan, in plotting, the drycells with appear green, the others will appear black
+        hds[hds > 1e20] = np.nan
+        hds[hds < -666] = np.nan
+        hds = hds - mod_per_hds # drawdown appears negative
+        data[name] = hds
+
+    # for each loop create a netcdf file
+    outfile = nc.Dataset(outpath, 'w')
+    x, y = smt.get_model_x_y(False)
+    # create dimensions
+    outfile.createDimension('latitude', len(y))
+    outfile.createDimension('longitude', len(x))
+    outfile.createDimension('layer', smt.layers - 1)
+
+    # create variables
+    depth = outfile.createVariable('layer', 'f8', ('layer',), fill_value=np.nan)
+    depth.setncatts({'units': 'none',
+                     'long_name': 'layer',
+                     'missing_value': np.nan,
+                     'comments': '0 indexed'})
+    depth[:] = range(smt.layers)
+
+    proj = outfile.createVariable('crs', 'i1')
+    proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                    'scale_factor_at_central_meridian': 0.9996,
+                    'longitude_of_central_meridian': 173.0,
+                    'latitude_of_projection_origin': 0.0,
+                    'false_easting': 1600000,
+                    'false_northing': 10000000,
+                    })
+
+    lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+    lat.setncatts({'units': 'NZTM',
+                   'long_name': 'latitude',
+                   'missing_value': np.nan,
+                   'standard_name': 'projection_y_coordinate'})
+    lat[:] = y
+
+    lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+    lon.setncatts({'units': 'NZTM',
+                   'long_name': 'longitude',
+                   'missing_value': np.nan,
+                   'standard_name': 'projection_x_coordinate'})
+    lon[:] = x
+
+    for name, values in data.items():
+        temp = outfile.createVariable(name, 'f8', ('layer','latitude','longitude',),
+                                      fill_value=np.nan)
+        temp.setncatts({'units': 'm',
+                       'long_name': name,
+                       'missing_value': np.nan})
+        temp[:] = values
+
+    outfile.description = (
+        'drawdown (negitive is drawdown vs reference) for forward runs: {}'.format(readme))
+    outfile.history = 'created {}'.format(datetime.datetime.now().isoformat())
+    outfile.source = 'script: {}'.format(sys.argv[0])
+    outfile.close()
+    #todo check
+
 
 def gen_all_outdata_forward_runs(forward_run_dir, outdir, plt_dd=False):
     """
@@ -272,14 +350,28 @@ def gen_all_outdata_forward_runs(forward_run_dir, outdir, plt_dd=False):
     meta_data_path = 'meta_data.csv'
     relative_outpath = 'relative_data.csv'
     cc_mult_path = 'cc_mult_miss_water.csv'
+    netcdf_path = 'drawdown.nc'
+
+    # copy readme over
+    with open(os.path.join(forward_run_dir,'READ_ME.txt')) as f:
+        readme = f.read()
+    with open(os.path.join(outdir,'READ_ME.txt'),'w') as f:
+        f.write(readme)
+
     print('extracting cc_mult and missing water')
     extract_and_save_all_cc_mult_missing_w(forward_run_dir,os.path.join(outdir, cc_mult_path))
+
     print('extracting absolute data')
     absolute_outpath = extract_and_save_all_forward_runs(forward_run_dir, os.path.join(outdir, absolute_outpath))
+
     print('extracting metadata')
     meta_data_path = extract_forward_metadata(forward_run_dir, os.path.join(outdir, meta_data_path))
+
     print('creating relative data')
     make_rel_data(absolute_outpath, meta_data_path, os.path.join(outdir, relative_outpath))
+
+    print('creating netcdf of drawdown')
+    netcdf_drawdown(meta_data_path, os.path.join(outdir,netcdf_path),readme)
 
     if plt_dd:
         print('plotting drawdown')
