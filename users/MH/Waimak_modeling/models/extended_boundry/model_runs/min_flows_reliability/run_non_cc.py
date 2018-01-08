@@ -9,7 +9,7 @@ from core import env
 import os
 import time
 from future.builtins import input
-
+import datetime
 from forward_runs import setup_run_args, run_forward_runs
 from extract_data_for_forward_runs import gen_all_outdata_forward_runs, extract_and_save_all_cc_mult_missing_w
 from visualise_data_from_fruns import plot_and_save_forward_vis
@@ -26,20 +26,25 @@ if __name__ == '__main__':
     #### inputs to define for each run####
     safemode = True
     run_modelses = [True,True]
-    model_ids = ['NsmcBase', 'AshOpt']
-    date = '2017_11_07'
-    base_dir = r"D:\mh_waimak_models" # path on gw02
+    model_ids = ['AshOpt']
+    now = datetime.date.today()
+    date = now.isoformat()
+    base_dir = r"D:\mh_waimak_models"
+    remove_carpet = False
 
     #### run the models ####
     for model_id, run_models in zip(model_ids, run_modelses):
         model_dir_path = r"{}\{}_non_cc_forward_runs_{}".format(base_dir, model_id, date)
         results_dir = r"{}\{}_non_cc_forward_runs_{}_results".format(base_dir, model_id, date)
         cc_to_waimak_only = False
+        if remove_carpet:
+            add = 'carpet drains removed if not explicit in the model name (_w_ncar)'
+        else:
+            add = 'carpet drains not removed'
         notes = """ 
-        Naturalisation changes applied to full domain, No climate change senarios run carpet drains removed 
-        if not explicit in the model name (_w_ncar)
+        Naturalisation changes applied to full domain, No climate change senarios run {}
         pumping changes only applied to Waimakariri, run in {}
-        """.format(model_dir_path)
+        """.format(add,model_dir_path)
         if run_models:
             if safemode:
                 if os.path.exists(model_dir_path):
@@ -54,7 +59,8 @@ if __name__ == '__main__':
             if not os.path.exists(results_dir):
                 os.makedirs(results_dir)
             runs = setup_run_args(model_id, model_dir_path, cc_to_waimak_only=cc_to_waimak_only, cc_runs=False)
-
+            if not remove_carpet:
+                [e.update({'rm_ncarpet': False}) for e in runs]
             t = time.time()
             run_forward_runs(runs, model_dir_path, notes)
             print('{} runs in __ min'.format(len(runs)))
