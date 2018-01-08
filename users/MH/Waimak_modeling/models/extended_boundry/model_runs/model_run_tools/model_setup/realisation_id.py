@@ -353,7 +353,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
 
-    shutil.rmtree(converter_dir) # recreating NsmcBaseB worked should work but todo check hds cbc for one of the NSMC realisations
+    shutil.rmtree(converter_dir)
     return m
 
 

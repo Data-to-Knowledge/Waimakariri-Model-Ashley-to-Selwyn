@@ -16,7 +16,8 @@ if __name__ == '__main__':
     base_results_dir = r"D:\mh_waimak_models\modpath_test_forward" #todo change make sure this is on the C drive as it will be much faster
 
     minparts = 1
-    maxparts = 100
+    maxparts = 20
+
 
     create_cbcs = False
     create_weak_sink_emulators = False
