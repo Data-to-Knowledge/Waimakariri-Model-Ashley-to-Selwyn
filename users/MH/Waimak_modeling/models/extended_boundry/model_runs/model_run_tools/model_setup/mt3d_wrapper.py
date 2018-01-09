@@ -10,6 +10,7 @@ import flopy
 import os
 
 # todo is from the old model tools need to refine it
+#todo set up to pass without a modflow model just an FTL
 def create_mt3d(m, mt3d_name=None,
                 ssm_crch=None, ssm_stress_period_data=None,
                 adv_sov=0, adv_percel=1,
@@ -18,8 +19,7 @@ def create_mt3d(m, mt3d_name=None,
                 nper=None, perlen=None, nstp=None, tsmult=None,  # these can be either value of list of values
                                                                              # and must match flow model if it is not SS
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0, # these can be either value of list of values
-                gcg_isolve = 1, gcg_inner=50, gcg_outer=1,
-                unit_nums = [500,501,502,503,504,505,506]):
+                gcg_isolve = 1, gcg_inner=50, gcg_outer=1):
     """
 
     :param m: modflow model or path to namefile of a model which has been run (then the model is loaded)
@@ -60,7 +60,6 @@ def create_mt3d(m, mt3d_name=None,
     :param ssflag:  If SSFlag is set to SSTATE (case insensitive), the steady-state transport simulation is
                     automatically activated. (see mt3dms_V5_ supplemental for more info) must be an iterable otherwise
                     only the first letter will be written
-    :param unit_nums: the fortran unit numbers to use (to assist with parallelizing)
 
     :return: mt3d instance
     """
@@ -85,14 +84,14 @@ def create_mt3d(m, mt3d_name=None,
         mt3d_name = '{}_mt3d'.format(m.name)
     mt3d = flopy.mt3d.Mt3dms(modelname=mt3d_name,
                              modflowmodel=m,
-                             ftlfilename=m.lmt6.output_file_name,
+                             ftlfilename=m.lmt6.output_file_name, #todo could define here
                              ftlfree=False,  # default but right I think
                              version='mt3d-usgs',
-                             exe_name="{}/models_exes/mt3d-usgs_Distribution/bin/MT3D-USGS_64.exe".format(sdp),
+                             exe_name="{}/models_exes/mt3d-usgs_Distribution/bin/MT3D-USGS_64.exe".format(sdp), #todo update with brioch's compilation
                              structured=True,  # defualt
-                             listunit=unit_nums[0],
-                             ftlunit=unit_nums[1],
-                             model_ws=m.model_ws,
+                             listunit=500,
+                             ftlunit=501,
+                             model_ws=m.model_ws, #todo perhaps change
                              load=True,  # defualt
                              silent=0  # defualt
                              )
@@ -117,10 +116,16 @@ def create_mt3d(m, mt3d_name=None,
                              nlsink=0,  # not using particles
                              npsink=15,  # not using particles
                              dchmoc=0.0001,  # not using MOC or MMOC or HMOC
-                             unitnumber=unit_nums[2]
+                             unitnumber=502
                              )
 
     # BTN
+    #    'BTN error. Required input is None, but no modflow model.'\
+    #    ' If no modflow model is passed to Mt3dms, then values '' \
+    #    ''must be specified in the BTN constructor for: '' \
+    #    ''nlay, nrow, ncol, nper, laycon, delr, delc, htop, dz, '' \
+    #    ''perlen, nstp, and tsmult.'
+
     btn = flopy.mt3d.Mt3dBtn(mt3d,
                              MFStyleArr=False,  # defualt it's a reader, should hopefully not cause problems
                              DRYCell=True,  # pass through dry cells
@@ -140,7 +145,7 @@ def create_mt3d(m, mt3d_name=None,
                              cinact=-9999999,  # defualt
                              thkmin=0.01,  # defualt
 
-                             # printing flags 0 is not print
+                             # printing flags 0 is not print #todo I could probably get away with not printing anything
                              ifmtcn=1,
                              ifmtnp=1,
                              ifmtrf=1,
@@ -164,7 +169,7 @@ def create_mt3d(m, mt3d_name=None,
                              ttsmax=ttsmax,
                              species_names=['N'],
                              extension='btn',
-                             unitnumber=unit_nums[3]
+                             unitnumber=503
                              )
 
     # DSP
@@ -175,9 +180,13 @@ def create_mt3d(m, mt3d_name=None,
                              dmcoef=1e-09,  # default don't think I need as only if multidiff True
                              extension='dsp',
                              multiDiff=False,  # only one component
-                             unitnumber=unit_nums[4])
+                             unitnumber=504)
 
     # SSM
+    #warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
+    #              'None.  Cannot calculate max number of sources ' +
+    #              'and sinks.  Estimating from stress_period_data. ')
+
     ssm = flopy.mt3d.Mt3dSsm(mt3d,
                              crch=ssm_crch,
                              cevt=None,
@@ -185,8 +194,33 @@ def create_mt3d(m, mt3d_name=None,
                              stress_period_data=ssm_stress_period_data,
                              dtype=None,  # default I should not need to specify this, but we'll see
                              extension='ssm',
-                             unitnumber=unit_nums[5],
+                             unitnumber=505,
                              )
+    kwargs = {} #todo place holder
+    mtsft = flopy.mt3d.Mt3dSft(mt3d,
+                               nsfinit=0,
+                               mxsfbc=0,
+                               icbcsf=0,
+                               ioutobs=None,
+                               ietsfr=0,
+                               isfsolv=1,
+                               wimp=0.50,
+                               wups=1.00,
+                               cclosesf=1.0E-6,
+                               mxitersf=10,
+                               crntsf=1.0,
+                               iprtxmd=0,
+                               coldsf=0.0,
+                               dispsf=0.0,
+                               nobssf=0,
+                               obs_sf=None,
+                               sf_stress_period_data=None,
+                               unitnumber=None,
+                               filenames=None,
+                               dtype=None,
+                               extension='sft',
+                               **kwargs)
+    #todo add mtsft
 
 
     # GCG
@@ -199,7 +233,7 @@ def create_mt3d(m, mt3d_name=None,
                              cclose=1e-05,  # defualt
                              iprgcg=0,  # defualt print max changes at end of each iteration
                              extension='gcg',
-                             unitnumber=unit_nums[6],
+                             unitnumber=506,
                              )
 
     return mt3d
