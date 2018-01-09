@@ -128,7 +128,7 @@ def get_model_well_reliability(model_id, model_path, indata):  # todo save this?
     data.loc[(temp > 0) & (temp <= 3), 'rel_rate'] = 2
     data.loc[temp > 3, 'rel_rate'] = 1
 
-    data.loc[data.model_water_level < -777, 'rel_rate'] = 4  # already dry at average state
+    data.loc[data.model_water_level < -777, 'rel_rate'] = 4  # already dry at average state #todo make sure hdry is set or compair to top/bottom this may not be needed if hdry is not set
 
     # create cost of reliability #todo handle if it is dry ask zeb how he wants to handle ask zeb what he wants as output
     # assign full consent volume.
