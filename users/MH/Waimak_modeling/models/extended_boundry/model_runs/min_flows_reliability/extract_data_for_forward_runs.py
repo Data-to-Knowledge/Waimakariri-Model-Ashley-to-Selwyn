@@ -287,7 +287,7 @@ def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
     # create dimensions
     outfile.createDimension('latitude', len(y))
     outfile.createDimension('longitude', len(x))
-    outfile.createDimension('layer', smt.layers - 1)
+    outfile.createDimension('layer', smt.layers)
 
     # create variables
     depth = outfile.createVariable('layer', 'f8', ('layer',), fill_value=np.nan)

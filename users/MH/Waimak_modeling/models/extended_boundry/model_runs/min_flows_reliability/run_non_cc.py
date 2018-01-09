@@ -25,12 +25,11 @@ if __name__ == '__main__':
     # done on rdsprod03
     #### inputs to define for each run####
     safemode = True
-    run_modelses = [True,True]
-    model_ids = ['AshOpt']
-    now = datetime.date.today()
-    date = now.isoformat()
+    run_modelses = [False]
+    model_ids = ['NsmcBase']
+    date = '2018-01-09'
     base_dir = r"D:\mh_waimak_models"
-    remove_carpet = False
+    remove_carpet = True
 
     #### run the models ####
     for model_id, run_models in zip(model_ids, run_modelses):
