@@ -266,6 +266,8 @@ def get_samp_points_df(recalc=False):
     outdata.loc['waimaklower_swaz'] = ['comb','swaz',-1,('drn_waimaklower_swaz','sfr_waimaklower_swaz')]
     outdata.loc['waimak_swaz'] = ['comb','swaz',-1,('drn_waimaklower_swaz','sfr_waimaklower_swaz',
                                                     'drn_waimakupper_swaz','sfr_waimakupper_swaz')]
+    outdata.loc['kaiapoi_nroad'] = ['comb','min_flow',-1,('drn_kaiapoi_nroad','sfr_bottom_cust')]
+    outdata.loc['kaiapoi_mainline'] = ['comb','min_flow',-1,('drn_kaiapoi_Nline','sfr_bottom_cust')]
 
     samp_dict = _get_sw_samp_pts_dict(recalc)
     for itm in outdata.index:
