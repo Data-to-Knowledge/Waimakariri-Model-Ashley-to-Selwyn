@@ -36,7 +36,7 @@ def extract_forward_run(name_file_path):
     streams = streams.loc[streams.m_type == 'min_flow'].index
 
     hd_data = get_hds_at_wells(wells, rel_kstpkpers=0, name_file_path=name_file_path,
-                               add_loc=True)
+                               add_loc=True, set_hdry=True)
     hd_data = hd_data.rename(columns={'hd_m3d_kstp0_kper0': 'kstpkper0'})
     str_data = get_flow_at_points(streams, rel_kstpkpers=0, base_path=name_file_path)
     str_data = str_data.rename(columns={'flow_m3d_kstp0_kper0': 'kstpkper0'})
@@ -248,6 +248,8 @@ def plt_drawdown(meta_data_path, outdir,raise_non_converged=True):
         hds = flopy.utils.HeadFile(hd_file_path).get_data((0, 0))
         # set no flow and dry cells to nan, in plotting, the drycells with appear green, the others will appear black
         hds[hds > 1e20] = np.nan
+        bots = smt.calc_elv_db()[1:]
+        hds[hds < bots] = np.nan
         hds[hds < -666] = np.nan
         hds = hds - mod_per_hds
         for layer in range(smt.layers):
@@ -270,13 +272,16 @@ def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
         ref_name = get_baseline_name(meta_data, name, raise_non_converged)
         mod_per_hds_path =meta_data.loc[ref_name, 'path'].replace('.nam', '.hds')
         mod_per_hds = flopy.utils.HeadFile(mod_per_hds_path).get_data((0, 0))
+        bots = smt.calc_elv_db()[1:]
         mod_per_hds[mod_per_hds > 1e20] = np.nan
+        mod_per_hds[mod_per_hds < bots] = np.nan
         mod_per_hds[mod_per_hds < -666] = np.nan
 
         hd_file_path = meta_data.loc[name, 'path'].replace('.nam', '.hds')
         hds = flopy.utils.HeadFile(hd_file_path).get_data((0, 0))
         # set no flow and dry cells to nan, in plotting, the drycells with appear green, the others will appear black
         hds[hds > 1e20] = np.nan
+        hds[hds < bots] = np.nan
         hds[hds < -666] = np.nan
         hds = hds - mod_per_hds # drawdown appears negative
         data[name] = hds
@@ -333,7 +338,6 @@ def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
     outfile.history = 'created {}'.format(datetime.datetime.now().isoformat())
     outfile.source = 'script: {}'.format(sys.argv[0])
     outfile.close()
-    #todo check
 
 
 def gen_all_outdata_forward_runs(forward_run_dir, outdir, plt_dd=False):
