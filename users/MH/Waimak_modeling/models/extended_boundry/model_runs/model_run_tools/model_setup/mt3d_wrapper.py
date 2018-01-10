@@ -8,24 +8,27 @@ from __future__ import division
 from core import env
 import flopy
 import os
+import shutil
+from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 # todo is from the old model tools need to refine it
 #todo set up to pass without a modflow model just an FTL
-def create_mt3d(m, mt3d_name=None,
+def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                 ssm_crch=None, ssm_stress_period_data=None,
                 adv_sov=0, adv_percel=1,
                 btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                 dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
-                nper=None, perlen=None, nstp=None, tsmult=None,  # these can be either value of list of values
+                nper=1, perlen=1, nstp=1, tsmult=1,  # these can be either value of list of values
                                                                              # and must match flow model if it is not SS
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0, # these can be either value of list of values
                 gcg_isolve = 1, gcg_inner=50, gcg_outer=1):
     """
 
-    :param m: modflow model or path to namefile of a model which has been run (then the model is loaded)
+    :param ftl_path: path to the FTL file to use with MT3D
+    :param mt3d_name: the name for all mt3d files if none name will mirror that of the modflow model name
+    :param mt3d_ws: working directory for the MT3D model
     :param ssm_crch: the recharge concentration for species 1
     :param ssm_stress_period_data: stress period data for other source/sinks
-    :param mt3d_name: the name for all mt3d files if none name will mirror that of the modflow model name
     :param adv_sov: is an integer flag for the advection solution option. MIXELM = 0, the standard finite-difference
                     method with upstream or central-in-space weighting, depending on the value of NADVFD; = 1,
                     the forward-tracking method of characteristics (MOC); = 2, the backward-tracking modified method
@@ -65,45 +68,35 @@ def create_mt3d(m, mt3d_name=None,
     """
     # create a general MT3d class instance to run most of our mt3d models
 
-    # load model if m is a string
-    if isinstance(m,str):
-        m = flopy.modflow.Modflow.load(m, model_ws=os.path.dirname(m),forgive=False,
-                                       exe_name="{}/models_exes/mf2005.exe".format(sdp))
-        if not os.path.exists('{}/{}'.format(m.model_ws,m.output_fnames[0])):
-            raise ValueError('Model must have been run prior to mt3d load')
-        else:
-            print('model has loaded successfully')
-    elif isinstance(m, flopy.modflow.mf.Modflow):
-        pass
-    else:
-        raise ValueError('unexpected input for m')
-
+    # check that FTL is in the model_ws folder and if not move it there
+    ftl_name = os.path.basename(ftl_path)
+    if not os.path.dirname(ftl_path) == mt3d_ws:
+        shutil.copyfile(ftl_path,os.path.join(mt3d_ws,ftl_name))
 
     # packages I'll likely need
-    if mt3d_name is None:
-        mt3d_name = '{}_mt3d'.format(m.name)
     mt3d = flopy.mt3d.Mt3dms(modelname=mt3d_name,
-                             modflowmodel=m,
-                             ftlfilename=m.lmt6.output_file_name, #todo could define here
-                             ftlfree=False,  # default but right I think
+                             modflowmodel=None,
+                             ftlfilename=ftl_name,
+                             ftlfree=True,  # formatted FTL to handle bug
                              version='mt3d-usgs',
-                             exe_name="{}/models_exes/mt3d-usgs_Distribution/bin/MT3D-USGS_64.exe".format(sdp), #todo update with brioch's compilation
-                             structured=True,  # defualt
+                             exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"# standard compilation did not converge
+                                      "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)),
+                             structured=True,  # defualt probably fine, though a point of weakness I don't know what it is
                              listunit=500,
                              ftlunit=501,
-                             model_ws=m.model_ws, #todo perhaps change
+                             model_ws=mt3d_ws,
                              load=True,  # defualt
                              silent=0  # defualt
                              )
 
     # ADV
     if adv_sov >= 1:
-        raise ValueError('mt3d object not configured for specified sover {}'.format(adv_sov))
+        raise ValueError('mt3d object not configured for specified advection solver {}'.format(adv_sov))
 
-    adv = flopy.mt3d.Mt3dAdv(mt3d,
+    adv = flopy.mt3d.Mt3dAdv(mt3d, #todo done
                              mixelm=adv_sov,
                              percel=adv_percel,
-                             mxpart=800000,  # not using particles
+                             mxpart=5000,  # not using particles
                              nadvfd=1,  # default to upstream weighting
                              itrack=3,  # not using particles
                              wd=0.5,  # not using particles
@@ -120,18 +113,14 @@ def create_mt3d(m, mt3d_name=None,
                              )
 
     # BTN
-    #    'BTN error. Required input is None, but no modflow model.'\
-    #    ' If no modflow model is passed to Mt3dms, then values '' \
-    #    ''must be specified in the BTN constructor for: '' \
-    #    ''nlay, nrow, ncol, nper, laycon, delr, delc, htop, dz, '' \
-    #    ''perlen, nstp, and tsmult.'
+    elv_db = smt.calc_elv_db()
 
     btn = flopy.mt3d.Mt3dBtn(mt3d,
                              MFStyleArr=False,  # defualt it's a reader, should hopefully not cause problems
                              DRYCell=True,  # pass through dry cells
-                             Legacy99Stor=False,  # defualt
-                             FTLPrint=False,  # defualt
-                             NoWetDryPrint=False,  # defualt shouldn't be a problem
+                             Legacy99Stor=False,  # defualt #todo
+                             FTLPrint=False,  # defualt #todo
+                             NoWetDryPrint=False,  # defualt shouldn't be a problem #todo
                              OmitDryBud=True,  # as passing through dry cells
                              AltWTSorb=False,  # defualt not using sorbing to my knowledge
                              ncomp=1,  # number of species
@@ -145,11 +134,11 @@ def create_mt3d(m, mt3d_name=None,
                              cinact=-9999999,  # defualt
                              thkmin=0.01,  # defualt
 
-                             # printing flags 0 is not print #todo I could probably get away with not printing anything
-                             ifmtcn=1,
-                             ifmtnp=1,
-                             ifmtrf=1,
-                             ifmtdp=1,
+                             # printing flags 0 is not print #todo I could probably get away with not printing anything check briochs base package
+                             ifmtcn=0,
+                             ifmtnp=0,
+                             ifmtrf=0,
+                             ifmtdp=0,
 
                              savucn=True,  # default
                              nprs=btn_nprs,
@@ -158,10 +147,21 @@ def create_mt3d(m, mt3d_name=None,
                              nprobs=1,  # not using obs so doesnt matter
                              chkmas=True,
                              nprmas=1,  # defualt print mass balance for each time period
+
+                             # modflow model parameters
                              nper=nper,
                              perlen=perlen,
                              nstp=nstp,
                              tsmult=tsmult,
+                             ncol=smt.cols,
+                             nlay=smt.layers,
+                             nrow=smt.rows,
+                             laycon=[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             delr=smt.grid_space,
+                             delc=smt.grid_space,
+                             htop=elv_db[0],
+                             dz=elv_db[0:-1]-elv_db[1:],
+
                              ssflag=ssflag,
                              dt0=dt0,
                              mxstrn=mxstrn,
@@ -174,12 +174,12 @@ def create_mt3d(m, mt3d_name=None,
 
     # DSP
     dsp = flopy.mt3d.Mt3dDsp(mt3d,
-                             al=dsp_lon,
-                             trpt=dsp_trpt,
-                             trpv=dsp_trpv,
-                             dmcoef=1e-09,  # default don't think I need as only if multidiff True
+                             al=dsp_lon, #todo I think this is 10
+                             trpt=dsp_trpt, #todo I think this is 0.1
+                             trpv=dsp_trpv, #todo I think this is 0.01
+                             dmcoef=1e-09,  # default don't think I need as only if multidiff True #todo I think this is 0
                              extension='dsp',
-                             multiDiff=False,  # only one component
+                             multiDiff=False,  # only one component #todo not sure
                              unitnumber=504)
 
     # SSM
@@ -190,13 +190,15 @@ def create_mt3d(m, mt3d_name=None,
     ssm = flopy.mt3d.Mt3dSsm(mt3d,
                              crch=ssm_crch,
                              cevt=None,
-                             mxss=None,  # default max number of sources and sinks this is calculated from modflow model
+                             mxss=None,  # default max number of sources and sinks this is calculated from modflow model #todo define aprioi
                              stress_period_data=ssm_stress_period_data,
                              dtype=None,  # default I should not need to specify this, but we'll see
                              extension='ssm',
                              unitnumber=505,
                              )
-    kwargs = {} #todo place holder
+
+    #MTSFT
+    kwargs = {} #todo place holder     #todo add mtsft
     mtsft = flopy.mt3d.Mt3dSft(mt3d,
                                nsfinit=0,
                                mxsfbc=0,
@@ -220,7 +222,6 @@ def create_mt3d(m, mt3d_name=None,
                                dtype=None,
                                extension='sft',
                                **kwargs)
-    #todo add mtsft
 
 
     # GCG
