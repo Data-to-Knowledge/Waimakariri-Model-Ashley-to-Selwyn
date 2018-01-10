@@ -63,19 +63,19 @@ def _get_reliability_xyz(model_id, recalc=False):
 
     print('calculating adequate penetration')
     # calculate addiquate penetration depth (ad_pen) #
-    #  2km wells drilled before 1 jan 2002, median depth then translate to elvation do this in arc and simply load the raster
+    # 2km wells drilled before 1 jan 2002, median depth then translate to elvation
     well_details = rd_sql(**sql_db.wells_db.well_details)
     well_details = well_details.loc[(well_details.DATE_DRILLED.isnull() |
                                      (well_details.DATE_DRILLED < pd.datetime(2002, 1, 1))) &
-                                    (well_details.WMCRZone == 4)  # keep only the waimakariri Zone
-    , ['NZTMX', 'NZTMY', 'DEPTH']]
+                                    (well_details.WMCRZone == 4),  # keep only the waimakariri Zone
+                                    ['NZTMX', 'NZTMY', 'DEPTH']]
 
     for well in outdata.index:
         temp = (
             (well_details.NZTMX - outdata.loc[well, 'nztmx']) ** 2 + (
-            well_details.NZTMY - outdata.loc[well, 'nztmy']) ** 2)
+                well_details.NZTMY - outdata.loc[well, 'nztmy']) ** 2)
         idx = temp <= 2000
-        outdata.loc[well, 'ad_pen'] = outdata.loc[well,'ground_level'] - np.nanmedian(well_details.loc[idx, 'DEPTH'])
+        outdata.loc[well, 'ad_pen'] = outdata.loc[well, 'ground_level'] - np.nanmedian(well_details.loc[idx, 'DEPTH'])
 
     # calculate use_pump_level
     outdata.loc[:, 'use_pump_level'] = outdata.loc[:, 'pump_level']
@@ -90,6 +90,11 @@ def _get_reliability_xyz(model_id, recalc=False):
         if pd.isnull(row) or pd.isnull(col) or pd.isnull(elv):
             continue
         outdata.loc[well, 'k'] = smt.convert_elv_to_k(int(row), int(col), elv, elv_db=elv_db)
+
+        row, col, elv = outdata.loc[well, ['i', 'j', 'pump_level']]
+        if pd.isnull(row) or pd.isnull(col) or pd.isnull(elv):
+            continue
+        outdata.loc[well, 'pump_k'] = smt.convert_elv_to_k(int(row), int(col), elv, elv_db=elv_db)
 
     # get specific capacity data (specific_c)
     idx = (outdata.specific_c < 0.00210345) & (outdata.k == 0)
@@ -143,17 +148,24 @@ def _get_reliability_xyz(model_id, recalc=False):
     allo = allo.loc[set(allo.index) - set(missing_wells.index)]
     allo = pd.concat((allo, missing_wells))
     allo = allo.reset_index()
-    allo = allo.groupby('index').aggregate({'cav':np.sum})
+    allo = allo.groupby('index').aggregate({'cav': np.sum})
 
     idx = set(outdata.index).intersection(allo.index)
     outdata.loc[idx, 'cav'] = allo.loc[idx, 'cav']
-    outdata.loc[outdata.cav.isnull(), 'cav'] = 10*365  # assume that the CAV of missing wells is 10 m3/day * 365 days
+    outdata.loc[outdata.cav.isnull(), 'cav'] = 10 * 365  # assume that the CAV of missing wells is 10 m3/day * 365 days
 
     # for some reason there are wells which have a cav and not the flux
-    idx = np.isclose(outdata.flux,10) & ~np.isclose(outdata.cav,3650)
-    outdata.loc[idx,'flux'] = 1.5 * outdata.loc[idx, 'cav']/6
+    idx = np.isclose(outdata.flux, 10) & ~np.isclose(outdata.cav, 3650)
+    outdata.loc[idx, 'flux'] = 1.5 * outdata.loc[idx, 'cav'] / 6
+
+    outdata = outdata.dropna(subset=[['k','i','j','pump_k']])
+    # add cell bottom
+    bots = elv_db[1:]
+    outdata.loc[:, 'cell_bot'] = bots[[e for e in outdata.loc[:, ['k', 'i', 'j']].values.astype(int).transpose()]]
+    outdata.loc[:, 'pump_cell_bot'] = bots[[e for e in outdata.loc[:, ['pump_k', 'i', 'j']].values.astype(int).transpose()]]
 
     outdata.to_hdf(save_dir, 'data', mode='w')
+
     return outdata  # todo spot check
 
 
@@ -166,6 +178,7 @@ def get_model_well_reliability(model_path, indata):
     """
 
     data = deepcopy(indata)
+
     # get simulation water level
     run_name = os.path.basename(model_path).replace('.nam', '')
     model_path = model_path.replace('.nam', '')
@@ -173,28 +186,45 @@ def get_model_well_reliability(model_path, indata):
     kstpkpers = _get_kstkpers(hds_file, kstpkpers=None, rel_kstpkpers=-1)
     kstpkper_names = 'model_water_level'
     data = _fill_df_with_bindata(hds_file, kstpkpers, kstpkper_names, data, hds_no_data, data)
+    assert not (data[kstpkper_names] < -777).any().any(), 'hdry must not be set for well reliablity calculations'
 
-    # adjust simulation to min water level #todo need zeb to provide more info just need the polygons and it will all make sense
-
-    # calculate drawdown and drawdown level #ignore the componenet of drawdown from average pumping in the cell, probably minor
+    # adjust simulation to min water level
+    level_adj = smt.shape_file_to_model_array(env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\Water supply wells\MeanvsMinWLadjustmentZones_v1.shp"),
+                                              'WL_adj_m', False)
+    data.loc[:, 'low_water_level'] = (data.loc[:, 'model_water_level'] +
+                                     level_adj[[e for e in data.loc[:, ['i', 'j']].astype(int).transpose()]])
+    # calculate drawdown and drawdown level
+    # ignore the componenet of drawdown from average pumping in the cell, probably minor
     data.loc[:, 'dd_water_level'] = data.loc[:, 'low_water_level'] - ((data.loc[:, 'flux'] * 1000 / 86400) /
                                                                       data.loc[:, 'specific_c'])  # todo dbl check units
-    # create reliability rating # todo handle if it is dry run by zeb
-    # todo also calculate with only the pump level
+    # create reliability rating
     temp = data.dd_water_level - data.use_pump_level
     data.loc[temp <= 0, 'ad_rel_rate'] = 3  # poor reliability
     data.loc[(temp > 0) & (temp <= 3), 'ad_rel_rate'] = 2  # moderate reliablity
     data.loc[temp > 3, 'ad_rel_rate'] = 1  # good reliability
 
     # completely unrelabile
-    data.loc[
-        data.model_water_level < -777, 'ad_rel_rate'] = 4  # already dry at average state #todo make sure hdry is set or compair to top/bottom this may not be needed if hdry is not set we want a flag here
+    data.loc[data.model_water_level < data.cell_bot, 'ad_rel_rate'] = 4  # already dry at average state
 
-    # create cost of reliability #todo handle if it is dry ask zeb how he wants to handle ask zeb what he wants as output
+    temp = data.dd_water_level - data.pump_level
+    data.loc[temp <= 0, 'pump_rel_rate'] = 3  # poor reliability
+    data.loc[(temp > 0) & (temp <= 3), 'pump_rel_rate'] = 2  # moderate reliablity
+    data.loc[temp > 3, 'pump_rel_rate'] = 1  # good reliability
+
+    # completely unrelabile
+    data.loc[data.model_water_level < data.pump_cell_bot, 'pump_rel_rate'] = 4  # already dry at average state
+
+    # create cost of reliability
     # assign full consent volume percentage of annual volume.  cost is in units of m3
+    for inp, oup in zip(['ad_rel_rate', 'pump_rel_rate'], ['ad_cost', 'pump_cost']):
+        for rel_rating, per in zip([1, 2, 3, 4], [0, .25, .5, 1]):
+            idx = data[inp] == rel_rating
+            data.loc[idx, oup] = data.cav * per
 
-    # todo add cutoff elevation and/or depth for each reliability rating
-    raise NotImplementedError
+    data.loc[:, 'cutoff_el_rel_1'] = data.dd_water_level
+    data.loc[:, 'cutoff_el_rel_2'] = data.dd_water_level - 0.1
+    data.loc[:, 'cutoff_el_rel_3'] = data.dd_water_level - 3.1
 
     return run_name, data
 
@@ -209,9 +239,11 @@ def get_all_well_reliablity(indir, outdir):
     with open(os.path.join(outdir, 'READ_ME.txt'), 'w') as f:
         f.write(
             """
+            Below is an explanation of every variable in the datasheets in this folder
+            
             
             """
-        )  # todo add a readme that defines every key in the dataframe
+        )  # todo add a readme that defines every key in the dataframe with units
 
     model_paths = glob(os.path.join(indir, '*', '*.nam'))
     model_id = os.path.basename(model_paths[0]).split('_')[0]
@@ -223,5 +255,7 @@ def get_all_well_reliablity(indir, outdir):
 
 
 if __name__ == '__main__':
-    test = _get_reliability_xyz('NsmcBase', recalc=True)
+    test = _get_reliability_xyz('NsmcBase', recalc=False)
+    data = get_model_well_reliability(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\NsmcBase_current.nam",
+                                      test)
     print('done')

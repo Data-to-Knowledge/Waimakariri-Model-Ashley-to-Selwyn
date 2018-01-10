@@ -16,7 +16,7 @@ import numpy as np
 if __name__ == '__main__':
     # run GNS model
 
-    m = import_gns_model('NsmcBase','modpath_base',r"C:\Users\MattH\Desktop\simple_modpath",False)
+    m = import_gns_model('StrOpt','modpath_base',r"C:\Users\MattH\Desktop\simple_modpath",False)
     m.write_name_file()
     m.upw.iphdry = 0  # hdry is -888.0
     m.write_input()
