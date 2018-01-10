@@ -70,7 +70,6 @@ if __name__ == '__main__':
             results_dir,
             False)
         extract_and_save_all_cc_mult_missing_w(model_dir_path, os.path.join(results_dir, "ccmult_extract.csv"))
-        print('done')
         trans_readme(model_dir_path,results_dir)
         plot_and_save_forward_vis(
             os.path.join(results_dir, "overview_plots"),
