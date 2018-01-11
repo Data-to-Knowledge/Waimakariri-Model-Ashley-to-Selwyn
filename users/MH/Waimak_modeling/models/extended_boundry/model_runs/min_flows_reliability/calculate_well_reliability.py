@@ -97,28 +97,31 @@ def _get_reliability_xyz(model_id, recalc=False):
         outdata.loc[well, 'pump_k'] = smt.convert_elv_to_k(int(row), int(col), elv, elv_db=elv_db)
 
     # get specific capacity data (specific_c)
+    outdata.loc[:,'sc_interpolated'] = False
+
     idx = (outdata.specific_c < 0.00210345) & (outdata.k == 0)
     layer0_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_0.txt"))
     outdata.loc[idx, 'specific_c'] = layer0_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
-    outdata.loc[idx,'sc_interpolated'] = True
+    outdata.loc[idx, 'sc_interpolated'] = True
+
     idx = (outdata.specific_c < 0.00210345) & (outdata.k == 1)
     layer1_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_1.txt"))
     outdata.loc[idx, 'specific_c'] = layer1_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
-    outdata.loc[idx,'sc_interpolated'] = True
+    outdata.loc[idx, 'sc_interpolated'] = True
 
     idx = (outdata.specific_c < 0.00210345) & (np.in1d(outdata.k, range(2, 6)))
     layer2_5_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_2-5.txt"))
     outdata.loc[idx, 'specific_c'] = layer2_5_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
-    outdata.loc[idx,'sc_interpolated'] = True
+    outdata.loc[idx, 'sc_interpolated'] = True
 
     idx = (outdata.specific_c < 0.00210345) & (np.in1d(outdata.k, range(6, 11)))
     layer6_10_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_6-10.txt"))
     outdata.loc[idx, 'specific_c'] = layer6_10_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
-    outdata.loc[idx,'sc_interpolated'] = True
+    outdata.loc[idx, 'sc_interpolated'] = True
 
     # get pumping rate
     print('getting pumping rate')
@@ -126,8 +129,8 @@ def _get_reliability_xyz(model_id, recalc=False):
     # for unconsented wells 10 m3/day
     increase_cav = get_full_consent(model_id, missing_sd_wells=True)
     increase_cav.loc[
-        increase_cav.use_type == 'irrigation-sw', 'flux'] *= 1.5 * 2  # peak month as 50% more water use and cav/6 months
-    increase_cav.loc[increase_cav.use_type != 'irrigation-sw', 'flux'] *= 1.2
+        increase_cav.use_type == 'irrigation-sw', 'flux'] *= 1  # peak month as 50% more water use and cav/6 months
+    increase_cav.loc[increase_cav.use_type != 'irrigation-sw', 'flux'] *= 1
     max_rate = get_max_rate(model_id, missing_sd_wells=True)
     idx = increase_cav.flux < max_rate.flux
     increase_cav.loc[idx, 'flux'] = max_rate.loc[idx, 'flux']
@@ -161,15 +164,16 @@ def _get_reliability_xyz(model_id, recalc=False):
     idx = np.isclose(outdata.flux, 10) & ~np.isclose(outdata.cav, 3650)
     outdata.loc[idx, 'flux'] = 1.5 * outdata.loc[idx, 'cav'] / (365)  # assume these are poorly defined
 
-    outdata = outdata.dropna(subset=[['k','i','j','pump_k']])
+    outdata = outdata.dropna(subset=[['k', 'i', 'j', 'pump_k']])
     # add cell bottom
     bots = elv_db[1:]
     outdata.loc[:, 'cell_bot'] = bots[[e for e in outdata.loc[:, ['k', 'i', 'j']].values.astype(int).transpose()]]
-    outdata.loc[:, 'pump_cell_bot'] = bots[[e for e in outdata.loc[:, ['pump_k', 'i', 'j']].values.astype(int).transpose()]]
+    outdata.loc[:, 'pump_cell_bot'] = bots[
+        [e for e in outdata.loc[:, ['pump_k', 'i', 'j']].values.astype(int).transpose()]]
 
     outdata.to_hdf(save_dir, 'data', mode='w')
 
-    return outdata  # todo spot check
+    return outdata
 
 
 def get_model_well_reliability(model_path, indata):
@@ -194,13 +198,14 @@ def get_model_well_reliability(model_path, indata):
     # adjust simulation to min water level
     level_adj = smt.shape_file_to_model_array(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\Water supply wells\MeanvsMinWLadjustmentZones_v1.shp"),
-                                              'WL_adj_m', False)
+        'WL_adj_m', False)
     data.loc[:, 'low_water_level'] = (data.loc[:, 'model_water_level'] +
-                                     level_adj[[e for e in data.loc[:, ['i', 'j']].astype(int).values.transpose()]])
+                                      level_adj[[e for e in data.loc[:, ['i', 'j']].astype(int).values.transpose()]])
     # calculate drawdown and drawdown level
-    # ignore the componenet of drawdown from average pumping in the cell, probably minor #todo below is double checking
+    # ignore the componenet of drawdown from average pumping in the cell, probably minor
+
     data.loc[:, 'dd_water_level'] = data.loc[:, 'low_water_level'] - ((data.loc[:, 'flux'] * 1000 / 86400) /
-                                                                      data.loc[:, 'specific_c'])  # todo dbl check units
+                                                                      data.loc[:, 'specific_c'])
     # create reliability rating
     temp = data.dd_water_level - data.use_pump_level
     data.loc[temp <= 0, 'ad_rel_rate'] = 3  # poor reliability
@@ -229,7 +234,7 @@ def get_model_well_reliability(model_path, indata):
     data.loc[:, 'cutoff_el_rel_2'] = data.dd_water_level - 0.1
     data.loc[:, 'cutoff_el_rel_3'] = data.dd_water_level
 
-    return run_name, data #todo check
+    return run_name, data
 
 
 def get_all_well_reliablity(indir, outdir):
@@ -239,14 +244,43 @@ def get_all_well_reliablity(indir, outdir):
     :param outdir: the directory to save the data
     :return:
     """
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     with open(os.path.join(outdir, 'READ_ME.txt'), 'w') as f:
         f.write(
             """
             Below is an explanation of every variable in the datasheets in this folder
             
-            
+            specific_c: specific capactiy (l/s/m)
+            depth: well depth (m)
+            i: model row
+            j: model column
+            nztmx: longitude
+            nztmy: latitude
+            ref_level: well reference elevation (m)
+            ground_level: well ground elevation (m)
+            pump_level: pump elevation (top of screen) (m)
+            ad_pen: adequate penetration elevation (m)
+            use_pump_level: lower of ad_pen or pump_level elevation (m)
+            k: model layer for use pump level
+            pump_k: model layer pump level
+            sc_interpolated: was SC interpolated
+            flux: flux used m3/day
+            cav: consented anual volume m3
+            cell_bot: cell bottom for use_pump_level elevation (m)
+            pump_cell_bot: bottom for pump_level elevation (m)
+            model_water_level: elevation (m)
+            low_water_level: model_water_level adjusted to expected annual lows elevation (m)
+            dd_water_level: low_water_level + in well drawdown elevation (m)
+            ad_rel_rate: reliability rating for adequate penetration scenario 1: good, 2: moderate, 3: poor, 4: dry at steady state
+            pump_rel_rate:reliability rating for pump level only 1: good, 2: moderate, 3: poor, 4: dry at steady state
+            ad_cost: cost for water volume in adiquate penetration scenario 
+            pump_cost: cost for water volume in pumping senario
+            cutoff_el_rel_1: cutoff for rating of 1 elevation (m)
+            cutoff_el_rel_2: cutoff for rating of 2 elevation (m)
+            cutoff_el_rel_3: cutoff for rating of 3 elevation (m)            
             """
-        )  # todo add a readme that defines every key in the dataframe with units
+        )
 
     model_paths = glob(os.path.join(indir, '*', '*.nam'))
     model_id = os.path.basename(model_paths[0]).split('_')[0]
@@ -254,12 +288,10 @@ def get_all_well_reliablity(indir, outdir):
     # for loop run across
     for model_path in model_paths:
         name, outdata = get_model_well_reliability(model_path, base_data)
-        outdata.to_csv(os.path.join(outdir, name))
+        outdata.to_csv(os.path.join(outdir, name + '.csv'))
 
 
 if __name__ == '__main__':
-    test = _get_reliability_xyz('NsmcBase', recalc=True)
-    name, data = get_model_well_reliability(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\NsmcBase_current.nam",
-                                      test)
-    data.to_csv(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\w_drawdown.csv")
-    print('done')
+    test = _get_reliability_xyz('NsmcBase',True)
+    get_all_well_reliablity("D:\mh_waimak_models\NsmcBase_non_cc_forward_runs_2018-01-09",
+                            "D:\mh_waimak_models\NsmcBase_non_cc_forward_runs_2018-01-09_well_reliablity")
