@@ -101,21 +101,24 @@ def _get_reliability_xyz(model_id, recalc=False):
     layer0_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_0.txt"))
     outdata.loc[idx, 'specific_c'] = layer0_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
-
+    outdata.loc[idx,'sc_interpolated'] = True
     idx = (outdata.specific_c < 0.00210345) & (outdata.k == 1)
     layer1_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_1.txt"))
     outdata.loc[idx, 'specific_c'] = layer1_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
+    outdata.loc[idx,'sc_interpolated'] = True
 
     idx = (outdata.specific_c < 0.00210345) & (np.in1d(outdata.k, range(2, 6)))
     layer2_5_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_2-5.txt"))
     outdata.loc[idx, 'specific_c'] = layer2_5_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
+    outdata.loc[idx,'sc_interpolated'] = True
 
     idx = (outdata.specific_c < 0.00210345) & (np.in1d(outdata.k, range(6, 11)))
     layer6_10_sc = np.e ** np.loadtxt(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\InitialParamaters\inital_sc_data_rasters_extended\v2\arrays\ln_spe_capacity_layer_6-10.txt"))
     outdata.loc[idx, 'specific_c'] = layer6_10_sc[outdata.loc[idx, 'i'].astype(int), outdata.loc[idx, 'j'].astype(int)]
+    outdata.loc[idx,'sc_interpolated'] = True
 
     # get pumping rate
     print('getting pumping rate')
@@ -156,7 +159,7 @@ def _get_reliability_xyz(model_id, recalc=False):
 
     # for some reason there are wells which have a cav and not the flux
     idx = np.isclose(outdata.flux, 10) & ~np.isclose(outdata.cav, 3650)
-    outdata.loc[idx, 'flux'] = 1.5 * outdata.loc[idx, 'cav'] / 6
+    outdata.loc[idx, 'flux'] = 1.5 * outdata.loc[idx, 'cav'] / (365)  # assume these are poorly defined
 
     outdata = outdata.dropna(subset=[['k','i','j','pump_k']])
     # add cell bottom
@@ -193,9 +196,9 @@ def get_model_well_reliability(model_path, indata):
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\Water supply wells\MeanvsMinWLadjustmentZones_v1.shp"),
                                               'WL_adj_m', False)
     data.loc[:, 'low_water_level'] = (data.loc[:, 'model_water_level'] +
-                                     level_adj[[e for e in data.loc[:, ['i', 'j']].astype(int).transpose()]])
+                                     level_adj[[e for e in data.loc[:, ['i', 'j']].astype(int).values.transpose()]])
     # calculate drawdown and drawdown level
-    # ignore the componenet of drawdown from average pumping in the cell, probably minor
+    # ignore the componenet of drawdown from average pumping in the cell, probably minor #todo below is double checking
     data.loc[:, 'dd_water_level'] = data.loc[:, 'low_water_level'] - ((data.loc[:, 'flux'] * 1000 / 86400) /
                                                                       data.loc[:, 'specific_c'])  # todo dbl check units
     # create reliability rating
@@ -222,11 +225,11 @@ def get_model_well_reliability(model_path, indata):
             idx = data[inp] == rel_rating
             data.loc[idx, oup] = data.cav * per
 
-    data.loc[:, 'cutoff_el_rel_1'] = data.dd_water_level
+    data.loc[:, 'cutoff_el_rel_1'] = data.dd_water_level - 3.1
     data.loc[:, 'cutoff_el_rel_2'] = data.dd_water_level - 0.1
-    data.loc[:, 'cutoff_el_rel_3'] = data.dd_water_level - 3.1
+    data.loc[:, 'cutoff_el_rel_3'] = data.dd_water_level
 
-    return run_name, data
+    return run_name, data #todo check
 
 
 def get_all_well_reliablity(indir, outdir):
@@ -255,7 +258,8 @@ def get_all_well_reliablity(indir, outdir):
 
 
 if __name__ == '__main__':
-    test = _get_reliability_xyz('NsmcBase', recalc=False)
-    data = get_model_well_reliability(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\NsmcBase_current.nam",
+    test = _get_reliability_xyz('NsmcBase', recalc=True)
+    name, data = get_model_well_reliability(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\NsmcBase_current.nam",
                                       test)
+    data.to_csv(r"C:\Users\MattH\Downloads\test_wel_reliablity\NsmcBase_current\w_drawdown.csv")
     print('done')
