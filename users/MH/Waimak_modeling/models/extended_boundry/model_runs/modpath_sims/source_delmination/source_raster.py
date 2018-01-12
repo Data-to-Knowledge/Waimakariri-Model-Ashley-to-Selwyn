@@ -39,7 +39,7 @@ def define_source_from_forward(emulator_path, bd_type, index):
     # run some checks on inputs
     assert isinstance(index, np.ndarray), 'index must be a nd array'
     assert index.shape == (smt.layers, smt.rows, smt.cols), 'index must be 3d'
-    assert issubclass(index.dtype, np.integer), 'index must be some sort of integer array'
+    assert np.issubdtype(index.dtype,np.integer), 'index must be some sort of integer array'
     assert index.min() >= 0, 'index should be positive'
 
     # load emulator and initialize outdata
@@ -68,7 +68,6 @@ def define_source_from_forward(emulator_path, bd_type, index):
         temp_emulator = emulator.loc[temp]
         temp_emulator = temp_emulator.reset_index()
         temp = temp_emulator.groupby('Particle_Group').aggregate({'fraction': np.sum})
-        temp *= 1 / temp.sum()
 
         # populate array
         outdata = smt.get_empty_model_grid(False)
@@ -120,8 +119,8 @@ def _run_forward_em_one_mp(kwargs):  # todo debug
                        'keep_org_files']
         assert np.in1d(needed_keys, kwargs.keys()).all(), 'missing keys {}'.format(
             set(needed_keys) - set(kwargs.keys()))
-        mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id + '.hdf')
-        outpath = os.path.join(kwargs['emulator_dir'], model_id)
+        mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id)
+        outpath = os.path.join(kwargs['emulator_dir'], model_id + '.hdf')
         mp_name = '{}_forward'.format(model_id)
         cbc_path = get_cbc(model_id, kwargs['modflow_dir'])
         setup_run_forward_modpath(cbc_path, mp_ws, mp_name,
@@ -200,7 +199,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     print('{} runs completed in {} minutes'.format(len(model_ids), ((time() - t) / 60)))
 
 
-def get_all_cbcs(model_ids, modflow_dir, sleep_time=5):
+def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
     """
     a quick multiprocessing wrapper to run all the NSMC realisations I need
     :param model_ids: list of model ids to pass to the get cbc
@@ -267,9 +266,10 @@ if __name__ == '__main__':
     index = smt.get_empty_model_grid(True).astype(bool)
     index[1] = np.isfinite(temp_index)
     index = smt.get_empty_model_grid(True).astype(bool)
-    temp = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)
-    index[5][np.isfinite(temp)] = True
-    bd_type = np.loadtxt(r"T:\Temp\temp_gw_files\NsmcBase_first_try_bnd_type.txt")
-    outdata = define_source_from_forward(r"T:\Temp\temp_gw_files\first_try.hdf", bd_type, index.astype(bool))
-    smt.plt_matrix(outdata != 0, base_map=True)
+    index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[np.newaxis].repeat(11,axis=0)
+    index = np.isfinite(index).astype(int)
+    bd_type = np.loadtxt(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
+    outdata = define_source_from_forward(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type, index.astype(int))
+    outdata[1][outdata[1]==0] = np.nan
+    smt.plt_matrix(np.log10(outdata[1]), base_map=True)
     plt.show()
