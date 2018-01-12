@@ -36,8 +36,8 @@ def run_all_forward_emulators(nsmc_nums, notes, base_results_dir, other_model_id
 if __name__ == '__main__':
     # items to change for different runs
     nsmc_nums = [-1,-2]  # todo change
-    notes = 'first try'  # todo change
-    base_results_dir = r"D:\mh_waimak_models\modpath_test_forward"  # todo change make sure this is on the C drive as it will be much faster
+    notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
+    base_results_dir = r"C:\mh_waimak_models\modpath_forward_base"
     other_model_ids = None  # could add a list of other model ids
     run_all_forward_emulators(nsmc_nums,notes,base_results_dir,
                               other_model_ids=other_model_ids,

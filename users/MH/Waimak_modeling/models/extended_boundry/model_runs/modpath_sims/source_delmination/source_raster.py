@@ -31,6 +31,8 @@ def define_source_from_forward(emulator_path, bd_type, index):
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
+    :param bd_type: the boundary type assement from defineing particles, should be saved with the model run as a text
+                    array.
     :param index: a integer array of areas of interest 0 delneates no interest
     :return: array of shape (smt.layers, rows, cols) with a rough percentage of water from source
     """
@@ -118,7 +120,7 @@ def _run_forward_em_one_mp(kwargs):  # todo debug
                        'keep_org_files']
         assert np.in1d(needed_keys, kwargs.keys()).all(), 'missing keys {}'.format(
             set(needed_keys) - set(kwargs.keys()))
-        mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id)
+        mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id + '.hdf')
         outpath = os.path.join(kwargs['emulator_dir'], model_id)
         mp_name = '{}_forward'.format(model_id)
         cbc_path = get_cbc(model_id, kwargs['modflow_dir'])
