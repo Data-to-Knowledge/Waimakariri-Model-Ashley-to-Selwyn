@@ -14,6 +14,7 @@ from warnings import warn
 from copy import deepcopy
 from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
+from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 hds_no_data = 1e30
 unc_no_data = -1
@@ -96,7 +97,7 @@ def get_hds_file_path(name_file_path=None, hds_path=None, m=None):
 
 
 def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_path=None, hds_path=None, m=None,
-                     add_loc=False, missing_handling='warn'):
+                     add_loc=False, missing_handling='warn', set_hdry=False):
     """
     return dataframe of heads at wells in well list
     :param well_list: list of well numbers to export data at
@@ -110,6 +111,7 @@ def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_pa
     :param missing_handeling: one of: 'raise' : raise an exception for any nan values with well numbers
                               'forgive': silently remove nan values
                               'warn': remove nan values, but issue a warning with well numbers
+    :param set_hdry: bool if True manually set the dry cells to hdry
     :return: df of heads (rows: wells  columns:kstpkpers)
     """
     # set up inputs and outdata
@@ -124,7 +126,8 @@ def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_pa
     if add_loc:
         outdata = pd.merge(outdata, well_locs, right_index=True, left_index=True)
 
-    outdata = _fill_df_with_bindata(hds_file, kstpkpers, kstpkper_names, outdata, hds_no_data, well_locs)
+    outdata = _fill_df_with_bindata(hds_file, kstpkpers, kstpkper_names, outdata, hds_no_data, well_locs,
+                                    set_hdry=set_hdry)
     return outdata
 
 
@@ -186,7 +189,7 @@ def _get_kstkpers(bud_file, kstpkpers=None, rel_kstpkpers=None):
     return kstpkpers
 
 
-def _fill_df_with_bindata(bin_file, kstpkpers, kstpkper_names, df, nodata_value, locations):
+def _fill_df_with_bindata(bin_file, kstpkpers, kstpkper_names, df, nodata_value, locations, set_hdry=False):
     """
     fills the dataframe with hds or con data
     :param bin_file: data file either flopy.utils.Headfile or flopy.utils.Uncfile
@@ -195,11 +198,16 @@ def _fill_df_with_bindata(bin_file, kstpkpers, kstpkper_names, df, nodata_value,
     :param df: dataframe to fill (retuns a copy)
     :param nodata_value: the nodata value to use for the binfile
     :param locations: the dataframe with i,j,k
+    :param set_hdry: bool if True manually set dry cells to -888 for head file only
     :return:
     """
     kstpkper_names = np.atleast_1d(kstpkper_names)
     df = deepcopy(df)
     data = bin_file.get_alldata(nodata=nodata_value)
+    if set_hdry:
+        bots = smt.calc_elv_db()[1:]
+        data[(data<bots) & (np.isfinite(data))] = -888
+
     mkstpkper = bin_file.get_kstpkper()
     for kstpkper, name in zip(kstpkpers, kstpkper_names):
         kstpkper = tuple(kstpkper)

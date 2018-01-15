@@ -101,8 +101,8 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
                           base_dir,
                           drain=drn,
                           safe_mode=False,
-                          mt3d_link=False
-                          )
+                          mt3d_link=False,
+                          set_hdry=False)
     else:
         m = mod_gns_model(model_id,
                           name,
@@ -111,8 +111,8 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
                           recharge={0: rch},
                           drain=drn,
                           safe_mode=False,
-                          mt3d_link=False
-                          )
+                          mt3d_link=False,
+                          set_hdry=False)
 
     # below included for easy manipulation if needed
     flopy.modflow.mfnwt.ModflowNwt(m,

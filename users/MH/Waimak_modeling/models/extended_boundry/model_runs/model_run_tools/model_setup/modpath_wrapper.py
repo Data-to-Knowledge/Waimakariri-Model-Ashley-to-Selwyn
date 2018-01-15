@@ -33,10 +33,8 @@ def get_cbc(model_id, base_dir):
     if os.path.exists(cbc_path):
         return cbc_path
 
-    m = import_gns_model(model_id,'for_modpath',os.path.join(base_dir,'for_modpath'),False)
+    m = import_gns_model(model_id,'for_modpath',os.path.join(base_dir,'for_modpath'),False, set_hdry=True)
     m.write_name_file()
-    m.upw.iphdry = 1  # hdry is -888.0
-
     m.write_input()
     m.run_model()
     con = modflow_converged(os.path.join(m.model_ws, '{}.list'.format(m.name)))

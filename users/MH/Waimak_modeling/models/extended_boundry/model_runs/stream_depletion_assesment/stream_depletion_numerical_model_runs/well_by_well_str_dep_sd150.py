@@ -112,9 +112,9 @@ def well_by_well_depletion_sd150(model_id, well_list, base_path, notes, ss_sy_ve
 
 if __name__ == '__main__':
     notes = """ """
-    model_id = 'StrOpt'
-    well_list = get_sd_well_list(model_id)
+    model_id = 'NsmcBase'
+    well_list = ['M34/0499', 'M34/5518'] # these have over 100% sd, M34/0499 has a very negative custmaindrain
     base_path = r"C:\Users\MattH\Desktop\test_sd150_look_at"
-    well_by_well_depletion_sd150(model_id, well_list, base_path, notes)
+    well_by_well_depletion_sd150(model_id, well_list, base_path, notes,ss_sy_version=2) #check the negative values in teh cust
 
     print('done')

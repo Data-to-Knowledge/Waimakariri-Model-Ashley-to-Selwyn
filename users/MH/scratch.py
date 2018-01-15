@@ -8,25 +8,48 @@ import numpy as np
 from core import env
 import shutil
 import os
+import itertools
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.extract_data import open_path_file_as_df
 
-def timeit_test():
-    base_converter_dir = "{}/base_for_nsmc_real".format(smt.sdp)
-    # check if the model has previously been saved to the save dir, and if so, load from there
-    converter_dir = os.path.join(os.path.expanduser('~'),'temp_nsmc_generation{}'.format(os.getpid()))
-    shutil.copytree(base_converter_dir,converter_dir)
-    shutil.rmtree(converter_dir)
+path_path = r"C:\Users\MattH\Desktop\test_reverse_modpath_strong\test_reverse.mppth"
+
+drop_names = [
+    'Time_Point_Index',
+    'Cumulative_Time_Step',
+    'Tracking_Time',
+    'Global_X',
+    'Global_Y',
+    'Global_Z',
+    'Grid',
+    'Local_X',
+    'Local_Y',
+    'Local_Z',
+    'Line_Segment_Index',
+]
+print('reading data')
+
+data = open_path_file_as_df(path_path)
+print('simplifying data')
+data.drop(drop_names, 1, inplace=True)
+
+sites = list(itertools.product([1],range(50,150),range(50,160)))
+
+def timeit_function():
+    temp_data = data.set_index(['Layer','Row','Column']).loc[sites].reset_index()
+    return temp_data
+def timeit_function2():
+    temp_data = ['{}-{}-{}'.format(l,r,c) for l,r,c in data[['Layer','Row','Column']].itertuples(False,None)]
+    sites2 = ['{}-{}-{}'.format(l,r,c) for l,r,c in sites]
+    idx = np.in1d(temp_data, sites2)
+    out_data = data.loc[idx]
+    return out_data
 
 
 
 
 if __name__ == '__main__':
     print 'hello world'
-    data = nc.Dataset(r"C:\Users\MattH\Downloads\test.nc",'w')
-    data.createDimension('bound',2)
-    data.createDimension('unbound',2)
-
-    temp = data.createVariable('test',float,('bound','unbound'),fill_value=np.nan)
-    temp[0,:] = [1,2,3]
-    temp[1] = [4,5,6,7,8,9]
+    temp = timeit_function()
+    temp2 = timeit_function2()
 
     print 'done'

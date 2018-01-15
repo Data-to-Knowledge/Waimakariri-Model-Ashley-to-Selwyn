@@ -163,7 +163,8 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
     # first max_rate_wap then max_rate then cav/365
     fluxes.loc[:, 'flux'] = fluxes.loc[:, 'max_rate_wap'] * -86.4  # to convert from l/s to m3/day
     fluxes.loc[fluxes.flux.isnull(), 'flux'] = fluxes.loc[:, 'max_rate'] * -86.4
-    fluxes.loc[fluxes.flux.isnull(), 'flux'] = fluxes.loc[:, 'cav'] / -365
+    fluxes.loc[fluxes.flux.isnull(), 'flux'] = fluxes.loc[:, 'cav'] / -365  # this could cause an inverse of max rate
+                                                                            # and 150 day rate
     outdata.loc[outdata.type == 'well', 'flux'] = 0
     idx = set(fluxes.index).intersection(outdata.index)
     outdata.loc[idx, 'flux'] = fluxes.loc[idx, 'flux']

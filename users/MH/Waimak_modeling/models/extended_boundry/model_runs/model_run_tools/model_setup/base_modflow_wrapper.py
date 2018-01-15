@@ -26,7 +26,7 @@ org_data_dir = "{}/from_GNS".format(sdp)
 # as part of this make another function which gets the name file (or copies the files across)
 
 
-def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, exe_path=None):
+def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, exe_path=None, set_hdry=True):
     """
     sets up a model object for a steady state run with the base modflow files from GNS. This serves as a base to be
     modified for other  model runs. DOES NOT Write input Files, name file, or RUN MODFLOW.
@@ -37,6 +37,7 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
     :param model_version: the model to use see supporting data paths for avalible versions. default to m_strong_vert
                           for backwards compatability
     :param exe_path: path to the modflow NWT exicutable
+    :param set_hdry: bool if True then IPHDRY will be set to 1 and dry cells will be set to hdry (-888)
     :return: model object
     """
     # set name to incorporate the model version as the start of the name
@@ -87,11 +88,17 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
         mt3d_outname = '{}_mt3d_link.ftl'.format(m.name)
         link = flopy.modflow.ModflowLmt(m, output_file_name=mt3d_outname, output_file_unit=mt3d_outunit, unitnumber=21)
         m.add_output(mt3d_outname, mt3d_outunit, True, 'LMT')
+
+    if set_hdry:
+        m.upw.iphdry = 1
+    else:
+        m.upw.iphdry = 0
+
     return m
 
 
 def mod_gns_model(model_id, name, dir_path, safe_mode=True, stress_period_vals=None, well=None, drain=None,
-                  recharge=None, stream=None, mt3d_link=False, start_heads=None, exe_path=None):
+                  recharge=None, stream=None, mt3d_link=False, start_heads=None, exe_path=None, set_hdry=True):
     """
     modify the gns model by changing the stress period data for one of the following packages WEL, DRN, RCH, STR, DIS
 
@@ -121,6 +128,7 @@ def mod_gns_model(model_id, name, dir_path, safe_mode=True, stress_period_vals=N
     :param mt3d_link: boolean if true write a MT3D-link module
     :param start_heads: None or array for the starting heads of the simulation.
     :param exe_path: path to the modflow NWT exicutable
+    :param set_hdry: bool if True then IPHDRY is set to 1 and dry cells will be set to -888
     :return: model
     """
 
@@ -166,7 +174,8 @@ def mod_gns_model(model_id, name, dir_path, safe_mode=True, stress_period_vals=N
             raise ValueError('{} has more stress periods supplied than present in model'.format(var_name))
 
     # import model and change stress period if needed
-    m = import_gns_model(model_id, name, dir_path, safe_mode=safe_mode, mt3d_link=mt3d_link, exe_path=exe_path)
+    m = import_gns_model(model_id, name, dir_path, safe_mode=safe_mode, mt3d_link=mt3d_link,
+                         exe_path=exe_path, set_hdry=set_hdry)
 
     if stress_period_vals is not None:
         print('changing stress periods')
