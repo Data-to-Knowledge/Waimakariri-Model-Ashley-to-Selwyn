@@ -437,7 +437,7 @@ def rd_hydstra_db(sites, start=0, end=0, datasource='A', data_type='mean', varfr
     if isinstance(export_path, str):
         save_df(data, export_path)
 
-    return (data)
+    return data
 
 
 # Define a context manager generator

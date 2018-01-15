@@ -182,21 +182,21 @@ def rd_niwa_geo():
 #### Import time series data
 
 
-def _rd_hydstra(self, sites, start_time=0, end_time=0, datasource='A', data_type='mean', varfrom=100, varto=140, interval='day', multiplier=1, min_qual=30):
+def _rd_hydstra(self, sites, start_time=0, end_time=0, datasource='A', data_type='mean', varfrom=100, varto=140, interval='day', multiplier=1, qual_codes=[30, 20, 10, 11, 21, 18]):
 
     ### Create dict to map the mtype to a hydstra variable
     mtypes_dict = {140: 'flow', 100: 'swl'}
     mtype = mtypes_dict[varto]
 
     ### Pull data from hydstra and format
-    df1 = rd_hydstra_db(sites, start_time, end_time, datasource, data_type, varfrom, varto, interval, multiplier, min_qual)
+    df1 = rd_hydstra_db(sites, start_time, end_time, datasource, data_type, varfrom, varto, interval, multiplier, qual_codes)
     df2 = df1.reset_index()
 #    df2.columns = ['site', 'time', 'data']
     df2['mtype'] = mtype
 
     ### Create new hydro class
     self.add_data(df2, 'time', 'site', 'mtype', 'data', 'long')
-    return(self)
+    return self
 
 
 def _rd_hydrotel(self, sites, mtype, from_date=None, to_date=None, resample_code='D', period=1, fun='mean', min_count=None):

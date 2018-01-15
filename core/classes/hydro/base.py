@@ -46,7 +46,9 @@ legacy_mtypes = {'usage': 'sum'}
 
 resample_fun.update(legacy_mtypes)
 
-all_mtypes = OrderedDict((i, '_'.join(fields_lst[i-1])) for i in range(1, len(fields_lst)))
+#all_mtypes = OrderedDict((i, '_'.join(fields_lst[i-1])) for i in range(1, len(fields_lst)))
+
+all_mtypes = ['river_flow_cont_qc', 'river_flow_disc_qc', 'river_wl_cont_qc', 'aq_wl_cont_qc', 'aq_wl_disc_qc', 'atmos_precip_cont_qc', 'river_flow_cont_raw', 'atmos_precip_cont_raw', 'river_wl_cont_raw', 'aq_wl_cont_raw', 'usage']
 
 ######################################
 ### The main class
