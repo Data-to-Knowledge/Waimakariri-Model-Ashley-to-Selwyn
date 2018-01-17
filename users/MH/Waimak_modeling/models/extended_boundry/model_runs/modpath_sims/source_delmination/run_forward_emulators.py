@@ -53,11 +53,11 @@ if __name__ == '__main__':
                  2997, 3039, 3064, 3067, 3075, 3100, 3116, 3165, 3216, 3289, 3310,
                  3318, 3350, 3378, 3389, 3418, 3428, 3456, 3464, 3482, 3513, 3585,
                  3641, 3651, 3663, 3685, 3712, 3717, 3762, 3796, 3836, 3861, 3910] # the 165 models which passed the EMMA filter
-    nsmc_nums = [-1] # todo just for testing DADB
+    nsmc_nums = [] # todo just for testing DADB
     notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
     other_model_ids = None  # could add a list of other model ids
     base_results_dir = get_base_results_dir('forward', socket.gethostname())
-    #other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids #todo just for testing un debug latter
+    other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids #todo just for testing un debug latter
     run_all_forward_emulators(nsmc_nums, notes, base_results_dir,
                               other_model_ids=other_model_ids,
                               minparts=1, maxparts=20,
