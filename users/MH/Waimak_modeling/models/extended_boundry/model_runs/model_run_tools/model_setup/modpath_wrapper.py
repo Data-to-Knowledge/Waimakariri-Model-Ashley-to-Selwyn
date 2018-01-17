@@ -13,8 +13,11 @@ import os
 import pandas as pd
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from base_modflow_wrapper import import_gns_model
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import modflow_converged
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import \
+    modflow_converged
 from traceback import format_exc
+
+
 # make something to run modpath simulations with particles in the top most active cells.
 
 
@@ -28,12 +31,13 @@ def get_cbc_mp(kwargs):
 
 
 def get_cbc(model_id, base_dir):
-    cbc_path = os.path.join(base_dir,'{}_for_modpath'.format(model_id),'{}_for_modpath.cbc'.format(model_id))
+    # if I wanted to split layers I would need to do it here...
+    cbc_path = os.path.join(base_dir, '{}_for_modpath'.format(model_id), '{}_for_modpath.cbc'.format(model_id))
 
     if os.path.exists(cbc_path):
         return cbc_path
 
-    m = import_gns_model(model_id,'for_modpath',os.path.join(base_dir,'for_modpath'),False, set_hdry=True)
+    m = import_gns_model(model_id, 'for_modpath', os.path.join(base_dir, 'for_modpath'), False, set_hdry=True)
     m.write_name_file()
     m.write_input()
     m.run_model()
@@ -66,14 +70,14 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
     :return: modpath model
     """
     model_passed = (isinstance(m, flopy.modflow.Modflow) and hdfile is None and budfile is None and disfile is None)
-    strs_passed = (m is None and all([isinstance(e, str) for e in [mp_ws, mp_name, hdfile, budfile, disfile,]]))
+    strs_passed = (m is None and all([isinstance(e, str) for e in [mp_ws, mp_name, hdfile, budfile, disfile, ]]))
     assert model_passed or strs_passed, 'either the model or paths must be defined, see documentation'
 
     if m is not None:
         hdiu = m.oc.iuhead
-        hdfile = os.path.join(m.model_ws,m.get_output(unit=hdiu))
-        budfile = os.path.join(m.model_ws,m.get_output(unit=hdiu).replace('.hds','.cbc'))
-        disfile = os.path.join(m.model_ws,m.get_package('dis').file_name[0])
+        hdfile = os.path.join(m.model_ws, m.get_output(unit=hdiu))
+        budfile = os.path.join(m.model_ws, m.get_output(unit=hdiu).replace('.hds', '.cbc'))
+        disfile = os.path.join(m.model_ws, m.get_package('dis').file_name[0])
 
         if mp_ws is None:
             mp_ws = m.model_ws
@@ -82,9 +86,8 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
             mp_name = '{}_mp'.format(m.name)
     else:
         m = flopy.modflow.Modflow(version='mfnwt')
-        flopy.modflow.ModflowDis(m,smt.layers,smt.rows,smt.cols,1)
+        flopy.modflow.ModflowDis(m, smt.layers, smt.rows, smt.cols, 1)
         flopy.modflow.ModflowUpw(m)
-
 
     mp = flopy.modpath.Modpath(modelname=mp_name,
                                exe_name="{}/models_exes/modpath.6_0/bin/mp6.exe".format(sdp),
@@ -94,7 +97,6 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
                                dis_file=disfile,
                                head_file=hdfile,
                                budget_file=budfile)
-
 
     mpb = flopy.modpath.ModpathBas(mp,
                                    hnoflo=hnoflo,
@@ -191,6 +193,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
 
     return mp
 
+
 def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
     """
     export paths to a shapefile
@@ -200,14 +203,14 @@ def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
     :return:
     """
     # generate spatial reference
-    spatial_ref = flopy.utils.SpatialReference(delr=np.full((smt.rows),200), delc=np.full((smt.cols),200), lenuni=2,
-                 xul=smt.ulx, yul=smt.uly, rotation=smt.rotation,
-                 proj4_str="EPSG:2193", units='meters',
-                 length_multiplier=1.)
+    spatial_ref = flopy.utils.SpatialReference(delr=np.full((smt.rows), 200), delc=np.full((smt.cols), 200), lenuni=2,
+                                               xul=smt.ulx, yul=smt.uly, rotation=smt.rotation,
+                                               proj4_str="EPSG:2193", units='meters',
+                                               length_multiplier=1.)
     paths = flopy.utils.PathlineFile(paths_file)
     if particle_ids is None:
-        pathdata = [e[['x','y','z','k','id']] for e in paths.get_alldata()]
-        paths.write_shapefile(shpname=shape_file,sr=spatial_ref)
+        pathdata = [e[['x', 'y', 'z', 'k', 'id']] for e in paths.get_alldata()]
+        paths.write_shapefile(shpname=shape_file, sr=spatial_ref)
     else:
         particle_ids = np.atleast_1d(particle_ids)
         pathdata = [paths.get_data(e) for e in particle_ids]
@@ -215,19 +218,18 @@ def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
 
 
 if __name__ == '__main__':
-    run_model=False
+    run_model = False
     if run_model:
-
         particle_data = flopy.modpath.mpsim.StartingLocationsFile.get_empty_starting_locations_data(2)
-        particle_data['particleid'] =[120,150]
-        particle_data['i0'][:] = [120,150]
-        particle_data['j0'][:] = [120,150]
+        particle_data['particleid'] = [120, 150]
+        particle_data['i0'][:] = [120, 150]
+        particle_data['j0'][:] = [120, 150]
         particle_data['particlegroup'][:] = 1
         particle_data['groupname'][:] = 'part1'
         particle_data['label'][:] = 'test'
         model_path = r"C:\Users\MattH\Desktop\NsmcBase_modpath_tester\NsmcBase_modpath_tester.nam"
-        m = flopy.modflow.Modflow.load(model_path,model_ws=os.path.dirname(model_path))
-        mp = create_mp_slf(particle_data,m)
+        m = flopy.modflow.Modflow.load(model_path, model_ws=os.path.dirname(model_path))
+        mp = create_mp_slf(particle_data, m)
         mp.write_input()
         mp.write_name_file()
         mp.run_model()

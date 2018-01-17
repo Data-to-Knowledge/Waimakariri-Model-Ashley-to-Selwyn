@@ -6,8 +6,9 @@ Date Created: 21/12/2017 10:52 AM
 
 from __future__ import division
 from core import env
-from source_raster import get_all_cbcs, run_forward_emulators, get_modeflow_dir_for_source
+from source_raster import get_all_cbcs,run_forward_emulators, get_modeflow_dir_for_source, get_base_results_dir
 import os
+import socket
 
 
 def run_all_forward_emulators(nsmc_nums, notes, base_results_dir, other_model_ids=None, minparts=1, maxparts=100,
@@ -54,8 +55,8 @@ if __name__ == '__main__':
                  3641, 3651, 3663, 3685, 3712, 3717, 3762, 3796, 3836, 3861, 3910] # the 165 models which passed the EMMA filter
     nsmc_nums = [-1] # todo just for testing DADB
     notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
-    base_results_dir = r"C:\mh_waimak_models\modpath_forward_base"
-    other_model_ids=None #todo DADB
+    other_model_ids = None  # could add a list of other model ids
+    base_results_dir = get_base_results_dir('forward', socket.gethostname())
     #other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids #todo just for testing un debug latter
     run_all_forward_emulators(nsmc_nums, notes, base_results_dir,
                               other_model_ids=other_model_ids,

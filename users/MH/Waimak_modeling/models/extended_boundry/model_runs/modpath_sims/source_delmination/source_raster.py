@@ -14,6 +14,7 @@ import multiprocessing
 import logging
 import psutil
 import datetime
+import socket
 from traceback import format_exc
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.setup_reverse_modpath import \
@@ -24,23 +25,25 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.se
     setup_run_forward_modpath
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.modpath_wrapper import \
     get_cbc, get_cbc_mp
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import modpath_converged
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import \
+    modpath_converged
 
 
-def define_source_from_forward(emulator_path, bd_type, index):
+def define_source_from_forward(emulator_path, bd_type, indexes):
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
     :param bd_type: the boundary type assement from defineing particles, should be saved with the model run as a text
                     array.
-    :param index: a integer array of areas of interest 0 delneates no interest
-    :return: array of shape (smt.layers, rows, cols) with a rough percentage of water from source
+    :param index: a dictionary of boolean arrays of areas of interest False delneates no interest
+    :return: dictionary of arrays of shape (smt.layers, rows, cols) with a particle count from source
     """
     # run some checks on inputs
-    assert isinstance(index, np.ndarray), 'index must be a nd array'
-    assert index.shape == (smt.layers, smt.rows, smt.cols), 'index must be 3d'
-    assert np.issubdtype(index.dtype,np.integer), 'index must be some sort of integer array'
-    assert index.min() >= 0, 'index should be positive'
+    assert isinstance(indexes, dict), 'indexes must be a dictionary'
+    for key, idx in indexes.items():
+        assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
+        assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
+        assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
 
     # load emulator and initialize outdata
     print('loading emulator')
@@ -52,6 +55,10 @@ def define_source_from_forward(emulator_path, bd_type, index):
 
     # get general area of interest
     print('calculating area of interest')
+    index = smt.get_empty_model_grid(True)
+    for value in indexes.values():
+        index += value
+
     idx = index > 0
     layers, rows, cols = np.meshgrid(range(smt.layers), range(smt.rows), range(smt.cols), indexing='ij')
     ids = ['{:02d}_{:03d}_{:03d}'.format(k, i, j) for k, i, j in zip(layers[idx], rows[idx], cols[idx])]
@@ -61,8 +68,7 @@ def define_source_from_forward(emulator_path, bd_type, index):
 
     # calculate source percentage
     all_outdata = {}
-    for g in set(index.flatten()) - {0}:
-        idx = index == g
+    for g, idx in indexes.items():
         ids = ['{:02d}_{:03d}_{:03d}'.format(k, i, j) for k, i, j in zip(layers[idx], rows[idx], cols[idx])]
         temp = np.in1d(emulator.index.values, ids)
         temp_emulator = emulator.loc[temp]
@@ -82,10 +88,10 @@ def define_source_from_forward(emulator_path, bd_type, index):
     return all_outdata
 
 
-def define_source_from_backward(index, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False):
+def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False):
     """
     define the source area for an integer index
-    :param index: a integer array of groups of areas of interest 0 delneates no interest
+    :param indexes: a dictionary of boolean arrays
     :param mp_ws: path for the modpath model
     :param mp_name: name of the modpath model
     :param cbc_file: cbc_file for the base modflow model of interest
@@ -95,16 +101,16 @@ def define_source_from_backward(index, mp_ws, mp_name, cbc_file, root3_num_part=
     :param recalc: bool if True rerun the model even if it exists
     :return:
     """
-    assert isinstance(index, np.ndarray), 'index must be a nd array'
-    assert index.shape == (smt.layers, smt.rows, smt.cols), 'index must be 3d'
-    assert issubclass(index.dtype, np.integer), 'index must be some sort of integer array'
-    assert index.min() >= 0, 'index should be positive'
+    assert isinstance(indexes, dict), 'indexes must be a dictionary'
+    for key, idx in indexes.items():
+        assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
+        assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
+        assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
 
     path_path = os.path.join(mp_ws, '{}.mppth'.format(mp_name))
     if not os.path.exists(path_path) or recalc:
         # set up and run model
-        part_index = index > 0
-        setup_run_backward_modpath(mp_ws, mp_name, cbc_file, index=part_index, group=index,
+        setup_run_backward_modpath(mp_ws, mp_name, cbc_file, indexes,
                                    root3_num_part=root3_num_part, capt_weak_s=capt_weak_s)
 
     mapper_path = os.path.join(mp_ws, '{}_group_mapper.csv'.format(mp_name))
@@ -112,7 +118,7 @@ def define_source_from_backward(index, mp_ws, mp_name, cbc_file, root3_num_part=
     return outdata
 
 
-def _run_forward_em_one_mp(kwargs):  # todo debug
+def _run_forward_em_one_mp(kwargs):
     model_id = kwargs['model_id']
     try:
         needed_keys = ['model_id', 'mp_runs_dir', 'emulator_dir', 'modflow_dir', 'min_part', 'max_part', 'capt_weak_s',
@@ -120,7 +126,7 @@ def _run_forward_em_one_mp(kwargs):  # todo debug
         assert np.in1d(needed_keys, kwargs.keys()).all(), 'missing keys {}'.format(
             set(needed_keys) - set(kwargs.keys()))
         mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id)
-        outpath = os.path.join(kwargs['emulator_dir'], model_id + '.hdf')
+        outpath = os.path.join(kwargs['emulator_dir'], model_id)
         mp_name = '{}_forward'.format(model_id)
         cbc_path = get_cbc(model_id, kwargs['modflow_dir'])
         setup_run_forward_modpath(cbc_path, mp_ws, mp_name,
@@ -226,13 +232,6 @@ def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
         f.writelines(wr)
 
 
-def get_both_source_areas():  # todo
-    # todo add weak source/sink so I can interpret all four plots qualativly
-    # a wrapper to setup and run all of the source delineation
-    # some how save the number data as well as just the boolean data as a netcdf
-    raise NotImplementedError
-
-
 def start_process():
     print('Starting', multiprocessing.current_process().name, 'pid: {}'.format(os.getpid()))
     p = psutil.Process(os.getpid())
@@ -251,6 +250,42 @@ def get_modeflow_dir_for_source(version=1):
     else:
         raise NotImplementedError('version {} has not been set up'.format(version))
     return path
+
+
+def get_base_results_dir(mode, comp):
+    """
+
+    :param mode:'forward' or 'backward'
+    :param comp: the socket host name
+    :return:
+    """
+    if mode == 'forward' and comp == 'GWATER02':
+        out = r"C:\mh_waimak_models\modpath_forward_base"
+    elif mode == 'backward' and comp == 'GWATER02':
+        out = r"C:\mh_waimak_models\modpath_reverse_base"
+    else:
+        raise ValueError('unexpected (mode, comp): ({},{}'.format(mode, comp))
+
+
+def get_forward_emulator_paths(model_ids, weak_sink=False):
+    """
+    get dictionary of forward emulator paths
+    :param model_ids: model_ids
+    :param weak_sink: Bool if True capture at weak sink
+    :return: {model_id: (emulator_path, bnd_type_path)}
+    """
+    model_ids = np.atleast_1d(model_ids)
+    forward_base = get_base_results_dir(mode='forward', comp=socket.gethostname())
+    if weak_sink:
+        sink = 'weak_sinks'
+    else:
+        sink = 'strong_sinks'
+    em_paths = [os.path.join(forward_base, sink, 'forward_data', '{}.hdf'.format(mid)) for mid in model_ids]
+    bnd_types = [os.path.join(forward_base, sink, 'forward_runs', mid,
+                              '{}_forward_bnd_type.txt'.format(mid)) for mid in model_ids]
+    out = {mid: (em, bd, npt) for mid, em, bd in zip(model_ids, em_paths, bnd_types)}
+    return out
+
 
 if __name__ == '__main__':
     # this looks good

@@ -32,6 +32,7 @@ def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     group_mapper = {key: val for key, val in zip(range(1, len(t)+1), t)}
     group_num = np.array([group_mapper[e] for e in group])
     grid_locs = list(np.atleast_2d(grid_locs))
+    assert len(grid_locs) == len(group), 'gridlocs and group must be the same length'
     grid_locs = [np.concatenate((grid, [gp, gn])) for grid, gp, gn in zip(grid_locs, group, group_num)]
     print('generating particles for {} cells'.format(len(grid_locs)))
     num_per_cel = root3_num_part ** 3
@@ -55,7 +56,7 @@ def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     return group_mapper, outdata
 
 
-def setup_run_backward_modpath(mp_ws, mp_name, cbc_file, index=None, group=None,
+def setup_run_backward_modpath(mp_ws, mp_name, cbc_file, indexes,
                                root3_num_part=1, capt_weak_s=False):
     """
     set up backward particle tracking
@@ -63,43 +64,32 @@ def setup_run_backward_modpath(mp_ws, mp_name, cbc_file, index=None, group=None,
     :param mp_name: name of the modpath simulation
     :param cbc_file: path to the cbc file (other necissary files are assumed to be in teh same folder with
                      the same naming conventions
-    :param index: a smt.layer,row,col boolean array or None (places particles in every active cell)
-    :param group: None or array of ints defining the groups for each cell. If None and an index is passed assume that
-                  Everything is in the same group, if None and an index is not passed assume that all cells are in their
-                  own group
+    :param indexes: a dictionary of smt.layer,row,col boolean arrays
     :param root3_num_part: the cubic root of the number of particles (placed evenly in the cell) e.g.
                            root3_num_part of 2 places 8 particles in each cell
     :param capt_weak_s: bool if True terminate particles at weak sources
     :return:
     """
 
-    if index is None:
-        index = smt.get_no_flow() == 1
-        if group is None:
-            raise NotImplementedError('have not set up groups for all cells')
 
-    if index is not None and group is None:
-        group = smt.get_empty_model_grid(True).astype(int)
-        group[index] = 1
-
-    assert isinstance(index, np.ndarray), 'index must be ndarray'
-    assert index.dtype == bool, 'index must be boolean'
-    assert index.shape == (smt.layers, smt.rows, smt.cols), 'index shape must be {}, not {}'.format((smt.layers,
-                                                                                                     smt.rows,
-                                                                                                     smt.cols),
-                                                                                                    index.shape)
-    assert isinstance(group, np.ndarray), 'group must be ndarray'
-    assert group.dtype == int, 'group must be int'
-    assert group.shape == (smt.layers, smt.rows, smt.cols), 'group shape must be {}, not {}'.format((smt.layers,
-                                                                                                     smt.rows,
-                                                                                                     smt.cols),
-                                                                                                    index.shape)
+    assert isinstance(indexes, dict), 'index must be dict'
+    for key, idx in indexes.items():
+        assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
+        assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d model grid'.format(key)
+        assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
 
     if not os.path.exists(mp_ws):
         os.makedirs(mp_ws)
 
-    group = group[index]
-    group_mapper, particles = particle_loc_from_grid(smt.model_where(index), group, root3_num_part)
+    grid_locs = []
+    group = []
+    for key, idx in indexes.items():
+        temp = smt.model_where(idx)
+        grid_locs.extend(temp)
+        group.extend(np.repeat(key, len(temp)))
+
+
+    group_mapper, particles = particle_loc_from_grid(grid_locs, group, root3_num_part)
     hd_file = cbc_file.replace('.cbc', '.hds')
     dis_file = cbc_file.replace('.cbc', '.dis')
     group_mapper = pd.Series(group_mapper)

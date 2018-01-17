@@ -92,8 +92,6 @@ def extract_forward_data(path):
 
     # make this output a fraction
     outdata = outdata.rename(columns={'Particle_ID': 'fraction'})
-    sums = outdata.groupby('ref_cell_id').sum()
-    outdata = outdata # this use to be made into a fraction not so much anymore
     outdata = outdata.reset_index().set_index('ref_cell_id')
 
     return outdata
