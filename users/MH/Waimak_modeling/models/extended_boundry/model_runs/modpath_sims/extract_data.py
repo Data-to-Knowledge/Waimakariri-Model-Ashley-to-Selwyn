@@ -145,7 +145,9 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
     data.reset_index(inplace=True)  # just keep all data in top active layer
     outdata = {}
     group_mapper = pd.read_csv(group_mapper_path, index_col=0, names=['key', 'val'])['val'].to_dict()
-    for g in set(data.Particle_Group):
+    print("creating maps")
+    for i,g in enumerate(set(data.Particle_Group)):
+        print('{} of {}'.format(i,len(group_mapper)))
         temp = data.loc[data.Particle_Group == g, ['Row', 'Column']]
         temp = temp.reset_index().groupby(['Row', 'Column']).count().reset_index().values
         temp_out = smt.get_empty_model_grid().astype(int)

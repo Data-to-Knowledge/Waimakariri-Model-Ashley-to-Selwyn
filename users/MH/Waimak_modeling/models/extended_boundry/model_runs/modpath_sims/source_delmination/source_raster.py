@@ -316,16 +316,19 @@ if __name__ == '__main__':
         plt.show()
 
     elif test_type == 2:
+        import pickle
         index = smt.get_empty_model_grid(True).astype(bool)
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis]
-        index1 = np.isfinite(index).repeat(11, axis=0)
         index2 = np.isfinite(index).repeat(11, axis=0)
         index2[1:, :, :] = False
-        indexes = {'layer0_chch': index2, 'all_layers_chch': index1}
+        index1 = np.full((smt.layers,smt.rows,smt.cols),False)
+        index1[6] = index
+        indexes = {'layer0_chch': index2, 'layer7_chch': index1}
         outdata = define_source_from_backward(indexes,
                                               r"C:\Users\MattH\Downloads\test_back",
                                               'test_back',
-                                              get_cbc('NsmcBase', get_modeflow_dir_for_source()))
-
+                                              get_cbc('NsmcBase', get_modeflow_dir_for_source()),
+                                              recalc=False)
+        pickle.dump(outdata,open(r"C:\Users\MattH\Downloads\testback_zones.p", 'w'))
         print('done')

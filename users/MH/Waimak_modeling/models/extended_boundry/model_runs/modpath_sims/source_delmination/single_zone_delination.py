@@ -27,8 +27,17 @@ def create_single_zone_indexs(): #todo
     create an index for all zones
     :return: {id: index}
     """
-    raise NotImplementedError
 
+    #todo the below is just a tester
+    index = smt.get_empty_model_grid(True).astype(bool)
+    index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
+        np.newaxis]
+    index2 = np.isfinite(index).repeat(11, axis=0)
+    index2[1:, :, :] = False
+    index1 = np.full((smt.layers, smt.rows, smt.cols), False)
+    index1[6] = index
+    indexes = {'layer0_chch': index2, 'layer7_chch': index1}
+    return indexes
 
 def create_zones(model_ids, outpath, root_num_part, recalc=False, recalc_backward_tracking=False):
     """
@@ -232,8 +241,7 @@ def _save_source_nc(outpath, forward_weak, forward_strong, backward_strong, back
 def _amalg_forward(data, num_parts, indexes):
     out = {}
     for name in indexes.keys():
-        temp = [e[name] / np for e, np in
-                zip(data, num_parts)]  # todo figure out nan behavior, which I don't think should be a problem
+        temp = [e[name] / np for e, np in zip(data, num_parts)]
         _add_data_variations(out, temp, name)
 
     return out
@@ -249,8 +257,7 @@ def _amalg_backward(data, root_num_part, indexes):
     """
     out = {}
     for name in indexes.keys():
-        temp = [e[name] / root_num_part ** 3 for e in
-                data]  # todo figure out nan behavior, which I don't think should be a problem
+        temp = [e[name] / root_num_part ** 3 for e in data]
         _add_data_variations(out, temp, name)
 
     return out
