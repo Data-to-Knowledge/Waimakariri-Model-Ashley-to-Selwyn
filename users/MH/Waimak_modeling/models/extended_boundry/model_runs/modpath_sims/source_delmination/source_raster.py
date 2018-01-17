@@ -218,9 +218,6 @@ def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
                                 initializer=start_process,
                                 )
     results = pool.map_async(get_cbc_mp, input_kwargs)
-    while not results.ready():
-        print('{} runs left of {}'.format(results._number_left, len(input_kwargs)))
-        sleep(60 * sleep_time)  # sleep 5 min between printing
     pool_outputs = results.get()
     pool.close()  # no more tasks
     pool.join()

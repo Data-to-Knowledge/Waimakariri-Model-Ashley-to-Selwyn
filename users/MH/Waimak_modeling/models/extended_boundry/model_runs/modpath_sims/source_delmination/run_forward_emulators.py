@@ -23,6 +23,7 @@ def run_all_forward_emulators(nsmc_nums, notes, base_results_dir, other_model_id
 
     # check all cbcs have been created
     get_all_cbcs(model_ids, modflow_dir)
+    print('starting to run particle tracking')
     if create_weak_sink_emulators:
         # 30 minutes for min part 1 max part 100
         # 45 minutes for min part 1 max part 500
@@ -51,9 +52,11 @@ if __name__ == '__main__':
                  2997, 3039, 3064, 3067, 3075, 3100, 3116, 3165, 3216, 3289, 3310,
                  3318, 3350, 3378, 3389, 3418, 3428, 3456, 3464, 3482, 3513, 3585,
                  3641, 3651, 3663, 3685, 3712, 3717, 3762, 3796, 3836, 3861, 3910] # the 165 models which passed the EMMA filter
+    nsmc_nums = [-1] # todo just for testing DADB
     notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
     base_results_dir = r"C:\mh_waimak_models\modpath_forward_base"
-    other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids
+    other_model_ids=None #todo DADB
+    #other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids #todo just for testing un debug latter
     run_all_forward_emulators(nsmc_nums, notes, base_results_dir,
                               other_model_ids=other_model_ids,
                               minparts=1, maxparts=20,
