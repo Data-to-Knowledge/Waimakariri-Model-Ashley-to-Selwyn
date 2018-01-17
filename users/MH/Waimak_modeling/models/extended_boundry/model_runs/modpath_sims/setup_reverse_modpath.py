@@ -30,7 +30,8 @@ def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     group = np.atleast_1d(group)
     t = set(group)
     group_mapper = {key: val for key, val in zip(range(1, len(t)+1), t)}
-    group_num = np.array([group_mapper[e] for e in group])
+    inverse_mapper = {val: key for key, val in zip(range(1, len(t)+1), t)}
+    group_num = np.vectorize(inverse_mapper.__getitem__)(group)
     grid_locs = list(np.atleast_2d(grid_locs))
     assert len(grid_locs) == len(group), 'gridlocs and group must be the same length'
     grid_locs = [np.concatenate((grid, [gp, gn])) for grid, gp, gn in zip(grid_locs, group, group_num)]

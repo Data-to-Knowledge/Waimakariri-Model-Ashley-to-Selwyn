@@ -113,6 +113,7 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
     :return:
     """
     # for now assume that I can hold the full thing in memory, but watch
+    print('extracting data')
     drop_names = [
         'Time_Point_Index',
         'Cumulative_Time_Step',

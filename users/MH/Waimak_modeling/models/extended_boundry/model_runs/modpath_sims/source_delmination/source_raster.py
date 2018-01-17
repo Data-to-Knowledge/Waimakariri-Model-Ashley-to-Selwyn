@@ -109,12 +109,13 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
 
     path_path = os.path.join(mp_ws, '{}.mppth'.format(mp_name))
     if not os.path.exists(path_path) or recalc:
+        print('creating and running modpath model')
         # set up and run model
         setup_run_backward_modpath(mp_ws, mp_name, cbc_file, indexes,
                                    root3_num_part=root3_num_part, capt_weak_s=capt_weak_s)
 
     mapper_path = os.path.join(mp_ws, '{}_group_mapper.csv'.format(mp_name))
-    outdata = extract_back_data(path_path, mapper_path)
+    outdata = extract_back_data(path_path, mapper_path, cbc_file.replace('.cbc', '.hds'))
     return outdata
 
 
@@ -139,7 +140,8 @@ def _run_forward_em_one_mp(kwargs):
             # delete large files to save memory
             for end in ['.mpend', '.mppth', '.loc', '.mpbas']:  # all others are either needed or really tiny
                 os.remove(os.path.join(mp_ws, '{}{}'.format(mp_name, end)))
-        success = 'converge' if modpath_converged(os.path.join(mp_ws, '{}.mplst'.format(mp_name))) else 'did not converge'
+        success = 'converge' if modpath_converged(
+            os.path.join(mp_ws, '{}.mplst'.format(mp_name))) else 'did not converge'
     except Exception as val:
         mp_name = '{}_forward'.format(model_id)
         success = format_exc().replace('\n', '')
@@ -267,6 +269,7 @@ def get_base_results_dir(mode, comp):
         raise ValueError('unexpected (mode, comp): ({},{}'.format(mode, comp))
     return out
 
+
 def get_forward_emulator_paths(model_ids, weak_sink=False):
     """
     get dictionary of forward emulator paths
@@ -294,14 +297,35 @@ if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.cwms_index import \
         get_zone_array_index
 
-    temp_index = smt.shape_file_to_model_array(r"C:\Users\MattH\Downloads\test_area.shp", 'Id', True)
-    index = smt.get_empty_model_grid(True).astype(bool)
-    index[1] = np.isfinite(temp_index)
-    index = smt.get_empty_model_grid(True).astype(bool)
-    index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[np.newaxis].repeat(11,axis=0)
-    index = np.isfinite(index).astype(int)
-    bd_type = np.loadtxt(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
-    outdata = define_source_from_forward(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type, index.astype(int))
-    outdata[1][outdata[1]==0] = np.nan
-    smt.plt_matrix(np.log10(outdata[1]), base_map=True)
-    plt.show()
+    test_type = 2
+    if test_type == 1:
+        temp_index = smt.shape_file_to_model_array(r"C:\Users\MattH\Downloads\test_area.shp", 'Id', True)
+        index = smt.get_empty_model_grid(True).astype(bool)
+        index[1] = np.isfinite(temp_index)
+        index = smt.get_empty_model_grid(True).astype(bool)
+        index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
+            np.newaxis].repeat(11, axis=0)
+        index = np.isfinite(index).astype(int)
+        bd_type = np.loadtxt(
+            r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
+        outdata = define_source_from_forward(
+            r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type,
+            index.astype(int))
+        outdata[1][outdata[1] == 0] = np.nan
+        smt.plt_matrix(np.log10(outdata[1]), base_map=True)
+        plt.show()
+
+    elif test_type == 2:
+        index = smt.get_empty_model_grid(True).astype(bool)
+        index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
+            np.newaxis]
+        index1 = np.isfinite(index).repeat(11, axis=0)
+        index2 = np.isfinite(index).repeat(11, axis=0)
+        index2[1:, :, :] = False
+        indexes = {'layer0_chch': index2, 'all_layers_chch': index1}
+        outdata = define_source_from_backward(indexes,
+                                              r"C:\Users\MattH\Downloads\test_back",
+                                              'test_back',
+                                              get_cbc('NsmcBase', get_modeflow_dir_for_source()))
+
+        print('done')
