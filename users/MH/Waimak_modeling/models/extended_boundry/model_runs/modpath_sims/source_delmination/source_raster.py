@@ -265,7 +265,7 @@ def get_base_results_dir(mode, comp):
         out = r"C:\mh_waimak_models\modpath_reverse_base"
     else:
         raise ValueError('unexpected (mode, comp): ({},{}'.format(mode, comp))
-
+    return out
 
 def get_forward_emulator_paths(model_ids, weak_sink=False):
     """
