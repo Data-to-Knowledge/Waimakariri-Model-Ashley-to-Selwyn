@@ -7,9 +7,12 @@ Created on Mon Sep 04 14:09:36 2017
 
 from core.classes.hydro import hydro, all_mtypes
 import calendar
+from pandas import DateOffset
+from numpy import logical_and
 
 
 site = 64304 #site number
+qual_codes = [10, 18, 20, 30, 50]
 
 fr_flow = 0.7 #full restriction flow
 pr_flow = 0.910 #partial restirction flow
@@ -36,32 +39,25 @@ for i in range(gap_number): #for each gap in the record
     df2.loc[logical_and(df2.index > gaps.start_gap[i], df2.index <= gaps.end_gap[i]), [site]] = last_flow
     #set the flow value during a gap to the value for the final day before the gap starts
 
-df2['full restriction'] = 0 #create a new column and set all values in it to 0
-df2['full restriction'][df2[site] < fr_flow] = 1 #Set column to 1 where flow is less than full restriction threshold
+df2['Full'] = 0 #create a new column and set all values in it to 0
+df2['Full'][df2[site] < fr_flow] = 1 #Set column to 1 where flow is less than full restriction threshold
 
 condition = logical_and(df2[site] < pr_flow, df2[site] >= fr_flow) #find dates where flow is between full and partial restriction threshold
 
-df2['partial restriction'] = 0
-df2['partial restriction'][condition] = 1
+df2['Partial'] = 0
+df2['Partial'][condition] = 1
 
 df3 = df2[df2.index.month.isin([9,10,11,12,1,2,3,4])] #new dataframe containing only months in the irrigation season (September - April)
 
-#df3['Month'] = df3.index.month
-#df3['Month'] = df3['Month'].apply(lambda x: calendar.month_abbr[x])
+Days_on_restriction = df3.groupby([df3.index.year, df3.index.month])['Full', 'Partial'].sum() #Count the number of days in each month of each year on full and partial restriction
 
-Days_on_restriction = df3.groupby([df3.index.year, df3.index.month])['full restriction', 'partial restriction'].sum()
+Days_on_restriction1 = Days_on_restriction.unstack() #reformat to table
 
-Days_on_restriction1 = Days_on_restriction.unstack()
+Days_on_restriction1.rename(columns = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'},  inplace=True) #Change column headers to month names
 
-Days_on_restriction1.rename(columns = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'},  inplace=True)
-
-Days_on_restriction1.index.names = ['year']
-Days_on_restriction1.columns.names[1] = ['month']
+Days_on_restriction1.index.names = ['Year'] #rename row index
+Days_on_restriction1.columns.names = ['Restriction Level', 'Month'] #rename column index
 
 export_csv = r'S:\Surface Water\temp\ConwaySH1_Days_on_restriction.csv'
-Days_on_restriction.to_csv(path_or_buf=export_csv)
+Days_on_restriction1.to_csv(path_or_buf=export_csv)
 
-Days_in_season = df3.groupby([df3.index.year, df3.index.month])[64304].count()
-
-
-df1.l
