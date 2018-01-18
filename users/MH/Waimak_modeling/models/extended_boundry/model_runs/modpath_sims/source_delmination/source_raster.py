@@ -29,7 +29,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     modpath_converged
 
 
-def define_source_from_forward(emulator_path, bd_type, indexes):
+def define_source_from_forward(emulator_path, bd_type_path, indexes):
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
@@ -39,11 +39,13 @@ def define_source_from_forward(emulator_path, bd_type, indexes):
     :return: dictionary of arrays of shape (smt.layers, rows, cols) with a particle count from source
     """
     # run some checks on inputs
+    bd_type = np.loadtxt(bd_type_path).astype(int)
     assert isinstance(indexes, dict), 'indexes must be a dictionary'
     for key, idx in indexes.items():
         assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
         assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
         assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
+
 
     # load emulator and initialize outdata
     print('loading emulator')
@@ -127,7 +129,7 @@ def _run_forward_em_one_mp(kwargs):
         assert np.in1d(needed_keys, kwargs.keys()).all(), 'missing keys {}'.format(
             set(needed_keys) - set(kwargs.keys()))
         mp_ws = os.path.join(kwargs['mp_runs_dir'], model_id)
-        outpath = os.path.join(kwargs['emulator_dir'], model_id)
+        outpath = os.path.join(kwargs['emulator_dir'], model_id + '.hdf')
         mp_name = '{}_forward'.format(model_id)
         cbc_path = get_cbc(model_id, kwargs['modflow_dir'])
         setup_run_forward_modpath(cbc_path, mp_ws, mp_name,
@@ -286,7 +288,7 @@ def get_forward_emulator_paths(model_ids, weak_sink=False):
     em_paths = [os.path.join(forward_base, sink, 'forward_data', '{}.hdf'.format(mid)) for mid in model_ids]
     bnd_types = [os.path.join(forward_base, sink, 'forward_runs', mid,
                               '{}_forward_bnd_type.txt'.format(mid)) for mid in model_ids]
-    out = {mid: (em, bd, npt) for mid, em, bd in zip(model_ids, em_paths, bnd_types)}
+    out = {mid: (em, bd) for mid, em, bd in zip(model_ids, em_paths, bnd_types)}
     return out
 
 
@@ -306,8 +308,7 @@ if __name__ == '__main__':
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis].repeat(11, axis=0)
         index = np.isfinite(index).astype(int)
-        bd_type = np.loadtxt(
-            r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
+        bd_type =(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
         outdata = define_source_from_forward(
             r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type,
             index.astype(int))
