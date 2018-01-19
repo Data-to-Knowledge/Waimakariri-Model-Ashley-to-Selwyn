@@ -124,10 +124,13 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
         'Grid',
         'Local_X',
         'Local_Y',
-        'Local_Z',
         'Line_Segment_Index',
     ]
     print('reading data')
+
+    # set the local grid maximum so that particles are only counted if they are in the top (1-local_z_max)
+    # percent of the cell
+    local_z_max = 0.8 #todo this may need to iterativly change
 
     data = open_path_file_as_df(path_path)
     print('simplifying data')
@@ -148,7 +151,7 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
     print("creating maps")
     for i,g in enumerate(set(data.Particle_Group)):
         print('{} of {}'.format(i,len(group_mapper)))
-        temp = data.loc[data.Particle_Group == g, ['Row', 'Column']]
+        temp = data.loc[(data.Particle_Group == g) & (data.Local_Z >= local_z_max), ['Row', 'Column']]
         temp = temp.reset_index().groupby(['Row', 'Column']).count().reset_index().values
         temp_out = smt.get_empty_model_grid().astype(int)
         temp_out[temp[:, 0], temp[:, 1]] = temp[:, 2]

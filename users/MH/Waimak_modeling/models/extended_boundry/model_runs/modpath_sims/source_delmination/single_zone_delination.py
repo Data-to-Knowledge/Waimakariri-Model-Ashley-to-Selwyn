@@ -12,7 +12,6 @@ import os
 import socket
 import sys
 import datetime
-import traceback
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.source_delmination.source_raster import \
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
@@ -379,9 +378,10 @@ def _pack_bits(data, model_ids, sfr_ids):
     return outdata
 
 
-def _get_data_for_zones(model_ids, indexes, root_num_part, recalc_backward_tracking):
+def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_backward_tracking):
     """
     get and amalgamate up the data for the zone delination
+    :param run_name: the name to call this run of backward models (to prevent overwrite)
     :param model_ids: list of model ids
     :param indexes: dictionary of boolean arrays for the targets
     :param root_num_part: the cubic root of the number of particles to release in each backward modpath cell
@@ -389,7 +389,7 @@ def _get_data_for_zones(model_ids, indexes, root_num_part, recalc_backward_track
     :return: amalg_weak_forward, amalg_strong_forward, amalg_strong_back, amalg_weak_back, forward_strongs_num_parts
     """
     modflow_dir = get_modeflow_dir_for_source()
-    backward_dir = get_base_results_dir('backward', socket.gethostname())
+    backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()),run_name)
 
     cust_data = get_cust_mapping(model_ids)
 
@@ -522,6 +522,7 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
 
 # todo make a wrapper function to run a set of model ids and also to save the netcdfs for Ashopt another script perhaps
 
+#todo debug the cust stuff
 
 if __name__ == '__main__':
     idxs = create_single_zone_indexs()
