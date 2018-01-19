@@ -192,7 +192,8 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     t = time()
     # multiprocess the running of things
     outputs = []
-    for kwarg in input_kwargs:
+    for i, kwarg in enumerate(input_kwargs):
+        print('starting {} of {}'.format(i+1,len(input_kwargs)))
         outputs.append(_run_forward_em_one_mp(kwarg))
     now = datetime.datetime.now()
     with open(
