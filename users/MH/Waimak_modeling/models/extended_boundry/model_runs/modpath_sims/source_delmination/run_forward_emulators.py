@@ -57,7 +57,7 @@ if __name__ == '__main__':
     notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
     other_model_ids = None  # could add a list of other model ids
     base_results_dir = get_base_results_dir('forward', socket.gethostname())
-    other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']  # could add a list of other model ids #todo just for testing un debug latter
+    other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']
     run_all_forward_emulators(nsmc_nums, notes, base_results_dir,
                               other_model_ids=other_model_ids,
                               minparts=1, maxparts=20,
