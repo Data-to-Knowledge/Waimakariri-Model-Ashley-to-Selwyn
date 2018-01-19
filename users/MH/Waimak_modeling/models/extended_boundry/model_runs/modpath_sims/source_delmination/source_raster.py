@@ -29,7 +29,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     modpath_converged
 
 
-def define_source_from_forward(emulator_path, bd_type_path, indexes):
+def define_source_from_forward(emulator_path, bd_type_path, indexes): #todo make bool or packed bool
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
@@ -90,7 +90,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes):
     return all_outdata
 
 
-def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False):
+def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False): #todo make option to make boolean or packed bool
     """
     define the source area for an integer index
     :param indexes: a dictionary of boolean arrays
