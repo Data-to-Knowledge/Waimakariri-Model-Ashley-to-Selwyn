@@ -23,6 +23,8 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_samp_points_df, _get_sw_samp_pts_dict
 from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+    get_stocastic_set
 
 
 def create_single_zone_indexs():
@@ -62,7 +64,8 @@ def get_cust_indexes():
     indexes is a dictionary for each sfr_id with the cell flagged to True
     :return: sfr_id_array, indexes  sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     """
-    base_data = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid', True)
+    base_data = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid',
+                                              True)
     indexes = {}
     for rid in set(base_data[np.isfinite(base_data)]):
         temp = smt.get_empty_model_grid(True).astype(bool)
@@ -569,7 +572,21 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
     out['{}_number_cust'.format(name)] = np.sum(bool_array_wcust, axis=0).astype(np.uint8)
 
 
-# todo make a wrapper function to run a set of model ids and also to save the netcdfs for Ashopt another script perhaps
+def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
+    indexes = create_single_zone_indexs()
+    base_outdir = r"C:\mh_waimak_models\single_source_zones"
+    print('running for AshOpt')
+    create_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
+                 outdir=os.path.join(base_outdir, 'AshOpt'), root_num_part=3,
+                 indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+
+    print('running for 165 models')
+    stocastic_model_ids = get_stocastic_set()
+    create_zones(model_ids=stocastic_model_ids,
+                 run_name='stocastic_set_private_wells',
+                 outdir=os.path.join(base_outdir, 'stocastic set'), root_num_part=3,
+                 indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+
 
 # todo debug the cust stuff
 

@@ -21,10 +21,10 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.so
     get_cbc, get_forward_emulator_paths
 from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+    get_stocastic_set
 
 
-# run single source delination as planned this can pull from single_zone_delineation pretty quickly
-# then amalgamate the number catagory based on groups and add to the netcdf, perhaps could use one or more weightings
 # todo debug this whole thing
 
 def create_private_wells_indexes():
@@ -43,8 +43,52 @@ def create_private_wells_indexes():
 
     return indexes
 
-def create_amalgimated_source_protection_zones():  # todo
-    raise NotImplementedError
+
+def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, recalc=False,
+                                               recalc_backward_tracking=False):
+    indexes = create_private_wells_indexes()
+    private_wells = pd.read_csv(
+        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones.csv",
+        index_col=0)
+    root_num_part = 3
+    single_site_data = create_zones(model_ids, run_name, outdir, root_num_part, indexes,
+                                    recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+
+    # the amalgimation must begin
+    for key in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+        data = single_site_data[key]
+        outdata = {}
+        for site in set(private_wells.Zone1):
+            any_array = smt.get_empty_model_grid().astype(int)
+            all_array = smt.get_empty_model_grid().astype(int)
+            number_array = smt.get_empty_model_grid().astype(int)
+            any_array_cust = smt.get_empty_model_grid().astype(int)
+            all_array_cust = smt.get_empty_model_grid().astype(int)
+            number_array_cust = smt.get_empty_model_grid().astype(int)
+            well_nums = private_wells.loc[private_wells.Zone1 == site].index
+            for well in well_nums:
+                temp_all = np.array(
+                    data.variables['{}_all'.format(well)])  # todo what happens with no values? good question I think I fixed it
+                temp_all_cust = np.array(data.variables['{}_all_cust'.format(well)])
+                temp_number = np.array(data.variables['{}_number'.format(well)])
+                temp_number_cust = np.array(data.variables['{}_number_cust'.format(well)])
+
+                number_array += temp_number
+                number_array_cust += temp_number_cust
+
+                any_array += temp_number > 0
+                any_array_cust += temp_number_cust > 0
+
+                all_array += temp_all
+                all_array_cust += temp_all_cust
+            outdata['{}_all'] = all_array
+            outdata['{}_all_cust'] = all_array_cust
+            outdata['{}_any'] = any_array
+            outdata['{}_any_cust'] = any_array_cust
+            outdata['{}_number'] = number_array
+            outdata['{}_number_cust'] = number_array_cust
+
+        save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part)
 
 
 def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
@@ -171,6 +215,7 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part):
 
     outpath = os.path.join(outdir, name + '.nc')
     outfile = nc.Dataset(outpath, 'w')
+    outfile.set_fill_off()
 
     x, y = smt.get_model_x_y(False)
 
@@ -189,28 +234,23 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part):
                     'false_northing': 10000000,
                     })
 
-    lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+    lat = outfile.createVariable('latitude', 'f8', ('latitude',))
     lat.setncatts({'units': 'NZTM',
                    'long_name': 'latitude',
-                   'missing_value': np.nan,
                    'standard_name': 'projection_y_coordinate'})
     lat[:] = y
 
-    lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+    lon = outfile.createVariable('longitude', 'f8', ('longitude',))
     lon.setncatts({'units': 'NZTM',
                    'long_name': 'longitude',
-                   'missing_value': np.nan,
                    'standard_name': 'projection_x_coordinate'})
     lon[:] = x
 
     # location add the data
     for site in eval(name).keys():
-        temp_var = outfile.createVariable(site, 'u1',
-                                          ('latitude', 'longitude'),
-                                          fill_value=0)
+        temp_var = outfile.createVariable(site, 'u1', ('latitude', 'longitude'))
         temp_var.setncatts({'units': 'bool or number of realisations',
                             'long_name': site,
-                            'missing_value': 0,
                             'comments': 'number of particles from a given cell'})
 
         t = eval(name)[site].astype(np.uint8)
@@ -299,3 +339,17 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
 
     out['{}_all_cust'.format(name)] = np.all(bool_array_wcust, axis=0).astype(np.uint8)
     out['{}_number_cust'.format(name)] = np.sum(bool_array_wcust, axis=0).astype(np.uint8)
+
+
+def run_multiple_source_zones(recalc=False, recalc_backward_tracking=False):
+    base_outdir = r"C:\mh_waimak_models\private_domestic_supply"
+    print('running for AshOpt')
+    create_amalgimated_source_protection_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
+                                               outdir=os.path.join(base_outdir, 'AshOpt'),
+                                               recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+    print('running for 165 models')
+    stocastic_model_ids = get_stocastic_set()
+    create_amalgimated_source_protection_zones(model_ids=stocastic_model_ids,
+                                               run_name='stocastic_set_private_wells',
+                                               outdir=os.path.join(base_outdir, 'stocastic set'),
+                                               recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
