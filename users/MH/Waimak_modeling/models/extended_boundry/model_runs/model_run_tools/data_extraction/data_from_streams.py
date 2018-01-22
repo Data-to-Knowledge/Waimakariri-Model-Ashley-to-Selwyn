@@ -251,6 +251,15 @@ def get_samp_points_df(recalc=False):
                      'bc_type': 'sfr',
                      'm_type': 'comp',
                      'comps': None},
+
+        'drn_source':{'path': "{}/m_ex_bd_inputs/raw_sw_samp_points/drn/particle_tracking/*.shp".format(smt.sdp),
+                     'bc_type': 'drn',
+                     'm_type': 'source',
+                     'comps': None},
+        'sfr_source':{'path': "{}/m_ex_bd_inputs/raw_sw_samp_points/sfr/particle_tracking/*.shp".format(smt.sdp),
+                     'bc_type': 'sfr',
+                     'm_type': 'source',
+                     'comps': None},
     }
 
 
@@ -330,6 +339,7 @@ def _make_swaz_drn_points():
 if __name__ == '__main__':
     # tests
     test = get_samp_points_df(True)
+    test.to_csv(r"C:\Users\MattH\Downloads\current_str_sites.csv")
     print('recalculated samp_df')
     raise
     test2 = _get_sw_samp_pts_dict()

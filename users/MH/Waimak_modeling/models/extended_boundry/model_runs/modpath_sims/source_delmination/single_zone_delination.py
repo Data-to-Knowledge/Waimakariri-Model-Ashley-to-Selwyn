@@ -12,10 +12,17 @@ import os
 import socket
 import sys
 import datetime
+import flopy
+import pandas as pd
+from copy import deepcopy
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.source_delmination.source_raster import \
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
     get_cbc, get_forward_emulator_paths
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.data_extraction.data_from_streams import \
+    get_samp_points_df, _get_sw_samp_pts_dict
+from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+    get_all_well_row_col
 
 
 def create_single_zone_indexs():
@@ -23,41 +30,61 @@ def create_single_zone_indexs():
     create an indexs for all zones for the stream and WDC wells
     :return: {id: index}
     """
+    indexes = {}
+    # streams
+    str_data = get_samp_points_df()
+    str_data = str_data.loc[str_data.m_type == 'source']
+    str_dict = _get_sw_samp_pts_dict()
+    for idx in str_data.index:
+        temp_out = smt.get_empty_model_grid(True)
+        temp_out[0] = str_dict[idx]
+        indexes[idx] = temp_out
 
-    # todo the below is just a tester still need to define
-    index = smt.get_empty_model_grid(True).astype(bool)
-    index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
-        np.newaxis]
-    index2 = np.isfinite(index).repeat(11, axis=0)
-    index2[1:, :, :] = False
-    index1 = np.full((smt.layers, smt.rows, smt.cols), False)
-    index1[6] = np.isfinite(index[0])
-    indexes = {'layer0_chch': index2, 'layer7_chch': index1}
+    # WDC water supply wells (groups of individual wells)
+    wdc_wells = pd.read_csv(
+        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv")
+    all_wells = get_all_well_row_col()
+
+    for z in set(wdc_wells.Zone):
+        temp_out = smt.get_empty_model_grid(True).astype(bool)
+        temp_wells = wdc_wells.loc[wdc_wells.Zone == z, 'WELL_NO']
+        layer, row, col = all_wells.loc[temp_wells, ['layer', 'row', 'col']].values.astype(int).transpose()
+        temp_out[layer, row, col] = True
+        indexes['{}_well'.format(z.replace(' ', '_'))] = temp_out
+
     return indexes
 
 
-def get_cust_indexes():  # todo
+def get_cust_indexes():  # todo debug
     """
     get the input indexes for the cust river
     sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     indexes is a dictionary for each sfr_id with the cell flagged to True
     :return: sfr_id_array, indexes  sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     """
-    raise NotImplementedError
+    base_data = smt.shape_file_to_model_array('{}/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid', True)
+    indexes = {}
+    for rid in set(base_data[np.isfinite(base_data)]):
+        temp = smt.get_empty_model_grid(True).astype(bool)
+        temp[0] = np.isclose(base_data, rid)
+        indexes[rid] = temp
+
+    return indexes
 
 
 def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
     """
     set up something to make a dictionary of mappers and return out put, make it save and/or load it so that I don't
     need to keep re-calculating results as netcdf (with geocoding) do both strong/weak forward/backward
-    outdata is a dictionary of dictionaries {strong_back: {model_id: packed 3d array}}
+    outdata is a dictionary of dictionaries {strong_back: {model_id: packed 3d array}} 3rd dimension is SFR reaches
+    losing is a dicionary {model_id: , int8 array) 1 is losing 0 is neither, -1 is gaining
     to pack and unpack bits: see:
     https://stackoverflow.com/questions/5602155/numpy-boolean-array-with-1-bit-entries
 
     :param model_ids: the model ids to create this for
     :param recalc: bool if True recalc the netcdf
     :param recalc_backward_tracking: bool if True rerun the backward modpath, if flagged true then recalc set to True
-    :return outdata, sfr_id_array, unpacked_size, unpacked_shape
+    :return outdata, sfr_id_array, unpacked_size, unpacked_shape, losing
     """
 
     sfr_id_array, indexes = get_cust_indexes()
@@ -82,7 +109,12 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
             temp2 = {np.array(temp.variables[e]) for e in
                      set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array'}}
             outdata[name] = temp2
-        return outdata, sfr_id_array, unpacked_size, unpacked_shape
+        temp_losing = temp.variables['losing'][:]
+        temp_models = temp.variables['model_id'][:]
+        losing = {}
+        for mid, a in zip(temp_models, temp_losing):
+            losing[mid] = a
+        return outdata, sfr_id_array, unpacked_size, unpacked_shape, losing
 
     # forward weak
     print('calculating forward weak')
@@ -128,12 +160,23 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
         back_strongs.append(temp)
     back_strongs = _pack_bits(back_strongs, model_ids, sfr_ids)
 
+    losing = {}
+    for mid in model_ids:
+        temp = smt.get_empty_model_grid().astype(np.int8)
+        cbc_path = get_cbc(mid, modflow_dir)
+        data = flopy.utils.CellBudgetFile(cbc_path).get_data(kstpkper=(0, 0), text='Stream Leakage', full3D=True)[0][
+            0].filled(0)
+        limit = 0
+        temp[data < -1 * limit] = -1
+        temp[data > limit] = 1
+        losing[mid] = [temp]
+
     # save the data
     print('joining the data')
     outdata = _save_cust_nc(outdir, forward_weaks, forward_strongs, back_strongs, back_weaks, model_ids,
-                            root_num_part, sfr_id_array, unpacked_size, unpacked_shape)
+                            root_num_part, sfr_id_array, unpacked_size, unpacked_shape, losing)
 
-    return outdata, sfr_id_array, unpacked_size, unpacked_shape
+    return outdata, sfr_id_array, unpacked_size, unpacked_shape, losing
 
 
 def create_zones(model_ids, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
@@ -176,15 +219,6 @@ def create_zones(model_ids, outdir, root_num_part, indexes, recalc=False, recalc
                              forward_part_nums=forward_strongs_num_parts)
 
     return outdata
-
-
-def plot_sources():  # todo play in arc first
-    """
-    take the output of create zones and plot it up
-    :return:
-    """
-
-    raise NotImplementedError
 
 
 def save_source_nc(outdir, forward_weak, forward_strong, backward_strong, backward_weak, model_ids, root_num_part,
@@ -271,7 +305,7 @@ def save_source_nc(outdir, forward_weak, forward_strong, backward_strong, backwa
 
 
 def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backward_weak, model_ids, root_num_part,
-                  sfr_ids_array, unpacked_size, unpacked_shape):
+                  sfr_ids_array, unpacked_size, unpacked_shape, losing):
     """
     save the cust id  as a netcdf file
     dimensions for data(direction, source behavior, amalg_type, row, col) variables of location ids
@@ -286,6 +320,7 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
     :param sfr_ids_array: an array identifing the sfr ids
     :param unpacked_size: the unpacked size of the packed 3d array
     :param unpacked_shape:  the unpacked shape of the packed 3d array (sfr_ids, rows, cols)
+    :param losing: {model_id: boolean 2d array for gaining and/or losing reach} True is losing
     :return: the packed data {strong_back: {model_id: packed 3d array}}
     """
     # some assertions
@@ -303,8 +338,12 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
         outfile.createDimension('latitude', len(y))
         outfile.createDimension('longitude', len(x))
         outfile.createDimension('packed_dim')
+        outfile.createDimension('model_id')
 
         # create variables
+
+        mid = outfile.createVariable('latitude', str, ('model_id',))
+        mid[:] = model_ids
 
         lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
         lat.setncatts({'units': 'NZTM',
@@ -326,6 +365,14 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
                               'missing_value': -1,
                               })
         cust_array[:] = sfr_ids_array
+
+        losing_array = np.concatenate([losing[e][np.newaxis] for e in model_ids])
+        los = outfile.createVariable('losing', int, ('model_id', 'latitude', 'longitude'), fill_value=0)
+        los.setncatts({'units': 'None',
+                       'long_name': 'losing/gaining reaches -1 gaining, 1 is losing, 0 is neither/nodata',
+                       'missing_value': 0,
+                       })
+        los[:] = losing_array
 
         # location add the data
         for mid in eval(name).keys():
@@ -389,7 +436,7 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     :return: amalg_weak_forward, amalg_strong_forward, amalg_strong_back, amalg_weak_back, forward_strongs_num_parts
     """
     modflow_dir = get_modeflow_dir_for_source()
-    backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()),run_name)
+    backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), run_name)
 
     cust_data = get_cust_mapping(model_ids)
 
@@ -496,19 +543,23 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
     :param run_name: one of ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']
     :return:
     """
-    sfr_data, sfr_id_array, unpacked_size, unpacked_shape = sfr_data
+
+    sfr_data, sfr_id_array, unpacked_size, unpacked_shape, losing = sfr_data
     bool_array = [e > 0 for e in org_arrays]
     out['{}_all'.format(name)] = np.all(bool_array, axis=0).astype(np.uint8)
     out['{}_number'.format(name)] = np.sum(bool_array, axis=0).astype(np.uint8)
 
     # add upstream cust influance
-    bool_array_wcust = []  # todo
+    bool_array_wcust = []
     for mid, temp_bool_array in zip(model_ids, bool_array):
-        if not (sfr_id_array[temp_bool_array] >= 0).any():
+        temp_sfr_id_array = deepcopy(sfr_id_array)
+        temp_sfr_id_array[losing[mid] <= 0] = -1
+
+        if not (temp_sfr_id_array[temp_bool_array] >= 0).any():
             bool_array_wcust.append(temp_bool_array)
             continue
 
-        temp_ids = np.array(set(sfr_id_array[temp_bool_array]) - {-1})
+        temp_ids = np.array(set(temp_sfr_id_array[temp_bool_array]) - {-1})
         # get and unpack the array
         temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
         temp = temp[:temp_ids.max() + 1].sum()
@@ -522,9 +573,9 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
 
 # todo make a wrapper function to run a set of model ids and also to save the netcdfs for Ashopt another script perhaps
 
-#todo debug the cust stuff
+# todo debug the cust stuff
 
 if __name__ == '__main__':
     idxs = create_single_zone_indexs()
-    create_zones(model_ids=['NsmcBase', 'AshOpt'], outdir=r"C:\Users\matth\Downloads\test_zone_delin",
-                 root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)
+    # create_zones(model_ids=['NsmcBase', 'AshOpt'], outdir=r"C:\Users\matth\Downloads\test_zone_delin",
+    #             root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)
