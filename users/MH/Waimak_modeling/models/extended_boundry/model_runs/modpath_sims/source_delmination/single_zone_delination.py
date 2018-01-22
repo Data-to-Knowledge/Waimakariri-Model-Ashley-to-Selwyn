@@ -55,14 +55,14 @@ def create_single_zone_indexs():
     return indexes
 
 
-def get_cust_indexes():  # todo debug
+def get_cust_indexes():
     """
     get the input indexes for the cust river
     sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     indexes is a dictionary for each sfr_id with the cell flagged to True
     :return: sfr_id_array, indexes  sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     """
-    base_data = smt.shape_file_to_model_array('{}/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid', True)
+    base_data = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid', True)
     indexes = {}
     for rid in set(base_data[np.isfinite(base_data)]):
         temp = smt.get_empty_model_grid(True).astype(bool)
@@ -179,7 +179,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
     return outdata, sfr_id_array, unpacked_size, unpacked_shape, losing
 
 
-def create_zones(model_ids, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
+def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
     """
     create the zones, load data from pre-run forward models and run and extract the data for backward models
     then amalgamate the data up into useful fashions, also sort out the cust particle tracking problem
@@ -204,7 +204,7 @@ def create_zones(model_ids, outdir, root_num_part, indexes, recalc=False, recalc
         return outdata
 
     amalg_weak_forward, amalg_strong_forward, amalg_strong_back, \
-    amalg_weak_back, forward_strongs_num_parts = _get_data_for_zones(model_ids, indexes,
+    amalg_weak_back, forward_strongs_num_parts = _get_data_for_zones(run_name, model_ids, indexes,
                                                                      root_num_part, recalc_backward_tracking)
 
     # save the data
@@ -500,7 +500,6 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
 def _amalg_forward(data, indexes, sfr_data, model_ids, run_name):
     """
     :param data: the list of dictionaries for the data
-    :param root_num_part: the root number of particles generated
     :param indexes: the indexes going forward
     :param model_ids: the list of model ids in teh same order as data
     :param run_name: one of ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']
@@ -518,7 +517,6 @@ def _amalg_backward(data, indexes, sfr_data, model_ids, run_name):
     """
 
     :param data: the list of dictionaries for the data
-    :param root_num_part: the root number of particles generated
     :param indexes: the indexes going forward
     :param model_ids: the list of model ids in teh same order as data
     :param run_name: one of ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']
@@ -576,6 +574,7 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
 # todo debug the cust stuff
 
 if __name__ == '__main__':
-    idxs = create_single_zone_indexs()
+    idxs = get_cust_indexes()
+    print('done')
     # create_zones(model_ids=['NsmcBase', 'AshOpt'], outdir=r"C:\Users\matth\Downloads\test_zone_delin",
     #             root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)

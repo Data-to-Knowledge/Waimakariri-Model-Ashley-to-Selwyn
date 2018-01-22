@@ -29,13 +29,14 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     modpath_converged
 
 
-def define_source_from_forward(emulator_path, bd_type_path, indexes): #todo make bool or packed bool
+def define_source_from_forward(emulator_path, bd_type_path, indexes, return_packed_bits=False):
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
     :param bd_type: the boundary type assement from defineing particles, should be saved with the model run as a text
                     array.
     :param index: a dictionary of boolean arrays of areas of interest False delneates no interest
+    :param return_packed_bits: bool if True return a boolean array as a packed bits array
     :return: dictionary of arrays of shape (smt.layers, rows, cols) with a particle count from source
     """
     # run some checks on inputs
@@ -85,12 +86,15 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes): #todo make
         temp_array[temp.index.values - 1] = temp.fraction.values
         outdata[idx] = temp_array
         outdata = outdata.reshape((smt.rows, smt.cols))
+        if return_packed_bits:
+            outdata = np.packbits(outdata > 0)
         all_outdata[g] = outdata
 
     return all_outdata
 
 
-def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False): #todo make option to make boolean or packed bool
+def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False,
+                                return_packed_bits=False):
     """
     define the source area for an integer index
     :param indexes: a dictionary of boolean arrays
@@ -101,6 +105,7 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
                            root3_num_part of 2 places 8 particles in each cell
     :param capt_weak_s: bool if True terminate particles at weak sources
     :param recalc: bool if True rerun the model even if it exists
+    :param return_packed_bits: bool if True retun the data as packed boolean arrays
     :return:
     """
     assert isinstance(indexes, dict), 'indexes must be a dictionary'
@@ -117,7 +122,8 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
                                    root3_num_part=root3_num_part, capt_weak_s=capt_weak_s)
 
     mapper_path = os.path.join(mp_ws, '{}_group_mapper.csv'.format(mp_name))
-    outdata = extract_back_data(path_path, mapper_path, cbc_file.replace('.cbc', '.hds'))
+    outdata = extract_back_data(path_path, mapper_path, cbc_file.replace('.cbc', '.hds'),
+                                return_packed_bits=return_packed_bits)
     return outdata
 
 

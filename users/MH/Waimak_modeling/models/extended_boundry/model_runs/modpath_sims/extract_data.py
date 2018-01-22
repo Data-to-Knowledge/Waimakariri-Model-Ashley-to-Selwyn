@@ -104,12 +104,13 @@ def save_forward_data(path, outpath):
     data.to_hdf(outpath, 'emulator', mode='w')
 
 
-def extract_back_data(path_path, group_mapper_path, hds_path):
+def extract_back_data(path_path, group_mapper_path, hds_path, return_packed_bits=False):
     """
 
     :param path_path: the pathline file
     :param group_mapper_path: the file to the group mapper produced in set_up_reverse_modpath
     :param hds_path: path to the simulation heads file
+    :param return_packed_bits: bool if True return the array as a boolean array and packedbits
     :return:
     """
     # for now assume that I can hold the full thing in memory, but watch
@@ -130,7 +131,7 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
 
     # set the local grid maximum so that particles are only counted if they are in the top (1-local_z_max)
     # percent of the cell
-    local_z_max = 0.8 #todo this may need to iterativly change
+    local_z_max = 0.8 #todo this may need to iterativly change scott is critical
 
     data = open_path_file_as_df(path_path)
     print('simplifying data')
@@ -155,6 +156,8 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
         temp = temp.reset_index().groupby(['Row', 'Column']).count().reset_index().values
         temp_out = smt.get_empty_model_grid().astype(int)
         temp_out[temp[:, 0], temp[:, 1]] = temp[:, 2]
+        if return_packed_bits:
+            temp_out = np.packbits(temp_out>0)
         outdata[group_mapper[g]] = temp_out
 
     return outdata
