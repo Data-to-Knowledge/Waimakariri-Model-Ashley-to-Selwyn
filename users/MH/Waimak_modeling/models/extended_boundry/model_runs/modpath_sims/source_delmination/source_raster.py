@@ -45,7 +45,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
     for key, idx in indexes.items():
         assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
         assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
-        assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
+        assert idx.dtype == bool, 'index for {} must be some sort of boolean array'.format(key)
 
 
     # load emulator and initialize outdata
@@ -274,8 +274,16 @@ def get_base_results_dir(mode, comp):
         out = r"C:\mh_waimak_models\modpath_forward_base"
     elif mode == 'backward' and comp == 'GWATER02':
         out = r"C:\mh_waimak_models\modpath_reverse_base"
+    elif mode == 'cust' and comp == 'GWATER02':
+        out = r'C:\mh_waimak_models\cust_data'
+    elif mode == 'forward' and comp == 'RDSProd03':
+        out = r"D:\mh_waimak_models\modpath_forward_base"
+    elif mode == 'backward' and comp == 'RDSProd03':
+        out = r"D:\mh_waimak_models\modpath_reverse_base"
+    elif mode == 'cust' and comp == 'RDSProd03':
+        out = r'D:\mh_waimak_models\cust_data'
     else:
-        raise ValueError('unexpected (mode, comp): ({},{}'.format(mode, comp))
+        raise ValueError('unexpected (mode, comp): ({},{})'.format(mode, comp))
     return out
 
 

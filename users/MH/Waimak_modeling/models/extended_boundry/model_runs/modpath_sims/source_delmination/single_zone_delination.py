@@ -38,8 +38,8 @@ def create_single_zone_indexs():
     str_data = str_data.loc[str_data.m_type == 'source']
     str_dict = _get_sw_samp_pts_dict()
     for idx in str_data.index:
-        temp_out = smt.get_empty_model_grid(True)
-        temp_out[0] = str_dict[idx]
+        temp_out = smt.get_empty_model_grid(True).astype(bool)
+        temp_out[0] = str_dict[idx].astype(bool)
         indexes[idx] = temp_out
 
     # WDC water supply wells (groups of individual wells)
@@ -64,15 +64,17 @@ def get_cust_indexes():
     indexes is a dictionary for each sfr_id with the cell flagged to True
     :return: sfr_id_array, indexes  sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     """
-    base_data = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid',
+    sfr_id_array = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid',
                                               True)
+    sfr_id_array[np.isnan(sfr_id_array)] = -1
+    sfr_id_array = sfr_id_array.astype(int)
     indexes = {}
-    for rid in set(base_data[np.isfinite(base_data)]):
+    for rid in set(sfr_id_array[np.isfinite(sfr_id_array)]):
         temp = smt.get_empty_model_grid(True).astype(bool)
-        temp[0] = np.isclose(base_data, rid)
+        temp[0] = np.isclose(sfr_id_array, rid)
         indexes[rid] = temp
 
-    return indexes
+    return sfr_id_array, indexes
 
 
 def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
@@ -91,7 +93,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
     """
 
     sfr_id_array, indexes = get_cust_indexes()
-    outdir = r'C:\mh_waimak_models\cust_data'
+    outdir = get_base_results_dir('cust', socket.gethostname())
     sfr_ids = indexes.keys()
     root_num_part = 4
     modflow_dir = get_modeflow_dir_for_source()
@@ -109,8 +111,8 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
         outdata = {}
         for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
             temp = nc.Dataset(os.path.join(outdir, name + '.nc'))
-            temp2 = {np.array(temp.variables[e]) for e in
-                     set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array'}}
+            temp2 = {e: np.array(temp.variables[e]) for e in
+                     set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing'}}
             outdata[name] = temp2
         temp_losing = temp.variables['losing'][:]
         temp_models = temp.variables['model_id'][:]
@@ -172,7 +174,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
         limit = 0
         temp[data < -1 * limit] = -1
         temp[data > limit] = 1
-        losing[mid] = [temp]
+        losing[mid] = temp
 
     # save the data
     print('joining the data')
@@ -345,7 +347,7 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
 
         # create variables
 
-        mid = outfile.createVariable('latitude', str, ('model_id',))
+        mid = outfile.createVariable('model_id', str, ('model_id',))
         mid[:] = model_ids
 
         lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
@@ -401,8 +403,8 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
         outfile.close()
 
         temp = nc.Dataset(os.path.join(outdir, name + '.nc'))
-        temp2 = {np.array(temp.variables[e]) for e in
-                 set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array'}}
+        temp2 = {e: np.array(temp.variables[e]) for e in
+                 set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing'}}
         outdata[name] = temp2
     return outdata
 
@@ -554,16 +556,16 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
     bool_array_wcust = []
     for mid, temp_bool_array in zip(model_ids, bool_array):
         temp_sfr_id_array = deepcopy(sfr_id_array)
-        temp_sfr_id_array[losing[mid] <= 0] = -1
+        temp_sfr_id_array[losing[mid] < 0] = -1
 
         if not (temp_sfr_id_array[temp_bool_array] >= 0).any():
             bool_array_wcust.append(temp_bool_array)
             continue
 
-        temp_ids = np.array(set(temp_sfr_id_array[temp_bool_array]) - {-1})
+        temp_ids = np.array(list(set(temp_sfr_id_array[temp_bool_array]) - {-1})).astype(int)
         # get and unpack the array
-        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
-        temp = temp[:temp_ids.max() + 1].sum()
+        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool) #todo for some reason this is breaking when cust loads rather than runs
+        temp = temp[:temp_ids.max() + 1].sum(axis=0)
         temp += temp_bool_array
 
         bool_array_wcust.append(temp.astype(bool))
@@ -591,7 +593,7 @@ def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
 # todo debug the cust stuff
 
 if __name__ == '__main__':
-    idxs = get_cust_indexes()
+    idxs = create_single_zone_indexs()
     print('done')
-    # create_zones(model_ids=['NsmcBase', 'AshOpt'], outdir=r"C:\Users\matth\Downloads\test_zone_delin",
-    #             root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)
+    create_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_zone_delim', outdir=r"D:\mh_testing\zone_delin",
+                 root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)
