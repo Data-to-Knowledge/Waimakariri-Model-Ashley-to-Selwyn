@@ -64,12 +64,13 @@ def get_cust_indexes():
     indexes is a dictionary for each sfr_id with the cell flagged to True
     :return: sfr_id_array, indexes  sfr array will be 0 indexed cust reaches in order and -1 where there is no data
     """
-    sfr_id_array = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp), 'rid',
-                                              True)
+    sfr_id_array = smt.shape_file_to_model_array('{}/m_ex_bd_inputs/shp/ordered_cust_reaches.shp'.format(smt.sdp),
+                                                 'rid',
+                                                 True)
     sfr_id_array[np.isnan(sfr_id_array)] = -1
     sfr_id_array = sfr_id_array.astype(int)
     indexes = {}
-    for rid in set(sfr_id_array[np.isfinite(sfr_id_array)]):
+    for rid in set(sfr_id_array.flatten()) - {-1}:
         temp = smt.get_empty_model_grid(True).astype(bool)
         temp[0] = np.isclose(sfr_id_array, rid)
         indexes[rid] = temp
@@ -112,7 +113,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
         for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
             temp = nc.Dataset(os.path.join(outdir, name + '.nc'))
             temp2 = {e: np.array(temp.variables[e]) for e in
-                     set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing'}}
+                     set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing', 'model_id'}}
             outdata[name] = temp2
         temp_losing = temp.variables['losing'][:]
         temp_models = temp.variables['model_id'][:]
@@ -404,7 +405,7 @@ def _save_cust_nc(outdir, forward_weak, forward_strong, backward_strong, backwar
 
         temp = nc.Dataset(os.path.join(outdir, name + '.nc'))
         temp2 = {e: np.array(temp.variables[e]) for e in
-                 set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing'}}
+                 set(temp.variables.keys()) - {'latitude', 'longitude', 'sfr_id_array', 'losing', 'model_id'}}
         outdata[name] = temp2
     return outdata
 
@@ -445,32 +446,6 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
 
     cust_data = get_cust_mapping(model_ids)
 
-    # forward weak
-    print('calculating forward weak')
-    forward_weaks = []
-    forward_weaks_num_parts = []
-    f_em_paths = get_forward_emulator_paths(model_ids, True)
-    for path in f_em_paths.values():
-        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
-        temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
-        forward_weaks_num_parts.append(temp2)
-        forward_weaks.append(temp)
-    # amalgamate data from realsiations mean and sd?
-    amalg_weak_forward = _amalg_forward(forward_weaks, indexes, cust_data, model_ids, 'forward_weak')
-
-    # forward strong
-    print('calculating forward strong')
-    forward_strongs = []
-    forward_strongs_num_parts = []
-    f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
-    for path in f_em_paths.values():
-        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
-        forward_strongs.append(temp)
-        temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
-        forward_strongs_num_parts.append(temp2)
-    # amalgamate data from realsiations
-    amalg_strong_forward = _amalg_forward(forward_strongs, indexes, cust_data, model_ids, 'forward_strong')
-
     # backward weak
     print('calculating backward weak')
     back_weaks = []
@@ -498,6 +473,32 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
         back_strongs.append(temp)
     # amalgamate data from realsiations mean and sd?
     amalg_strong_back = _amalg_backward(back_strongs, indexes, cust_data, model_ids, 'backward_strong')
+
+    # forward weak
+    print('calculating forward weak')
+    forward_weaks = []
+    forward_weaks_num_parts = []
+    f_em_paths = get_forward_emulator_paths(model_ids, True)
+    for path in f_em_paths.values():
+        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
+        temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
+        forward_weaks_num_parts.append(temp2)
+        forward_weaks.append(temp)
+    # amalgamate data from realsiations mean and sd?
+    amalg_weak_forward = _amalg_forward(forward_weaks, indexes, cust_data, model_ids, 'forward_weak')
+
+    # forward strong
+    print('calculating forward strong')
+    forward_strongs = []
+    forward_strongs_num_parts = []
+    f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
+    for path in f_em_paths.values():
+        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
+        forward_strongs.append(temp)
+        temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
+        forward_strongs_num_parts.append(temp2)
+    # amalgamate data from realsiations
+    amalg_strong_forward = _amalg_forward(forward_strongs, indexes, cust_data, model_ids, 'forward_strong')
 
     return amalg_weak_forward, amalg_strong_forward, amalg_strong_back, amalg_weak_back, forward_strongs_num_parts
 
@@ -564,7 +565,7 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
 
         temp_ids = np.array(list(set(temp_sfr_id_array[temp_bool_array]) - {-1})).astype(int)
         # get and unpack the array
-        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool) #todo for some reason this is breaking when cust loads rather than runs
+        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
         temp = temp[:temp_ids.max() + 1].sum(axis=0)
         temp += temp_bool_array
 
@@ -578,22 +579,99 @@ def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
     indexes = create_single_zone_indexs()
     base_outdir = r"C:\mh_waimak_models\single_source_zones"
     print('running for AshOpt')
+    outdir = os.path.join(base_outdir, 'AshOpt')
     create_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
-                 outdir=os.path.join(base_outdir, 'AshOpt'), root_num_part=3,
+                 outdir=outdir, root_num_part=3,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+    split_netcdfs(outdir)
 
     print('running for 165 models')
+    outdir = os.path.join(base_outdir, 'stocastic set')
     stocastic_model_ids = get_stocastic_set()
     create_zones(model_ids=stocastic_model_ids,
                  run_name='stocastic_set_private_wells',
-                 outdir=os.path.join(base_outdir, 'stocastic set'), root_num_part=3,
+                 outdir=outdir, root_num_part=3,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+    split_netcdfs(outdir)
 
 
-# todo debug the cust stuff
+def split_netcdfs(indir):
+    """
+
+    :param indir: the dir with the 3 netcdfs  the new files are put in a file labeled individuals
+    :return:
+    """
+    print('splitting netcdf')
+    outdir = os.path.join(indir, 'individual_netcdfs')
+    if not os.path.exists(os.path.join(indir, 'individual_netcdfs')):
+        os.makedirs(outdir)
+
+    data = {}
+    for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+        data[name] = nc.Dataset(os.path.join(indir, name + '.nc'))
+
+    # get list of variables (assmue all are teh same) and list of base variables
+    variables = list(set(data['forward_strong'].variables.keys()) - {'crs', 'latitude', 'longitude'})
+    base_variables = list(set([e.replace('_number', '').replace('_all', '').replace('_cust', '') for e in variables]))
+
+    for bv in base_variables:
+        outfile = nc.Dataset(os.path.join(outdir, bv + '.nc'), 'w')
+        x, y = smt.get_model_x_y(False)
+        # create dimensions
+        outfile.createDimension('latitude', len(y))
+        outfile.createDimension('longitude', len(x))
+
+        # create variables
+
+        proj = outfile.createVariable('crs', 'i1')  # this works really well...
+        proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                        'scale_factor_at_central_meridian': 0.9996,
+                        'longitude_of_central_meridian': 173.0,
+                        'latitude_of_projection_origin': 0.0,
+                        'false_easting': 1600000,
+                        'false_northing': 10000000,
+                        })
+
+        lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+        lat.setncatts({'units': 'NZTM',
+                       'long_name': 'latitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_y_coordinate'})
+        lat[:] = y
+
+        lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+        lon.setncatts({'units': 'NZTM',
+                       'long_name': 'longitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_x_coordinate'})
+        lon[:] = x
+
+        # location add the data
+        for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+            for suffix in ['number', 'all', 'number_cust', 'all_cust']:
+                temp_var = outfile.createVariable('{}_{}_{}'.format(name[0:4], name.split('_')[-1][0:2], suffix), float,
+                                                  ('latitude', 'longitude'),
+                                                  fill_value=np.nan)
+                temp_var.setncatts({'units': 'bool or number of realisations',
+                                    'long_name': '{}_{}_{}'.format(name, bv, suffix),
+                                    'missing_value': np.nan,
+                                    'comments': 'number of particles from a given cell'})
+
+                t = data[name].variables['{}_{}'.format(bv, suffix)][:]
+                t = t.filled(0).astype(float)
+                t[np.isclose(t, 0)] = np.nan
+                temp_var[:] = t
+
+        outfile.description = ('source zones for single sources')
+        outfile.history = 'created {}'.format(datetime.datetime.now().isoformat())
+        outfile.source = 'script: {}'.format(sys.argv[0])
+        outfile.close()
+
 
 if __name__ == '__main__':
     idxs = create_single_zone_indexs()
     print('done')
-    create_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_zone_delim', outdir=r"D:\mh_testing\zone_delin",
-                 root_num_part=3, indexes=idxs, recalc=True, recalc_backward_tracking=False)
+    outdir_temp = r"D:\mh_testing\zone_delin"
+    create_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_zone_delim', outdir=outdir_temp,
+                 root_num_part=3, indexes=idxs, recalc=False, recalc_backward_tracking=False)
+    split_netcdfs(outdir_temp)

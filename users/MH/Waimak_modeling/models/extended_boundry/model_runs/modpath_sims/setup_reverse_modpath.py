@@ -34,7 +34,7 @@ def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     group_num = np.vectorize(inverse_mapper.__getitem__)(group)
     grid_locs = list(np.atleast_2d(grid_locs))
     assert len(grid_locs) == len(group), 'gridlocs and group must be the same length'
-    grid_locs = [np.concatenate((grid, [gp, gn])) for grid, gp, gn in zip(grid_locs, group, group_num)]
+    grid_locs = [np.concatenate((grid, [gn])) for grid, gn in zip(grid_locs, group_num)]
     print('generating particles for {} cells'.format(len(grid_locs)))
     num_per_cel = root3_num_part ** 3
     num_par = len(grid_locs) * num_per_cel
@@ -44,14 +44,14 @@ def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     # k,i,j,x,y,z
     outdata = pd.DataFrame(flopy.modpath.mpsim.StartingLocationsFile.get_empty_starting_locations_data(npt=num_par))
 
-    outdata['k0'] = ploc[:, 0]
-    outdata['i0'] = ploc[:, 1]
-    outdata['j0'] = ploc[:, 2]
-    outdata['groupname'] = ploc[:, 4]
-    outdata['particlegroup'] = ploc[:, 4]
-    outdata['xloc0'] = ploc[:, 5]
-    outdata['yloc0'] = ploc[:, 6]
-    outdata['zloc0'] = ploc[:, 7]
+    outdata['k0'] = ploc[:, 0].astype(int)
+    outdata['i0'] = ploc[:, 1].astype(int)
+    outdata['j0'] = ploc[:, 2].astype(int)
+    outdata['groupname'] = ['{:04d}'.format(e) for e in ploc[:, 3].astype(int)]
+    outdata['particlegroup'] = ploc[:, 3].astype(int)
+    outdata['xloc0'] = ploc[:, 4]
+    outdata['yloc0'] = ploc[:, 5]
+    outdata['zloc0'] = ploc[:, 6]
     outdata['initialtime'] = 1  # should not matter for now as I am releasing all at once
     outdata['label'] = 's'  # a filler so that the loc file will read properly
     return group_mapper, outdata
