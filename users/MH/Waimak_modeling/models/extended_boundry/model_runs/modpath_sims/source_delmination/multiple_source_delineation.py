@@ -323,16 +323,16 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
     bool_array_wcust = []
     for mid, temp_bool_array in zip(model_ids, bool_array):
         temp_sfr_id_array = deepcopy(sfr_id_array)
-        temp_sfr_id_array[losing[mid] <= 0] = -1
+        temp_sfr_id_array[losing[mid] < 0] = -1
 
         if not (temp_sfr_id_array[temp_bool_array] >= 0).any():
             bool_array_wcust.append(temp_bool_array)
             continue
 
-        temp_ids = np.array(set(temp_sfr_id_array[temp_bool_array]) - {-1})
+        temp_ids = np.array(list(set(temp_sfr_id_array[temp_bool_array]) - {-1})).astype(int)
         # get and unpack the array
-        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
-        temp = temp[:temp_ids.max() + 1].sum()
+        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool) #todo for some reason this is breaking when cust loads rather than runs
+        temp = temp[:temp_ids.max() + 1].sum(axis=0)
         temp += temp_bool_array
 
         bool_array_wcust.append(temp.astype(bool))
