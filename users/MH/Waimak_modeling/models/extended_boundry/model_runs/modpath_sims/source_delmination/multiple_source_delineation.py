@@ -35,21 +35,30 @@ def create_private_wells_indexes():
         index_col=0)
     private_wells = pd.merge(private_wells, all_wells.loc[:, ['layer', 'row', 'col']], right_index=True,
                              left_index=True)
+    private_wells = private_wells.dropna()
     indexes = {}
-    for name, k, i, j in private_wells.loc[:, ['layer', 'row', 'col']].itertuples(True, None):
+    for name, k, i, j in private_wells.loc[:, ['layer', 'row', 'col']].astype(int).itertuples(True, None):
         temp = smt.get_empty_model_grid(True).astype(bool)
         temp[k, i, j] = True
         indexes[name] = temp
 
-    return indexes
+    return private_wells, indexes
 
 
 def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, recalc=False,
                                                recalc_backward_tracking=False):
-    indexes = create_private_wells_indexes()
-    private_wells = pd.read_csv(
-        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones.csv",
-        index_col=0)
+    """
+    calculates teh source area for all the individaul wells (or loads it) and then aggrigates the data across the
+    different zones new amalgimated netcdfs are placed in a amalgimate folder in outdir  all arguments are passed
+    directly to create_zones
+    :param model_ids:
+    :param run_name:
+    :param outdir:
+    :param recalc:
+    :param recalc_backward_tracking:
+    :return:
+    """
+    private_wells, indexes = create_private_wells_indexes()
     root_num_part = 3
     single_site_data = create_zones(model_ids, run_name, outdir, root_num_part, indexes,
                                     recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
@@ -58,17 +67,18 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
     for key in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
         data = single_site_data[key]
         outdata = {}
-        for site in set(private_wells.Zone1):
+        for site in set(private_wells.Zone_1): #todo there are some key error problems start here
             any_array = smt.get_empty_model_grid().astype(int)
             all_array = smt.get_empty_model_grid().astype(int)
             number_array = smt.get_empty_model_grid().astype(int)
             any_array_cust = smt.get_empty_model_grid().astype(int)
             all_array_cust = smt.get_empty_model_grid().astype(int)
             number_array_cust = smt.get_empty_model_grid().astype(int)
-            well_nums = private_wells.loc[private_wells.Zone1 == site].index
+            well_nums = private_wells.loc[private_wells.Zone_1 == site].index
             for well in well_nums:
                 temp_all = np.array(
-                    data.variables['{}_all'.format(well)])  # todo what happens with no values? good question I think I fixed it
+                    data.variables[
+                        '{}_all'.format(well.replace('/','_'))])  # todo what happens with no values? good question I think I fixed it
                 temp_all_cust = np.array(data.variables['{}_all_cust'.format(well)])
                 temp_number = np.array(data.variables['{}_number'.format(well)])
                 temp_number_cust = np.array(data.variables['{}_number_cust'.format(well)])
@@ -121,10 +131,11 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
     cust_data = get_cust_mapping(model_ids)
 
     # forward weak
-    print('calculating forward weak')
+    print('calculating forward weak\n\n')
     forward_weaks = []
     f_em_paths = get_forward_emulator_paths(model_ids, True)
-    for path in f_em_paths.values():
+    for i, path in enumerate(f_em_paths.values()):
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
                                           return_packed_bits=True)
         forward_weaks.append(temp)
@@ -138,10 +149,11 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              root_num_part=root_num_part)
 
     # forward strong
-    print('calculating forward strong')
+    print('calculating forward strong\n\n')
     forward_strongs = []
     f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
-    for path in f_em_paths.values():
+    for i, path in enumerate(f_em_paths.values()):
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
                                           return_packed_bits=True)
         forward_strongs.append(temp)
@@ -154,9 +166,10 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              root_num_part=root_num_part)
 
     # backward weak
-    print('calculating backward weak')
+    print('calculating backward weak\n\n')
     back_weaks = []
-    for mid in model_ids:
+    for i, mid in enumerate(model_ids):
+        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'weak', mid),
                                            mp_name='{}_weak'.format(mid),
@@ -166,7 +179,10 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                                            return_packed_bits=True)
         back_weaks.append(temp)
     # amalgamate data from realsiations mean and sd?
-    amalg_weak_back = _amalg_backward(back_weaks, indexes, cust_data, model_ids, 'backward_weak')
+    # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells)
+    # and/or the exit via a non top layer flux
+    amalg_weak_back = _amalg_backward(back_weaks, indexes, cust_data, model_ids,
+                                      'backward_weak')  # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells) and/or the exit via a non top layer flux
     outpath = save_source_nc(outdir=outdir,
                              name='backward_weak',
                              data=amalg_weak_back,
@@ -174,15 +190,16 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              root_num_part=root_num_part)
 
     # backward strong
-    print('calculating backward strong')
+    print('calculating backward strong\n\n')
     back_strongs = []
-    for mid in model_ids:
+    for i, mid in enumerate(model_ids):
+        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'strong', mid),
                                            mp_name='{}_strong'.format(mid),
                                            cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
                                            root3_num_part=root_num_part, capt_weak_s=False,
-                                           recalc=recalc_backward_tracking)
+                                           recalc=recalc_backward_tracking, return_packed_bits=True)
         back_strongs.append(temp)
     # amalgamate data from realsiations mean and sd?
     amalg_strong_back = _amalg_backward(back_strongs, indexes, cust_data, model_ids, 'backward_strong')
@@ -191,6 +208,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              data=amalg_strong_back,
                              model_ids=model_ids,
                              root_num_part=root_num_part)
+
 
     outdata = {}
     for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
@@ -247,13 +265,13 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part):
     lon[:] = x
 
     # location add the data
-    for site in eval(name).keys():
-        temp_var = outfile.createVariable(site, 'u1', ('latitude', 'longitude'))
+    for site in data.keys():
+        temp_var = outfile.createVariable(site.replace('/','_'), 'u1', ('latitude', 'longitude'))
         temp_var.setncatts({'units': 'bool or number of realisations',
                             'long_name': site,
                             'comments': 'number of particles from a given cell'})
 
-        t = eval(name)[site].astype(np.uint8)
+        t = data[site].astype(np.uint8)
         t[~np.isclose(no_flow, 1)] = 0
         temp_var[:] = t
 
@@ -278,7 +296,13 @@ def _amalg_forward(data, indexes, sfr_data, model_ids, run_name):
     """
     out = {}
     for name in indexes.keys():
-        temp = [e[name] for e in data]
+        temp = []
+        for e in data:  # set all False arrays for those wells who never intersect particles
+            try:
+                temp.append(e[name])
+            except KeyError:
+                temp.append(np.zeros((16608), dtype=np.uint8))
+
         _add_data_variations(out, temp, name, sfr_data, model_ids, run_name)
 
     return out
@@ -296,7 +320,13 @@ def _amalg_backward(data, indexes, sfr_data, model_ids, run_name):
     """
     out = {}
     for name in indexes.keys():
-        temp = [e[name] for e in data]
+        temp = []
+        for e in data:  # set all False arrays for those wells who's particles get stranded
+            try:
+                temp.append(e[name])
+            except KeyError:
+                temp.append(np.zeros((16608), dtype=np.uint8))
+
         _add_data_variations(out, temp, name, sfr_data, model_ids, run_name)
 
     return out
@@ -313,7 +343,7 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
     :param run_name: one of ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']
     :return:
     """
-    bool_array = [np.unpackbits(e[:132860]).reshape((smt.rows, smt.cols)).astype(bool) for e in org_arrays_packed]
+    bool_array = [np.unpackbits(e)[:132860].reshape((smt.rows, smt.cols)).astype(bool) for e in org_arrays_packed]
     sfr_data, sfr_id_array, unpacked_size, unpacked_shape, losing = sfr_data
 
     out['{}_all'.format(name)] = np.all(bool_array, axis=0).astype(np.uint8)
@@ -331,7 +361,7 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
 
         temp_ids = np.array(list(set(temp_sfr_id_array[temp_bool_array]) - {-1})).astype(int)
         # get and unpack the array
-        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool) #todo for some reason this is breaking when cust loads rather than runs
+        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
         temp = temp[:temp_ids.max() + 1].sum(axis=0)
         temp += temp_bool_array
 
@@ -353,3 +383,12 @@ def run_multiple_source_zones(recalc=False, recalc_backward_tracking=False):
                                                run_name='stocastic_set_private_wells',
                                                outdir=os.path.join(base_outdir, 'stocastic set'),
                                                recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+
+
+# todo add/write up a script to break up the areas again.
+
+if __name__ == '__main__':
+    outdir_temp = r"D:\mh_testing\zone_delin_multiple"
+    create_amalgimated_source_protection_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_multiple',
+                                               outdir=os.path.join(outdir_temp, 'test_multiple'),
+                                               recalc=False, recalc_backward_tracking=False)

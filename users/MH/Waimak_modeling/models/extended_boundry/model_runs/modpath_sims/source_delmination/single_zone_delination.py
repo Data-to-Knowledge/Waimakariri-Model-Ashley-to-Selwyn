@@ -447,9 +447,10 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     cust_data = get_cust_mapping(model_ids)
 
     # backward weak
-    print('calculating backward weak')
+    print('calculating backward weak\n\n')
     back_weaks = []
-    for mid in model_ids:
+    for i, mid in enumerate(model_ids):
+        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'weak', mid),
                                            mp_name='{}_weak'.format(mid),
@@ -461,9 +462,10 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     amalg_weak_back = _amalg_backward(back_weaks, indexes, cust_data, model_ids, 'backward_weak')
 
     # backward strong
-    print('calculating backward strong')
+    print('calculating backward strong\n\n')
     back_strongs = []
-    for mid in model_ids:
+    for i, mid in enumerate(model_ids):
+        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'strong', mid),
                                            mp_name='{}_strong'.format(mid),
@@ -475,11 +477,13 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     amalg_strong_back = _amalg_backward(back_strongs, indexes, cust_data, model_ids, 'backward_strong')
 
     # forward weak
-    print('calculating forward weak')
+    print('calculating forward weak\n\n')
     forward_weaks = []
     forward_weaks_num_parts = []
     f_em_paths = get_forward_emulator_paths(model_ids, True)
-    for path in f_em_paths.values():
+
+    for i, path in enumerate(f_em_paths.values()):
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
         temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
         forward_weaks_num_parts.append(temp2)
@@ -488,11 +492,13 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     amalg_weak_forward = _amalg_forward(forward_weaks, indexes, cust_data, model_ids, 'forward_weak')
 
     # forward strong
-    print('calculating forward strong')
+    print('calculating forward strong\n\n')
     forward_strongs = []
     forward_strongs_num_parts = []
     f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
-    for path in f_em_paths.values():
+
+    for i, path in enumerate(f_em_paths.values()):
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
         forward_strongs.append(temp)
         temp2 = np.loadtxt(path[1].replace('_bnd_type.txt', '_num_parts.txt'))  # load number of particles
@@ -648,7 +654,7 @@ def split_netcdfs(indir):
 
         # location add the data
         for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
-            for suffix in ['number', 'all', 'number_cust', 'all_cust']:
+            for suffix in ['number', 'number_cust']:
                 temp_var = outfile.createVariable('{}_{}_{}'.format(name[0:4], name.split('_')[-1][0:2], suffix), float,
                                                   ('latitude', 'longitude'),
                                                   fill_value=np.nan)
