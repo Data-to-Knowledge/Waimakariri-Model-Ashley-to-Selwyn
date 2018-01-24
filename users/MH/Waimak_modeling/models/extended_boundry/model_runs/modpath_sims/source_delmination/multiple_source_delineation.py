@@ -25,8 +25,6 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_stocastic_set
 
 
-# todo debug this whole thing
-
 def create_private_wells_indexes():
     all_wells = get_all_well_row_col()
 
@@ -67,7 +65,7 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
     for key in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
         data = single_site_data[key]
         outdata = {}
-        for site in set(private_wells.Zone_1): #todo there are some key error problems start here
+        for site in set(private_wells.Zone_1):
             any_array = smt.get_empty_model_grid().astype(int)
             all_array = smt.get_empty_model_grid().astype(int)
             number_array = smt.get_empty_model_grid().astype(int)
@@ -76,9 +74,8 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
             number_array_cust = smt.get_empty_model_grid().astype(int)
             well_nums = private_wells.loc[private_wells.Zone_1 == site].index
             for well in well_nums:
-                temp_all = np.array(
-                    data.variables[
-                        '{}_all'.format(well.replace('/','_'))])  # todo what happens with no values? good question I think I fixed it
+                well = well.replace('/', '_')
+                temp_all = np.array(data.variables['{}_all'.format(well)])
                 temp_all_cust = np.array(data.variables['{}_all_cust'.format(well)])
                 temp_number = np.array(data.variables['{}_number'.format(well)])
                 temp_number_cust = np.array(data.variables['{}_number_cust'.format(well)])
@@ -91,12 +88,12 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
 
                 all_array += temp_all
                 all_array_cust += temp_all_cust
-            outdata['{}_all'] = all_array
-            outdata['{}_all_cust'] = all_array_cust
-            outdata['{}_any'] = any_array
-            outdata['{}_any_cust'] = any_array_cust
-            outdata['{}_number'] = number_array
-            outdata['{}_number_cust'] = number_array_cust
+            outdata['{}_all'.format(site)] = all_array
+            outdata['{}_all_cust'.format(site)] = all_array_cust
+            outdata['{}_any'.format(site)] = any_array
+            outdata['{}_any_cust'.format(site)] = any_array_cust
+            outdata['{}_number'.format(site)] = number_array
+            outdata['{}_number_cust'.format(site)] = number_array_cust
 
         save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part)
 
@@ -385,10 +382,88 @@ def run_multiple_source_zones(recalc=False, recalc_backward_tracking=False):
                                                recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
 
 
-# todo add/write up a script to break up the areas again.
+def split_netcdfs(indir):
+    """
+
+    :param indir: the dir with the 3 netcdfs  the new files are put in a file labeled individuals
+    :return:
+    """
+    print('splitting netcdf')
+    outdir = os.path.join(indir, 'individual_netcdfs')
+    if not os.path.exists(os.path.join(indir, 'individual_netcdfs')):
+        os.makedirs(outdir)
+
+    data = {}
+    for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+        data[name] = nc.Dataset(os.path.join(indir, 'amalgimated_' + name + '.nc'))
+
+    # get list of variables (assmue all are teh same) and list of base variables
+    variables = list(set(data['forward_strong'].variables.keys()) - {'crs', 'latitude', 'longitude'})
+    base_variables = list(set([e.replace('_number', '').replace('_all', '').replace('_cust', '').replace('_any','') for e in variables]))
+
+    for bv in base_variables:
+        outfile = nc.Dataset(os.path.join(outdir, bv + '.nc'), 'w')
+        x, y = smt.get_model_x_y(False)
+        # create dimensions
+        outfile.createDimension('latitude', len(y))
+        outfile.createDimension('longitude', len(x))
+
+        # create variables
+
+        proj = outfile.createVariable('crs', 'i1')  # this works really well...
+        proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                        'scale_factor_at_central_meridian': 0.9996,
+                        'longitude_of_central_meridian': 173.0,
+                        'latitude_of_projection_origin': 0.0,
+                        'false_easting': 1600000,
+                        'false_northing': 10000000,
+                        })
+
+        lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+        lat.setncatts({'units': 'NZTM',
+                       'long_name': 'latitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_y_coordinate'})
+        lat[:] = y
+
+        lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+        lon.setncatts({'units': 'NZTM',
+                       'long_name': 'longitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_x_coordinate'})
+        lon[:] = x
+
+        # location add the data
+        for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+            for suffix in ['number', 'number_cust', 'all', 'all_cust', 'any', 'any_cust']:
+                temp_var = outfile.createVariable('{}_{}_{}'.format(name[0:4], name.split('_')[-1][0:2], suffix), float,
+                                                  ('latitude', 'longitude'),
+                                                  fill_value=np.nan)
+                temp_var.setncatts({'units': 'bool or number of realisations',
+                                    'long_name': '{}_{}_{}'.format(name, bv, suffix),
+                                    'missing_value': np.nan,
+                                    'comments': 'number of particles from a given cell'})
+
+                t = data[name].variables['{}_{}'.format(bv, suffix)][:]
+                t = t.astype(float)
+                t[np.isclose(t, 0)] = np.nan
+                temp_var[:] = t
+
+        outfile.description = ('source zones for aggregated sources. '
+                               'any: sum of wells where any model showed the cell in a source zone '
+                               'all: sum of wells where all models showed the cell in a source zone '
+                               'number: num of the number of models which showed the cell in a source zone '
+                               '(also summed over wells) '
+                               '_cust: denotes particle tracking through the cust river')
+        outfile.history = 'created {}'.format(datetime.datetime.now().isoformat())
+        outfile.source = 'script: {}'.format(sys.argv[0])
+        outfile.close()
+
+
 
 if __name__ == '__main__':
     outdir_temp = r"D:\mh_testing\zone_delin_multiple"
     create_amalgimated_source_protection_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_multiple',
                                                outdir=os.path.join(outdir_temp, 'test_multiple'),
                                                recalc=False, recalc_backward_tracking=False)
+    split_netcdfs(os.path.join(outdir_temp, 'test_multiple'))
