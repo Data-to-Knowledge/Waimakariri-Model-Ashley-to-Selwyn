@@ -47,7 +47,6 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
         assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
         assert idx.dtype == bool, 'index for {} must be some sort of boolean array'.format(key)
 
-
     # load emulator and initialize outdata
     print('loading emulator')
     t = time()
@@ -199,7 +198,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     # multiprocess the running of things
     outputs = []
     for i, kwarg in enumerate(input_kwargs):
-        print('starting {} of {}. weak_sink?, {}'.format(i+1,len(input_kwargs),capt_weak_s))
+        print('starting {} of {}. weak_sink?, {}'.format(i + 1, len(input_kwargs), capt_weak_s))
         outputs.append(_run_forward_em_one_mp(kwarg))
     now = datetime.datetime.now()
     with open(
@@ -216,7 +215,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     print('{} runs completed in {} minutes'.format(len(model_ids), ((time() - t) / 60)))
 
 
-def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
+def get_all_cbcs(model_ids, modflow_dir, sleep_time=1, recalc=False):
     """
     a quick multiprocessing wrapper to run all the NSMC realisations I need
     :param model_ids: list of model ids to pass to the get cbc
@@ -227,7 +226,8 @@ def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
     input_kwargs = []
     for model_id in model_ids:
         input_kwargs.append({'model_id': model_id,
-                             'base_dir': modflow_dir})
+                             'base_dir': modflow_dir,
+                             'recalc': recalc})
 
     multiprocessing.log_to_stderr(logging.DEBUG)
     pool_size = psutil.cpu_count(logical=False)
@@ -314,7 +314,7 @@ if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.cwms_index import \
         get_zone_array_index
 
-    test_type = 2
+    test_type = 3
     if test_type == 1:
         temp_index = smt.shape_file_to_model_array(r"C:\Users\MattH\Downloads\test_area.shp", 'Id', True)
         index = smt.get_empty_model_grid(True).astype(bool)
@@ -323,7 +323,8 @@ if __name__ == '__main__':
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis].repeat(11, axis=0)
         index = np.isfinite(index).astype(int)
-        bd_type =(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
+        bd_type = (
+        r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
         outdata = define_source_from_forward(
             r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type,
             index.astype(int))
@@ -333,12 +334,13 @@ if __name__ == '__main__':
 
     elif test_type == 2:
         import pickle
+
         index = smt.get_empty_model_grid(True).astype(bool)
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis]
         index2 = np.isfinite(index).repeat(11, axis=0)
         index2[1:, :, :] = False
-        index1 = np.full((smt.layers,smt.rows,smt.cols),False)
+        index1 = np.full((smt.layers, smt.rows, smt.cols), False)
         index1[6] = index
         indexes = {'layer0_chch': index2, 'layer7_chch': index1}
         outdata = define_source_from_backward(indexes,
@@ -346,5 +348,10 @@ if __name__ == '__main__':
                                               'test_back',
                                               get_cbc('NsmcBase', get_modeflow_dir_for_source()),
                                               recalc=False)
-        pickle.dump(outdata,open(r"C:\Users\MattH\Downloads\testback_zones.p", 'w'))
+        pickle.dump(outdata, open(r"C:\Users\MattH\Downloads\testback_zones.p", 'w'))
         print('done')
+
+    if test_type==3:
+        nsmc_nums = [2971, 3116, 3310, 3378, 3456, 3513, 3762, 3910]
+        model_ids = ['NsmcReal{:06d}'.format(e) for e in nsmc_nums]
+        get_all_cbcs(model_ids, get_modeflow_dir_for_source(), recalc=True)

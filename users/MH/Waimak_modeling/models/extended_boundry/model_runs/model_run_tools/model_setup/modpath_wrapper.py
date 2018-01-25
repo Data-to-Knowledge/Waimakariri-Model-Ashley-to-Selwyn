@@ -30,11 +30,11 @@ def get_cbc_mp(kwargs):
     return kwargs['model_id'], success
 
 
-def get_cbc(model_id, base_dir):
+def get_cbc(model_id, base_dir, recalc=False):
     # if I wanted to split layers I would need to do it here...
     cbc_path = os.path.join(base_dir, '{}_for_modpath'.format(model_id), '{}_for_modpath.cbc'.format(model_id))
 
-    if os.path.exists(cbc_path):
+    if os.path.exists(cbc_path) and not recalc:
         return cbc_path
 
     m = import_gns_model(model_id, 'for_modpath', os.path.join(base_dir, 'for_modpath'), False, set_hdry=True)
