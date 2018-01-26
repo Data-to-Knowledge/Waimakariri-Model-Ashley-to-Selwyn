@@ -78,7 +78,7 @@ def get_cust_indexes():
     return sfr_id_array, indexes
 
 
-def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
+def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_tracking=False):
     """
     set up something to make a dictionary of mappers and return out put, make it save and/or load it so that I don't
     need to keep re-calculating results as netcdf (with geocoding) do both strong/weak forward/backward
@@ -87,6 +87,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
     to pack and unpack bits: see:
     https://stackoverflow.com/questions/5602155/numpy-boolean-array-with-1-bit-entries
 
+    :param base_name: a unique identifier for teh data
     :param model_ids: the model ids to create this for
     :param recalc: bool if True recalc the netcdf
     :param recalc_backward_tracking: bool if True rerun the backward modpath, if flagged true then recalc set to True
@@ -94,7 +95,7 @@ def get_cust_mapping(model_ids, recalc=False, recalc_backward_tracking=False):
     """
 
     sfr_id_array, indexes = get_cust_indexes()
-    outdir = get_base_results_dir('cust', socket.gethostname())
+    outdir = os.path.join(get_base_results_dir('cust', socket.gethostname()), base_name)
     sfr_ids = indexes.keys()
     root_num_part = 4
     modflow_dir = get_modeflow_dir_for_source()
@@ -444,7 +445,7 @@ def _get_data_for_zones(run_name, model_ids, indexes, root_num_part, recalc_back
     modflow_dir = get_modeflow_dir_for_source()
     backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), run_name)
 
-    cust_data = get_cust_mapping(model_ids)
+    cust_data = get_cust_mapping(run_name, model_ids)
 
     # backward weak
     print('calculating backward weak\n\n')
@@ -586,7 +587,7 @@ def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
     base_outdir = r"C:\mh_waimak_models\single_source_zones"
     print('running for AshOpt')
     outdir = os.path.join(base_outdir, 'AshOpt')
-    create_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
+    create_zones(model_ids=['AshOpt'], run_name='AshOpt_single_sources',
                  outdir=outdir, root_num_part=3,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(outdir)
@@ -595,7 +596,7 @@ def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
     outdir = os.path.join(base_outdir, 'stocastic set')
     stocastic_model_ids = get_stocastic_set()
     create_zones(model_ids=stocastic_model_ids,
-                 run_name='stocastic_set_private_wells',
+                 run_name='stocastic_set_single_sources',
                  outdir=outdir, root_num_part=3,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(outdir)
@@ -675,9 +676,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    idxs = create_single_zone_indexs()
-    print('done')
-    outdir_temp = r"D:\mh_testing\zone_delin"
-    create_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_zone_delim', outdir=outdir_temp,
-                 root_num_part=3, indexes=idxs, recalc=False, recalc_backward_tracking=False)
-    split_netcdfs(outdir_temp)
+    run_single_source_zones()
