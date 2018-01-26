@@ -159,7 +159,7 @@ def get_flow_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None):
 
 
 def get_con_at_points(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpkpers=None,
-                      rel_kstpkpers=None):  # todo debug
+                      rel_kstpkpers=None):
     """
     get the concentration at stream sites
     :param sites: a list of sites (from the surface feature flow paths)
@@ -264,7 +264,7 @@ def _get_drain_con(drn_idx, drn_flux, ucn_data):
     return outcon
 
 
-def _get_sobs_concentration(sfr_idx, sobs_path):  # todo spot check one index
+def _get_sobs_concentration(sfr_idx, sobs_path):
     """
     get the sfr concentration
     :param sfr_idx: the boolean array for the sfr segment (only 1 segment is permissible)
