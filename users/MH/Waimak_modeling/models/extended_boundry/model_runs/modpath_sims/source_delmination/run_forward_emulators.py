@@ -38,6 +38,7 @@ def run_all_forward_emulators(nsmc_nums, notes, base_results_dir, other_model_id
 
 if __name__ == '__main__':
     # items to change for different runs
+    raise ValueError('I probably dont want to re-run this')
     #nsmc_nums = [5, 17, 18, 26, 37, 44, 72, 103, 117, 133, 142,
     #             204, 233, 240, 258, 271, 278, 308, 314, 388, 391, 439,
     #             441, 447, 488, 491, 552, 555, 604, 640, 666, 790, 794,
@@ -53,11 +54,11 @@ if __name__ == '__main__':
              #    2997, 3039, 3064, 3067, 3075, 3100, 3116, 3165, 3216, 3289, 3310,
               #   3318, 3350, 3378, 3389, 3418, 3428, 3456, 3464, 3482, 3513, 3585,
                #  3641, 3651, 3663, 3685, 3712, 3717, 3762, 3796, 3836, 3861, 3910] # the 165 models which passed the EMMA filter
-    nsmc_nums = [2971, 3116, 3310, 3378, 3456, 3513, 3762, 3910] #todo rerunning errrors
+    nsmc_nums = [2971, 3116, 3310, 3378, 3456, 3513, 3762, 3910] # rerunning errrors
     notes = 'forward runs for the 165 models plus the ashley river optimisation for the calibration period'
     base_results_dir = get_base_results_dir('forward', socket.gethostname())
     #other_model_ids = ['NsmcBase', 'AshOpt', 'StrOpt']
-    other_model_ids = [] #todo re-running some that missed
+    other_model_ids = [] # re-running some that missed
     run_all_forward_emulators(nsmc_nums, notes, base_results_dir,
                               other_model_ids=other_model_ids,
                               minparts=1, maxparts=20,

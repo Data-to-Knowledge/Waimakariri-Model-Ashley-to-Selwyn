@@ -18,7 +18,7 @@ from users.MH.Waimak_modeling.model_tools.plotting import plt_default_map
 
 
 
-if __name__ == '__main__': #todo this isn't working super well with lines debug
+if __name__ == '__main__': # this isn't working super well with lines debug
     hds = flopy.utils.HeadFile("{}/base_model_runs/base_ss_mf/base_SS.hds".format(sdp))
     head = hds.get_data(hds.get_kstpkper()[-1])
     head[np.isclose(head, -999)] = np.nan

@@ -14,7 +14,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.a
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.data_extraction.data_from_streams import \
     _get_sw_samp_pts_dict, get_samp_points_df, _get_flux_flow_arrays
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
-
+from data_at_wells import get_well_positions
 
 def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites,
                                   outpath=None):
@@ -95,7 +95,7 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
     return outdata
 
 
-def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, outpath=None):  # todo debug
+def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, outpath=None):
     """
     create a dictionary (keys = runtype) of dataframes(index=nsmc realisation, columns = sites) for each runtype in
     :param nsmc_nums: the netcdf numbers to calculate values for or all
@@ -115,15 +115,14 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
         nsmc_nums = np.atleast_1d(nsmc_nums)
         num_idx = np.in1d(emma_nums, nsmc_nums)
 
-    all_wells = get_all_well_row_col()
+    well_locs = get_well_positions(sites)
 
-    outdata = pd.DataFrame(index=nsmc_nums, columns=sites)
-    for site in sites:
+    outdata = pd.DataFrame(index=nsmc_nums, columns=well_locs.index)
+    for site in well_locs.index:
         # get the well concentrations
-        layers, rows, cols = all_wells.loc[site, ['layer', 'row', 'col']].values.transpose()
+        l, r, c = well_locs.loc[site,['k','i','j']].astype(int)
 
-        well_fraction = np.concatenate([np.array(ucn_nc_file.variables[ucn_var_name][num_idx, l, r, c])[:, np.newaxis]
-                                        for l, r, c in zip(layers, rows, cols)], axis=1)
+        well_fraction = np.array(ucn_nc_file.variables[ucn_var_name][num_idx, l, r, c])
 
         outdata.loc[:, site] = well_fraction
 
@@ -137,10 +136,18 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
 
 
 if __name__ == '__main__':
-    test = calculate_con_from_netcdf_str(nsmc_nums='all',
-                                         ucn_nc_path=r"T:\Temp\temp_gw_files\mednload_ucn.nc",
-                                         ucn_var_name='mednload',
-                                         cbc_nc_path=r"K:\mh_modeling\netcdfs_of_key_modeling_data\post_filter1_cell_budgets.nc",
-                                         sites=['kaiapoi_harpers_s', 'kaiapoi_heywards'],
-                                         outpath=None)
-    print(test.describe())
+    testtype=1
+    if testtype==0:
+        test = calculate_con_from_netcdf_str(nsmc_nums='all',
+                                             ucn_nc_path=r"T:\Temp\temp_gw_files\mednload_ucn.nc",
+                                             ucn_var_name='mednload',
+                                             cbc_nc_path=r"K:\mh_modeling\netcdfs_of_key_modeling_data\post_filter1_cell_budgets.nc",
+                                             sites=['kaiapoi_harpers_s', 'kaiapoi_heywards'],
+                                             outpath=None)
+        print(test.describe())
+    elif testtype==1:
+        test = calculate_con_from_netcdf_well(nsmc_nums = 7,
+                                       ucn_nc_path=r"T:\Temp\temp_gw_files\mednload_ucn.nc",
+                                       ucn_var_name='mednload',
+                                       sites=['M35/1003', 'M35/6295','BS28/5004'])
+        print(test)

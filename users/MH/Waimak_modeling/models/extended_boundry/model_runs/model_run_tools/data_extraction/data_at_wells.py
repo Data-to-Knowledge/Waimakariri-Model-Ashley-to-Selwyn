@@ -233,8 +233,6 @@ def _fill_df_with_bindata(bin_file, kstpkpers, kstpkper_names, df, nodata_value,
 
 if __name__ == '__main__':
     #tests
-    hds = (
-    r"C:\Users\MattH\Desktop\Waimak_modeling\python_models\component_con_n_ss\rch_constant_con\mf_constant_concentration.hds")
-    unc =r"C:\Users\MattH\Desktop\Waimak_modeling\python_models\component_con_n_ss\rch_constant_con\MT3D001.UCN"
-    test = get_con_at_wells(well_list=['M35/1003', 'M35/6295','BS28/5004'], unc_file_path=unc, rel_kstpkpers='all', add_loc=True)
+    unc =r"K:\mh_modeling\data_from_gns\median_n\MedNload_ucnrepo\mt_aw_ex_mednload_7.ucn"
+    test = get_con_at_wells(well_list=['M35/1003', 'M35/6295','BS28/5004'], unc_file_path=unc, rel_kstpkpers=-1, add_loc=True)
     print(test)

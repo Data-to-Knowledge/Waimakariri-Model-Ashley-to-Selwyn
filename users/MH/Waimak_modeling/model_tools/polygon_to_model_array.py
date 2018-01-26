@@ -85,7 +85,7 @@ def _layer_to_model_array(source_layer, attribute, alltouched=False, cols=365, r
     return outdata
 
 
-# todo clean up and debug the below and move to core #todo also add all touched
+# clean up and debug the below and move to core # also add all touched
 def geodb_to_raster(path, shape_name, attribute, out_path, pixelWidth, pixelHeight=None):
     """
     convert layer to a raster and save  assumes NZTM.
@@ -150,7 +150,7 @@ def _layer_to_raster(source_layer, attribute, out_path, pixelWidth, pixelHeight=
     target_dsSRS = osr.SpatialReference()
     target_dsSRS.ImportFromEPSG(2193)
     target_ds.SetProjection(target_dsSRS.ExportToWkt())
-    # todo clean up and add to core
+    # clean up and add to core
 
 
 if __name__ == '__main__':
