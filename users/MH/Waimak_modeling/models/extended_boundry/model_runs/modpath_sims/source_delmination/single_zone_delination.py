@@ -124,7 +124,7 @@ def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_trackin
         return outdata, sfr_id_array, unpacked_size, unpacked_shape, losing
 
     # forward weak
-    print('calculating forward weak')
+    print('calculating cust forward weak')
     forward_weaks = []
     f_em_paths = get_forward_emulator_paths(model_ids, True)
     for path in f_em_paths.values():
@@ -133,7 +133,7 @@ def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_trackin
     forward_weaks = _pack_bits(forward_weaks, model_ids, sfr_ids)
 
     # forward strong
-    print('calculating forward strong')
+    print('calculating cust forward strong')
     forward_strongs = []
     f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
     for path in f_em_paths.values():
@@ -142,7 +142,7 @@ def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_trackin
     forward_strongs = _pack_bits(forward_strongs, model_ids, sfr_ids)
 
     # backward weak
-    print('calculating backward weak')
+    print('calculating cust backward weak')
     back_weaks = []
     for mid in model_ids:
         temp = define_source_from_backward(indexes,
@@ -155,7 +155,7 @@ def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_trackin
     back_weaks = _pack_bits(back_weaks, model_ids, sfr_ids)
 
     # backward strong
-    print('calculating backward strong')
+    print('calculating cust backward strong')
     back_strongs = []
     for mid in model_ids:
         temp = define_source_from_backward(indexes,
