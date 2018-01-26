@@ -420,4 +420,5 @@ def get_stocastic_set():
     return model_ids
 if __name__ == '__main__':
     # tests
-    m = get_model('NsmcReal{:06d}'.format(-2), save_to_dir=True)
+    m = get_model('NsmcBase')
+    print('done')

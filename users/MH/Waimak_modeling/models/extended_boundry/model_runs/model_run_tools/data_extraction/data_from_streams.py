@@ -189,6 +189,7 @@ def get_con_at_points(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpk
     for name, kstpkper in zip(kstpkper_names, kstpkpers):
         ucn = unc_file.get_data(kstpkper=kstpkper)
         ucn[np.isclose(ucn, unc_no_data)] = np.nan
+        ucn = ucn[0]
         sfr_bud = sfo.get_data(kstpkper=kstpkper, text='STREAMFLOW OUT', full3D=True)[0][0]
         drn_bud = cbc.get_data(kstpkper=kstpkper, text='drain', full3D=True)[0][0]
         for site in sites:
@@ -211,18 +212,18 @@ def get_con_at_points(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpk
                     raise ValueError('masked values returned for {}'.format(site))
 
                 # flux is returned using modflow standard convention - is flow out of model + is flow in to model
-                sfr_flux = sfr_bud[sfr_array]
+                sfr_flux = sfr_bud[sfr_array].sum()
 
                 assert sfr_flux > 0, 'sfr_flux must be >0'
-                assert drn_flux > 0, 'drn_flux must be >0'
+                assert drn_flux.sum() > 0, 'drn_flux must be >0'
 
                 # GET CONCENTRATIONS
-                sfr_con = _get_sfo_concentration(sfr_array, sobs_path)
+                sfr_con = _get_sobs_concentration(sfr_array, sobs_path)
                 drn_con = _get_drain_con(drn_array, drn_flux, ucn)
 
                 # combine concentrations
-                load = sfr_con * sfr_flux + drn_con * drn_flux
-                con = load / (sfr_flux + drn_flux)
+                load = sfr_con * sfr_flux + drn_con * drn_flux.sum()
+                con = load / (sfr_flux + drn_flux.sum())
 
             # drain only
             elif drn_array is not None:
@@ -230,14 +231,14 @@ def get_con_at_points(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpk
                     raise ValueError('masked values returned for {}'.format(site))
                 # flux is returned using modflow standard convention - is flow out of model + is flow in to model
                 flux = drn_bud[drn_array] * -1  # note this is still a 1d array
-                assert flux > 0, 'drn_flux must be >0'
+                assert flux.sum() > 0, 'drn_flux must be >0'
                 con = _get_drain_con(drn_array, flux, ucn)
 
             # sfr only
             elif sfr_array is not None:
                 if sfr_bud[sfr_array].mask.sum() != 0:
                     raise ValueError('masked values returned for {}'.format(site))
-                con = _get_sfo_concentration(sfr_array, sobs_path)
+                con = _get_sobs_concentration(sfr_array, sobs_path)
 
             else:
                 raise ValueError('should not get here')
@@ -263,7 +264,7 @@ def _get_drain_con(drn_idx, drn_flux, ucn_data):
     return outcon
 
 
-def _get_sfo_concentration(sfr_idx, sobs_path):  # todo spot check one index
+def _get_sobs_concentration(sfr_idx, sobs_path):  # todo spot check one index
     """
     get the sfr concentration
     :param sfr_idx: the boolean array for the sfr segment (only 1 segment is permissible)
@@ -276,7 +277,7 @@ def _get_sfo_concentration(sfr_idx, sobs_path):  # todo spot check one index
     assert sfr_idx.sum() == 1, 'sfr_idx must have only one positive entry'
     mapper_array = smt.shape_file_to_model_array("{}/m_ex_bd_inputs/raw_sw_samp_points/sfr/all_sfr.shp".format(smt.sdp),
                                                  'Field1', True) + 1
-    sfr_reach = mapper_array[sfr_idx]
+    sfr_reach = mapper_array[sfr_idx][0]
     sobs = pd.read_table(sobs_path, delim_whitespace=True, index_col=1)
     con = sobs.loc[sfr_reach, 'SFR-CONCENTRATION']
     return con
@@ -459,6 +460,21 @@ def _make_swaz_drn_points():
 
 if __name__ == '__main__':
     # tests
-    test = get_samp_points_df(True)
-    test.to_csv(r"C:\Users\MattH\Downloads\current_str_sites.csv")
-    print('recalculated samp_df')
+    test_type = 2
+    if test_type == 0:
+        test = get_samp_points_df()
+        print('done')
+    elif test_type == 1:
+        test = get_samp_points_df(True)
+        test.to_csv(r"C:\Users\MattH\Downloads\current_str_sites.csv")
+        print('recalculated samp_df')
+    elif test_type == 2:
+
+        test = get_con_at_points(sites=['ashley_sh1', 'sfr_bottom_cust','kaiapoi_nroad', 'kaiapoi_harpers_s'],
+                                 ucn_file_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_ucnrepo\mt_aw_ex_mednload_7.ucn",
+                                 sobs_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_sobsrepo\mt_aw_ex_mednload_7.sobs",
+                                 cbc_path=r"K:\mh_modeling\data_from_gns\cbcrepo\mf_aw_ex_7.cbc",
+                                 sfo_path=r"K:\mh_modeling\data_from_gns\sforepo\mf_aw_ex_7.sfo",
+                                 kstpkpers=None,
+                                 rel_kstpkpers=-1)
+        print('done')
