@@ -27,6 +27,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_cbc, get_cbc_mp
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import \
     modpath_converged
+import gc
 
 
 def define_source_from_forward(emulator_path, bd_type_path, indexes, return_packed_bits=False):
@@ -66,6 +67,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
     ids = ['{:02d}_{:03d}_{:03d}'.format(k, i, j) for k, i, j in zip(layers[idx], rows[idx], cols[idx])]
     temp = np.in1d(emulator.index.values, ids)
     emulator = emulator.loc[temp]
+    gc.collect()
     print('took {} s to general identify area'.format(time() - t))
 
     # calculate source percentage
