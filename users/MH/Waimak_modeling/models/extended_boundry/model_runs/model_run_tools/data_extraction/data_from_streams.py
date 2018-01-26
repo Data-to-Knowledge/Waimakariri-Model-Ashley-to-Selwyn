@@ -477,4 +477,4 @@ if __name__ == '__main__':
                                  sfo_path=r"K:\mh_modeling\data_from_gns\sforepo\mf_aw_ex_7.sfo",
                                  kstpkpers=None,
                                  rel_kstpkpers=-1)
-        print('done')
+        print(test)

@@ -16,7 +16,8 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 
-def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites, outpath=None):  # todo debug and check
+def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites,
+                                  outpath=None):
     """
     create a dictionary (keys = runtype) of dataframes(index=nsmc realisation, columns = sites) for each runtype in
     :param nsmc_nums: the nsmc number to use or 'all'
@@ -34,18 +35,14 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
 
     filter_nums = np.array(cbc_nc_file.variables['nsmc_num'])
     emma_nums = np.array(ucn_nc_file.variables['nsmc_num'])
-    if nsmc_nums =='all':
+    if nsmc_nums == 'all':
         ucn_num_idx = np.ones(emma_nums.shape).astype(bool)
         nsmc_filter_idx = np.in1d(filter_nums, emma_nums)
         nsmc_nums = emma_nums
     else:
         nsmc_nums = np.atleast_1d(nsmc_nums)
-        ucn_num_idx = np.in1d(emma_nums,nsmc_nums)
+        ucn_num_idx = np.in1d(emma_nums, nsmc_nums)
         nsmc_filter_idx = np.in1d(filter_nums, nsmc_nums)
-
-
-    if not (emma_nums == filter_nums[nsmc_filter_idx]).all():
-        raise ValueError('expected Ucn netcdf to be a sub set and in the same order re nc_nums as cbb')
 
     outdata = pd.DataFrame(index=nsmc_nums, columns=sites)
     sw_samp_dict = _get_sw_samp_pts_dict()
@@ -64,7 +61,7 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
             assert sfr_idx.sum() == 1, 'only single boolean true sfr_idxs used'
             r, c = smt.model_where(sfr_idx)[0]
             sfr_fraction = np.array(
-                ucn_nc_file.variables['sobs_{}'.format(ucn_var_name)][ucn_num_idx, r, c])  # todo check
+                ucn_nc_file.variables['sobs_{}'.format(ucn_var_name)][ucn_num_idx, r, c])
             sfr_flux = np.array(cbc_nc_file.variables['streamflow out'][nsmc_filter_idx, r, c])
 
         if drn_idx is not None:
@@ -77,10 +74,10 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
             assert drn_con.shape == drn_flow.shape, 'drn_con and drn_flow, must be the same size'
             # convert to drain concentration across all drain cells
             drn_fraction = ((drn_con * drn_flow).sum(axis=1) / drn_flow.sum(axis=1))
-            drn_flux = drn_flow.sum(axis=1)
+            drn_flux = drn_flow.sum(axis=1)*-1
 
         if drn_fraction is not None and sfr_fraction is not None:
-            outcon = (sfr_fraction * sfr_flux + drn_fraction + drn_flux) / (drn_flux + sfr_flux)
+            outcon = (sfr_fraction * sfr_flux + drn_fraction * drn_flux) / (drn_flux + sfr_flux)
         elif drn_fraction is not None:
             outcon = drn_fraction
         elif sfr_fraction is not None:
@@ -111,19 +108,17 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
     ucn_nc_file = nc.Dataset(ucn_nc_path)
 
     emma_nums = np.array(ucn_nc_file.variables['nsmc_num'])
-    if nsmc_nums =='all':
+    if nsmc_nums == 'all':
         num_idx = np.ones(emma_nums.shape).astype(bool)
         nsmc_nums = emma_nums
     else:
         nsmc_nums = np.atleast_1d(nsmc_nums)
-        num_idx = np.in1d(emma_nums,nsmc_nums)
-
+        num_idx = np.in1d(emma_nums, nsmc_nums)
 
     all_wells = get_all_well_row_col()
 
     outdata = pd.DataFrame(index=nsmc_nums, columns=sites)
     for site in sites:
-
         # get the well concentrations
         layers, rows, cols = all_wells.loc[site, ['layer', 'row', 'col']].values.transpose()
 
@@ -139,3 +134,13 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
         outdata.to_csv(os.path.join(outpath, '{}_concentration.csv'.format(ucn_var_name)))
 
     return outdata
+
+
+if __name__ == '__main__':
+    test = calculate_con_from_netcdf_str(nsmc_nums='all',
+                                         ucn_nc_path=r"T:\Temp\temp_gw_files\mednload_ucn.nc",
+                                         ucn_var_name='mednload',
+                                         cbc_nc_path=r"K:\mh_modeling\netcdfs_of_key_modeling_data\post_filter1_cell_budgets.nc",
+                                         sites=['kaiapoi_harpers_s', 'kaiapoi_heywards'],
+                                         outpath=None)
+    print(test.describe())
