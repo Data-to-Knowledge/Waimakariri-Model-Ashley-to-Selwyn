@@ -125,7 +125,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
     modflow_dir = get_modeflow_dir_for_source()
     backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), run_name)
 
-    cust_data = get_cust_mapping(model_ids)
+    cust_data = get_cust_mapping(run_name, model_ids)
 
     # forward weak
     print('calculating forward weak\n\n')
@@ -462,8 +462,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    outdir_temp = r"D:\mh_testing\zone_delin_multiple"
-    create_amalgimated_source_protection_zones(model_ids=['NsmcReal000005', 'NsmcReal000017'], run_name='test_multiple',
-                                               outdir=os.path.join(outdir_temp, 'test_multiple'),
-                                               recalc=False, recalc_backward_tracking=False)
-    split_netcdfs(os.path.join(outdir_temp, 'test_multiple'))
+    run_multiple_source_zones()
