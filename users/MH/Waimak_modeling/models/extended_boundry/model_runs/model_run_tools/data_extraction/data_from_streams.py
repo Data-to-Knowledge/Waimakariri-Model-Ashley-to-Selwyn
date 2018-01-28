@@ -460,7 +460,7 @@ def _make_swaz_drn_points():
 
 if __name__ == '__main__':
     # tests
-    test_type = 2
+    test_type = 1
     if test_type == 0:
         test = get_samp_points_df()
         print('done')
