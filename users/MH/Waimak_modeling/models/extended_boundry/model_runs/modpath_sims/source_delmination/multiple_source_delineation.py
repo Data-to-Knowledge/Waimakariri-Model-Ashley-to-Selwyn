@@ -26,7 +26,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 import gc
 
 
-def create_private_wells_indexes(): #todo break up
+def create_private_wells_indexes(num_iterations=1, iteration=0):
     all_wells = get_all_well_row_col()
 
     private_wells = pd.read_csv(
@@ -35,16 +35,26 @@ def create_private_wells_indexes(): #todo break up
     private_wells = pd.merge(private_wells, all_wells.loc[:, ['layer', 'row', 'col']], right_index=True,
                              left_index=True)
     private_wells = private_wells.dropna()
+
+    chunk_size = len(private_wells)//num_iterations + 1
+    if num_iterations == iteration+1: # if it is the last iteration then use +1 to grab the last index
+        extra = 1
+    else:
+        extra = 0
+    start =iteration*chunk_size
+    end = start + chunk_size + extra
+    out_private_wells = private_wells.iloc[start:end]
+
     indexes = {}
-    for name, k, i, j in private_wells.loc[:, ['layer', 'row', 'col']].astype(int).itertuples(True, None):
+    for name, k, i, j in out_private_wells.loc[:, ['layer', 'row', 'col']].astype(int).itertuples(True, None):
         temp = smt.get_empty_model_grid(True).astype(bool)
         temp[k, i, j] = True
         indexes[name] = temp
 
-    return private_wells, indexes
+    return out_private_wells, indexes
 
 
-def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, recalc=False,
+def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_it, recalc=False,
                                                recalc_backward_tracking=False):
     """
     calculates teh source area for all the individaul wells (or loads it) and then aggrigates the data across the
@@ -59,7 +69,7 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
     """
     private_wells, indexes = create_private_wells_indexes()
     root_num_part = 3
-    single_site_data = create_zones(model_ids, run_name, outdir, root_num_part, indexes,
+    single_site_data = create_zones(model_ids, run_name, outdir, root_num_part, num_it,
                                     recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
 
     # the amalgimation must begin
@@ -99,14 +109,14 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, reca
         save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part)
 
 
-def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
+def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, recalc=False, recalc_backward_tracking=False):
     """
     create the zones, load data from pre-run forward models and run and extract the data for backward models
     then amalgamate the data up into useful fashions, also sort out the cust particle tracking problem
     :param model_ids: the model_ids to run this for
     :param outdir: the directory to save the four output netcdfs
     :param root_num_part: the 3 root of the number of particles to put in each backward cell
-    :param indexes: a dictionay of ids and boolean zone arrays
+    :param num_iterations: int the number of iterations to run this thing in
     :param recalc: if True recalc the netcdfs
     :param recalc_backward_tracking: if True also re-run backward models (if this is True, recalc will be changed to True
     :return: {forward_weak: open netcdf file}
@@ -124,94 +134,105 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
         return outdata
 
     modflow_dir = get_modeflow_dir_for_source()
-    backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), run_name)
 
     cust_data = get_cust_mapping(run_name, model_ids)
 
-    # forward weak #todo put the for loop here
-    print('calculating forward weak\n\n')
-    forward_weaks = []
-    f_em_paths = get_forward_emulator_paths(model_ids, True)
-    for i, path in enumerate(f_em_paths.values()):
-        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
-        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
-                                          return_packed_bits=True)
-        forward_weaks.append(temp)
+    for it in range(num_iterations):
+        private_wells, indexes = create_private_wells_indexes(num_iterations, it)
+        backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), '{}_it{}'.format(run_name,it))
+        if it == 0:
+            first = True
+        else:
+            first = False
 
-    # amalgamate data from realsiations mean and sd?
-    amalg_weak_forward = _amalg_forward(forward_weaks, indexes, cust_data, model_ids, 'forward_weak')
-    outpath = save_source_nc(outdir=outdir,
-                             name='forward_weak',
-                             data=amalg_weak_forward,
-                             model_ids=model_ids,
-                             root_num_part=root_num_part) #todo manage new file
-    gc.collect()
+        # forward weak
+        print('calculating forward weak\n\n')
+        forward_weaks = []
+        f_em_paths = get_forward_emulator_paths(model_ids, True)
+        for i, path in enumerate(f_em_paths.values()):
+            print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+            temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
+                                              return_packed_bits=True)
+            forward_weaks.append(temp)
 
-    # forward strong
-    print('calculating forward strong\n\n')
-    forward_strongs = []
-    f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
-    for i, path in enumerate(f_em_paths.values()):
-        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
-        temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
-                                          return_packed_bits=True)
-        forward_strongs.append(temp)
-    # amalgamate data from realsiations
-    amalg_strong_forward = _amalg_forward(forward_strongs, indexes, cust_data, model_ids, 'forward_strong')
-    outpath = save_source_nc(outdir=outdir,
-                             name='forward_strong',
-                             data=amalg_strong_forward,
-                             model_ids=model_ids,
-                             root_num_part=root_num_part) #todo manage new file
-    gc.collect()
+        # amalgamate data from realsiations mean and sd?
+        amalg_weak_forward = _amalg_forward(forward_weaks, indexes, cust_data, model_ids, 'forward_weak')
+        outpath = save_source_nc(outdir=outdir,
+                                 name='forward_weak',
+                                 data=amalg_weak_forward,
+                                 model_ids=model_ids,
+                                 root_num_part=root_num_part,
+                                 new_file=first)
+        gc.collect()
 
-    # backward weak
-    print('calculating backward weak\n\n')
-    back_weaks = []
-    for i, mid in enumerate(model_ids):
-        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
-        temp = define_source_from_backward(indexes,
-                                           mp_ws=os.path.join(backward_dir, 'weak', mid),
-                                           mp_name='{}_weak'.format(mid),
-                                           cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
-                                           root3_num_part=root_num_part, capt_weak_s=True,
-                                           recalc=recalc_backward_tracking,
-                                           return_packed_bits=True)
-        back_weaks.append(temp)
-    # amalgamate data from realsiations mean and sd?
-    # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells)
-    # and/or the exit via a non top layer flux
-    amalg_weak_back = _amalg_backward(back_weaks, indexes, cust_data, model_ids,
-                                      'backward_weak')  # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells) and/or the exit via a non top layer flux
-    outpath = save_source_nc(outdir=outdir,
-                             name='backward_weak',
-                             data=amalg_weak_back,
-                             model_ids=model_ids,
-                             root_num_part=root_num_part) #todo manage new file
+        # forward strong
+        print('calculating forward strong\n\n')
+        forward_strongs = []
+        f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
+        for i, path in enumerate(f_em_paths.values()):
+            print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+            temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
+                                              return_packed_bits=True)
+            forward_strongs.append(temp)
+        # amalgamate data from realsiations
+        amalg_strong_forward = _amalg_forward(forward_strongs, indexes, cust_data, model_ids, 'forward_strong')
+        outpath = save_source_nc(outdir=outdir,
+                                 name='forward_strong',
+                                 data=amalg_strong_forward,
+                                 model_ids=model_ids,
+                                 root_num_part=root_num_part,
+                                 new_file=first)
+        gc.collect()
 
-    gc.collect()
+        # backward weak
+        print('calculating backward weak\n\n')
+        back_weaks = []
+        for i, mid in enumerate(model_ids):
+            print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+            temp = define_source_from_backward(indexes,
+                                               mp_ws=os.path.join(backward_dir, 'weak', mid),
+                                               mp_name='{}_weak'.format(mid),
+                                               cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
+                                               root3_num_part=root_num_part, capt_weak_s=True,
+                                               recalc=recalc_backward_tracking,
+                                               return_packed_bits=True)
+            back_weaks.append(temp)
+        # amalgamate data from realsiations mean and sd?
+        # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells)
+        # and/or the exit via a non top layer flux
+        amalg_weak_back = _amalg_backward(back_weaks, indexes, cust_data, model_ids,
+                                          'backward_weak')  # there are some wells are missing, my guess is they got stranded (which accounts for most (e.g. dry wells) and/or the exit via a non top layer flux
+        outpath = save_source_nc(outdir=outdir,
+                                 name='backward_weak',
+                                 data=amalg_weak_back,
+                                 model_ids=model_ids,
+                                 root_num_part=root_num_part,
+                                 new_file=first)
 
-    # backward strong
-    print('calculating backward strong\n\n')
-    back_strongs = []
-    for i, mid in enumerate(model_ids):
-        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
-        temp = define_source_from_backward(indexes,
-                                           mp_ws=os.path.join(backward_dir, 'strong', mid),
-                                           mp_name='{}_strong'.format(mid),
-                                           cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
-                                           root3_num_part=root_num_part, capt_weak_s=False,
-                                           recalc=recalc_backward_tracking, return_packed_bits=True)
-        back_strongs.append(temp)
-    # amalgamate data from realsiations mean and sd?
-    amalg_strong_back = _amalg_backward(back_strongs, indexes, cust_data, model_ids, 'backward_strong')
-    outpath = save_source_nc(outdir=outdir,
-                             name='backward_strong',
-                             data=amalg_strong_back,
-                             model_ids=model_ids,
-                             root_num_part=root_num_part) #todo manage new file
+        gc.collect()
 
-    gc.collect()
+        # backward strong
+        print('calculating backward strong\n\n')
+        back_strongs = []
+        for i, mid in enumerate(model_ids):
+            print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+            temp = define_source_from_backward(indexes,
+                                               mp_ws=os.path.join(backward_dir, 'strong', mid),
+                                               mp_name='{}_strong'.format(mid),
+                                               cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
+                                               root3_num_part=root_num_part, capt_weak_s=False,
+                                               recalc=recalc_backward_tracking, return_packed_bits=True)
+            back_strongs.append(temp)
+        # amalgamate data from realsiations mean and sd?
+        amalg_strong_back = _amalg_backward(back_strongs, indexes, cust_data, model_ids, 'backward_strong')
+        outpath = save_source_nc(outdir=outdir,
+                                 name='backward_strong',
+                                 data=amalg_strong_back,
+                                 model_ids=model_ids,
+                                 root_num_part=root_num_part,
+                                 new_file=first)
+
+        gc.collect()
 
     outdata = {}
     for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
@@ -268,7 +289,7 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False)
                        'standard_name': 'projection_x_coordinate'})
         lon[:] = x
     else:
-        outfile = nc.Dataset(outpath, 'a') #todo check append for netcdf
+        outfile = nc.Dataset(outpath, 'a')
 
     # location add the data
     for site in data.keys():
@@ -377,19 +398,20 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
     out['{}_number_cust'.format(name)] = np.sum(bool_array_wcust, axis=0).astype(np.uint8)
 
 
-def run_multiple_source_zones(recalc=False, recalc_backward_tracking=False):
+def run_multiple_source_zones(num_it_stocastic, recalc=False, recalc_backward_tracking=False):
     base_outdir = r"D:\mh_waimak_models\private_domestic_supply"
     print('running for AshOpt')
     create_amalgimated_source_protection_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
-                                               outdir=os.path.join(base_outdir, 'AshOpt'),
+                                               outdir=os.path.join(base_outdir, 'AshOpt'), num_it=1,
                                                recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(os.path.join(base_outdir, 'AshOpt'))
 
     print('running for 165 models')
-    stocastic_model_ids = get_stocastic_set()
+    stocastic_model_ids = get_stocastic_set()[0:2] #todo DADB
     create_amalgimated_source_protection_zones(model_ids=stocastic_model_ids,
                                                run_name='stocastic_set_private_wells',
                                                outdir=os.path.join(base_outdir, 'stocastic set'),
+                                               num_it=num_it_stocastic,
                                                recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(os.path.join(base_outdir, 'stocastic set'))
 
@@ -473,4 +495,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    run_multiple_source_zones()
+    run_multiple_source_zones(5)
