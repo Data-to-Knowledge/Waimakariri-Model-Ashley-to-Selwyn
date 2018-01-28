@@ -58,7 +58,7 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
         drn_idx, sfr_idx = _get_flux_flow_arrays(site, sw_samp_dict, sw_samp_df)
 
         if sfr_idx is not None:
-            assert sfr_idx.sum() == 1, 'only single boolean true sfr_idxs used'
+            assert sfr_idx.sum() == 1, 'only single boolean true sfr_idxs used, site:{}'.format(site)
             r, c = smt.model_where(sfr_idx)[0]
             sfr_fraction = np.array(
                 ucn_nc_file.variables['sobs_{}'.format(ucn_var_name)][ucn_num_idx, r, c])
