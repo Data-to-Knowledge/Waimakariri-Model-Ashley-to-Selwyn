@@ -26,7 +26,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 import gc
 
 
-def create_private_wells_indexes():
+def create_private_wells_indexes(): #todo break up
     all_wells = get_all_well_row_col()
 
     private_wells = pd.read_csv(
@@ -128,7 +128,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
 
     cust_data = get_cust_mapping(run_name, model_ids)
 
-    # forward weak
+    # forward weak #todo put the for loop here
     print('calculating forward weak\n\n')
     forward_weaks = []
     f_em_paths = get_forward_emulator_paths(model_ids, True)
@@ -144,7 +144,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              name='forward_weak',
                              data=amalg_weak_forward,
                              model_ids=model_ids,
-                             root_num_part=root_num_part)
+                             root_num_part=root_num_part) #todo manage new file
     gc.collect()
 
     # forward strong
@@ -162,7 +162,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              name='forward_strong',
                              data=amalg_strong_forward,
                              model_ids=model_ids,
-                             root_num_part=root_num_part)
+                             root_num_part=root_num_part) #todo manage new file
     gc.collect()
 
     # backward weak
@@ -187,7 +187,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              name='backward_weak',
                              data=amalg_weak_back,
                              model_ids=model_ids,
-                             root_num_part=root_num_part)
+                             root_num_part=root_num_part) #todo manage new file
 
     gc.collect()
 
@@ -209,7 +209,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
                              name='backward_strong',
                              data=amalg_strong_back,
                              model_ids=model_ids,
-                             root_num_part=root_num_part)
+                             root_num_part=root_num_part) #todo manage new file
 
     gc.collect()
 
@@ -219,7 +219,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
     return outdata
 
 
-def save_source_nc(outdir, name, data, model_ids, root_num_part):
+def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False):
     """
     save the thing as a netcdf file
     dimensions for data(direction, source behavior, amalg_type, row, col) variables of location ids
@@ -235,37 +235,40 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part):
     no_flow = smt.get_no_flow(0)
 
     outpath = os.path.join(outdir, name + '.nc')
-    outfile = nc.Dataset(outpath, 'w')
-    outfile.set_fill_off()
+    if new_file:
+        outfile = nc.Dataset(outpath, 'w')
+        outfile.set_fill_off()
 
-    x, y = smt.get_model_x_y(False)
+        x, y = smt.get_model_x_y(False)
 
-    # create dimensions
-    outfile.createDimension('latitude', len(y))
-    outfile.createDimension('longitude', len(x))
+        # create dimensions
+        outfile.createDimension('latitude', len(y))
+        outfile.createDimension('longitude', len(x))
 
-    # create variables
+        # create variables
 
-    proj = outfile.createVariable('crs', 'i1')  # this works really well...
-    proj.setncatts({'grid_mapping_name': "transverse_mercator",
-                    'scale_factor_at_central_meridian': 0.9996,
-                    'longitude_of_central_meridian': 173.0,
-                    'latitude_of_projection_origin': 0.0,
-                    'false_easting': 1600000,
-                    'false_northing': 10000000,
-                    })
+        proj = outfile.createVariable('crs', 'i1')  # this works really well...
+        proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                        'scale_factor_at_central_meridian': 0.9996,
+                        'longitude_of_central_meridian': 173.0,
+                        'latitude_of_projection_origin': 0.0,
+                        'false_easting': 1600000,
+                        'false_northing': 10000000,
+                        })
 
-    lat = outfile.createVariable('latitude', 'f8', ('latitude',))
-    lat.setncatts({'units': 'NZTM',
-                   'long_name': 'latitude',
-                   'standard_name': 'projection_y_coordinate'})
-    lat[:] = y
+        lat = outfile.createVariable('latitude', 'f8', ('latitude',))
+        lat.setncatts({'units': 'NZTM',
+                       'long_name': 'latitude',
+                       'standard_name': 'projection_y_coordinate'})
+        lat[:] = y
 
-    lon = outfile.createVariable('longitude', 'f8', ('longitude',))
-    lon.setncatts({'units': 'NZTM',
-                   'long_name': 'longitude',
-                   'standard_name': 'projection_x_coordinate'})
-    lon[:] = x
+        lon = outfile.createVariable('longitude', 'f8', ('longitude',))
+        lon.setncatts({'units': 'NZTM',
+                       'long_name': 'longitude',
+                       'standard_name': 'projection_x_coordinate'})
+        lon[:] = x
+    else:
+        outfile = nc.Dataset(outpath, 'a') #todo check append for netcdf
 
     # location add the data
     for site in data.keys():

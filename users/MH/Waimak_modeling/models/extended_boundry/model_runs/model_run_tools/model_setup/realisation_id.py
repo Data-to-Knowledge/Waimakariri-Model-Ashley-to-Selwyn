@@ -395,7 +395,7 @@ def get_model(model_id, save_to_dir=False):
     m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False)
     return m
 
-def get_stocastic_set():
+def get_stocastic_set(return_model_ids=True):
     """
     a quick wrapper to get all of the 165 stocastic models
     :return:
@@ -417,7 +417,10 @@ def get_stocastic_set():
                  3641, 3651, 3663, 3685, 3712, 3717, 3762, 3796, 3836, 3861, 3910]
 
     model_ids = ['NsmcReal{:06d}'.format(e) for e in nsmc_nums]
-    return model_ids
+    if return_model_ids:
+        return model_ids
+    else:
+        return nsmc_nums
 if __name__ == '__main__':
     # tests
     m = get_model('NsmcBase')

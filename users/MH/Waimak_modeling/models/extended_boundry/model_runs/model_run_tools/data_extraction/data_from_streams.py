@@ -158,8 +158,8 @@ def get_flow_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None):
     return outdata
 
 
-def get_con_at_points(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpkpers=None,
-                      rel_kstpkpers=None):
+def get_con_at_str(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpkpers=None,
+                   rel_kstpkpers=None):
     """
     get the concentration at stream sites
     :param sites: a list of sites (from the surface feature flow paths)
@@ -470,11 +470,11 @@ if __name__ == '__main__':
         print('recalculated samp_df')
     elif test_type == 2:
 
-        test = get_con_at_points(sites=['ashley_sh1', 'sfr_bottom_cust','kaiapoi_nroad', 'kaiapoi_harpers_s'],
-                                 ucn_file_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_ucnrepo\mt_aw_ex_mednload_7.ucn",
-                                 sobs_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_sobsrepo\mt_aw_ex_mednload_7.sobs",
-                                 cbc_path=r"K:\mh_modeling\data_from_gns\cbcrepo\mf_aw_ex_7.cbc",
-                                 sfo_path=r"K:\mh_modeling\data_from_gns\sforepo\mf_aw_ex_7.sfo",
-                                 kstpkpers=None,
-                                 rel_kstpkpers=-1)
+        test = get_con_at_str(sites=['ashley_sh1', 'sfr_bottom_cust', 'kaiapoi_nroad', 'kaiapoi_harpers_s'],
+                              ucn_file_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_ucnrepo\mt_aw_ex_mednload_7.ucn",
+                              sobs_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_sobsrepo\mt_aw_ex_mednload_7.sobs",
+                              cbc_path=r"K:\mh_modeling\data_from_gns\cbcrepo\mf_aw_ex_7.cbc",
+                              sfo_path=r"K:\mh_modeling\data_from_gns\sforepo\mf_aw_ex_7.sfo",
+                              kstpkpers=None,
+                              rel_kstpkpers=-1)
         print(test)
