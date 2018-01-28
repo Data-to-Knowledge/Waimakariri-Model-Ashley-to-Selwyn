@@ -179,7 +179,7 @@ def get_cust_mapping(base_name, model_ids, recalc=False, recalc_backward_trackin
         losing[mid] = temp
 
     # save the data
-    print('joining the data') #todo this could be broken up for easy space
+    print('joining the data')
     outdata = _save_cust_nc(outdir, forward_weaks, forward_strongs, back_strongs, back_weaks, model_ids,
                             root_num_part, sfr_id_array, unpacked_size, unpacked_shape, losing)
 
