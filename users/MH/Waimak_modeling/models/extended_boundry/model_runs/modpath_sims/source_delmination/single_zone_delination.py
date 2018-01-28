@@ -520,7 +520,7 @@ def _amalg_forward(data, indexes, sfr_data, model_ids, run_name):
     """
     out = {}
     for name in indexes.keys():
-        temp = [e[name] for e in data]
+        temp = _get_all_avalible_data(data, name)
         _add_data_variations(out, temp, name, sfr_data, model_ids, run_name)
 
     return out
@@ -537,10 +537,19 @@ def _amalg_backward(data, indexes, sfr_data, model_ids, run_name):
     """
     out = {}
     for name in indexes.keys():
-        temp = [e[name] for e in data]
+        temp = _get_all_avalible_data(data, name)
         _add_data_variations(out, temp, name, sfr_data, model_ids, run_name)
 
     return out
+
+def _get_all_avalible_data(data,key):
+    temp = []
+    for e in data:
+        try:
+            temp.append(e[key])
+        except:
+            pass
+    return temp
 
 
 def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
