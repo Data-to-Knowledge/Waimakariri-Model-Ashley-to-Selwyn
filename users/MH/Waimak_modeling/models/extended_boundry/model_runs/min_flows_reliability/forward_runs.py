@@ -78,7 +78,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     super_gmp = {
         'model_id': model_id,
-        'name': 'mod_period',
+        'name': 'super_gmp',
         'base_dir': None,
         'cc_inputs': None,
         'pc5': False,

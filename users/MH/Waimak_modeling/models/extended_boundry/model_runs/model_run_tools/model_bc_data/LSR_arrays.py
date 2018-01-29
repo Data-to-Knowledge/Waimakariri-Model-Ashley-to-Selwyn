@@ -62,13 +62,13 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     rch_array = get_lsrm_base_array(sen, rcp, rcm, period, method)
     if super_gmp:
         assert sen == 'current', 'for super gmp senario must be current'
-        assert all([e is None for e in [rcp, rcm, period,
-                                        method]]), 'rcp, rcm, period, method must all be None, no support for climate change scenarios'
+        assert all([e is None for e in [rcp,
+                                        rcm]]), 'rcp, rcm, must all be None, no support for climate change scenarios'
         mult = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\cmp_gmp_point_sources_n.shp".format(smt.sdp),
                                              'drn_change', True)
+        mult[np.isnan(mult)]=1
 
         rch_array *= mult
-        raise NotImplementedError
 
     # apply multiplier array from pest parameraterisation
     rch_mult = get_rch_multipler(model_id)
@@ -296,7 +296,10 @@ def get_ird_base_array(sen, rcp, rcm, per, at):
 
 if __name__ == '__main__':
     # tests
-    testtype = 1
+    testtype = 0
+    if testtype == 0:
+        test = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=False, rcm=None, rcp=None, period=None,
+                    amag_type=None, cc_to_waimak_only=False, super_gmp=True)
     if testtype == 1:
         _create_all_lsrm_arrays()
 

@@ -20,7 +20,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.so
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
     get_cbc, get_forward_emulator_paths
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.data_extraction.data_from_streams import \
-    get_samp_points_df, _get_sw_samp_pts_dict
+    get_samp_points_df, _get_sw_samp_pts_dict, _get_flux_flow_arrays
 from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
@@ -35,11 +35,15 @@ def create_single_zone_indexs():
     indexes = {}
     # streams
     str_data = get_samp_points_df()
-    str_data = str_data.loc[str_data.m_type == 'source']
+    str_data_use = str_data.loc[str_data.m_type == 'source']
     str_dict = _get_sw_samp_pts_dict()
-    for idx in str_data.index:
+    for idx in str_data_use.index:
+        sfr_array, drn_array = _get_flux_flow_arrays(idx, str_dict, str_data)
         temp_out = smt.get_empty_model_grid(True).astype(bool)
-        temp_out[0] = str_dict[idx].astype(bool)
+        if sfr_array is not None:
+            temp_out[0] = sfr_array.astype(bool) | temp_out[0]
+        if drn_array is not None:
+            temp_out[0] = drn_array.astype(bool) | temp_out[0]
         indexes[idx] = temp_out
 
     # WDC water supply wells (groups of individual wells)
