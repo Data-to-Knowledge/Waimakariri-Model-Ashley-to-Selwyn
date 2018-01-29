@@ -106,7 +106,7 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_
             outdata['{}_number'.format(site)] = number_array
             outdata['{}_number_cust'.format(site)] = number_array_cust
 
-        save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part)
+        save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part, True)
 
 
 def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, recalc=False, recalc_backward_tracking=False):
@@ -138,6 +138,9 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
     cust_data = get_cust_mapping(run_name, model_ids)
 
     for it in range(num_iterations):
+        print('\n\n##################################################')
+        print('starting well set {} of {}'.format(it+1, num_iterations))
+        print('###################################################\n\n')
         private_wells, indexes = create_private_wells_indexes(num_iterations, it)
         backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), '{}_it{}'.format(run_name,it))
         if it == 0:
@@ -407,7 +410,7 @@ def run_multiple_source_zones(num_it_stocastic, recalc=False, recalc_backward_tr
     split_netcdfs(os.path.join(base_outdir, 'AshOpt'))
 
     print('running for 165 models')
-    stocastic_model_ids = get_stocastic_set()[0:2] #todo DADB
+    stocastic_model_ids = get_stocastic_set()
     create_amalgimated_source_protection_zones(model_ids=stocastic_model_ids,
                                                run_name='stocastic_set_private_wells',
                                                outdir=os.path.join(base_outdir, 'stocastic set'),
@@ -495,4 +498,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    run_multiple_source_zones(5)
+    run_multiple_source_zones(3, recalc=True, recalc_backward_tracking=False)
