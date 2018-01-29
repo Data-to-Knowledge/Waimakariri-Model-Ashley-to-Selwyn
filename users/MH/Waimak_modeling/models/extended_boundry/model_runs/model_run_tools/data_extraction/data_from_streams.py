@@ -406,8 +406,8 @@ def get_samp_points_df(recalc=False):
 
     outdata.loc['ash_ash_est_s'] = ['comb', 'source', -1, ('drn_ash_ash_est', 'sfr_ashley_sh1_s')]
     outdata.loc['ash_ash_est'] = ['comb', 'other', -1, ('drn_ash_ash_est', 'sfr_ashley_sh1')]
-    outdata.loc['kaiapoi_end_s'] = ['comb', 'source', -1, ('drn_kaiapoi_end', 'sfr_bottom_cust')]
-    outdata.loc['kaiapoi_end'] = ['comb', 'other', -1, ('drn_kaiapoi_end', 'sfr_cust_swaz', 'sfr_custmaindrain_swaz')]
+    outdata.loc['kaiapoi_end'] = ['comb', 'other', -1, ('drn_kaiapoi_end', 'sfr_bottom_cust')]
+    outdata.loc['kaiapoi_end_s'] = ['comb', 'source', -1, ('drn_kaiapoi_end', 'sfr_cust_swaz', 'sfr_custmaindrain_swaz')]
     outdata.loc['ash_est_all'] = ['comb', 'other', -1, ('drn_ash_ash_est', 'sfr_ashley_sh1', 'drn_waikuku_end_s',
                                                         'drn_taranaki_end_s',
                                                         'drn_saltwater_end_s',)]
