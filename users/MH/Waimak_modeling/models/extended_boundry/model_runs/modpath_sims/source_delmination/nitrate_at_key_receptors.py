@@ -40,7 +40,15 @@ def get_str_ids():
                  'southbrook_marshes_s',
                  'taranaki_gressons_s',
                  'taranaki_preeces_s',
-                 'waikuku_sh1_s']
+                 'waikuku_sh1_s',
+                 # round 2
+                 'ash_ash_est',
+                 'ash_est_all',
+                 'cam_end_s',
+                 'waikuku_end_s',
+                 'taranaki_end_s',
+                 'saltwater_end_s',
+                 'kaiapoi_end']
 
     return str_sites
 
