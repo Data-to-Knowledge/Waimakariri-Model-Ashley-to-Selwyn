@@ -35,13 +35,18 @@ def create_private_wells_indexes(num_iterations=1, iteration=0):
     private_wells = pd.merge(private_wells, all_wells.loc[:, ['layer', 'row', 'col']], right_index=True,
                              left_index=True)
     private_wells = private_wells.dropna()
+    private_wells = pd.merge(private_wells, pd.DataFrame(all_wells.loc[:, 'depth']), how='left', left_index=True,
+                             right_index=True)
+    idx = private_wells.depth > 50
+    private_wells.loc[idx, 'zone_2'] = private_wells.loc[idx, 'Zone_1'] + '_deep'
+    private_wells.loc[~idx, 'zone_2'] = private_wells.loc[~idx, 'Zone_1'] + '_shallow'
 
-    chunk_size = len(private_wells)//num_iterations + 1
-    if num_iterations == iteration+1: # if it is the last iteration then use +1 to grab the last index
+    chunk_size = len(private_wells) // num_iterations + 1
+    if num_iterations == iteration + 1:  # if it is the last iteration then use +1 to grab the last index
         extra = 1
     else:
         extra = 0
-    start =iteration*chunk_size
+    start = iteration * chunk_size
     end = start + chunk_size + extra
     out_private_wells = private_wells.iloc[start:end]
 
@@ -76,14 +81,24 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_
     for key in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
         data = single_site_data[key]
         outdata = {}
+        sites = {}
         for site in set(private_wells.Zone_1):
+            well_nums = list(private_wells.loc[private_wells.Zone_1 == site].index)
+            sites[site] = well_nums
+        for site in set(private_wells.zone_2):
+            well_nums = list(private_wells.loc[private_wells.zone_2 == site].index)
+            sites[site] = well_nums
+        sites['all_wells'] = list(private_wells.index)
+        sites['all_wells_shallow'] = list(private_wells.loc[private_wells.depth <= 50].index)
+        sites['all_wells_deep'] = list(private_wells.loc[private_wells.depth > 50].index)
+
+        for site, well_nums in sites.items():
             any_array = smt.get_empty_model_grid().astype(int)
             all_array = smt.get_empty_model_grid().astype(int)
             number_array = smt.get_empty_model_grid().astype(int)
             any_array_cust = smt.get_empty_model_grid().astype(int)
             all_array_cust = smt.get_empty_model_grid().astype(int)
             number_array_cust = smt.get_empty_model_grid().astype(int)
-            well_nums = private_wells.loc[private_wells.Zone_1 == site].index
             for well in well_nums:
                 well = well.replace('/', '_')
                 temp_all = np.array(data.variables['{}_all'.format(well)])
@@ -109,7 +124,8 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_
         save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part, True)
 
 
-def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, recalc=False, recalc_backward_tracking=False):
+def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, recalc=False,
+                 recalc_backward_tracking=False):
     """
     create the zones, load data from pre-run forward models and run and extract the data for backward models
     then amalgamate the data up into useful fashions, also sort out the cust particle tracking problem
@@ -139,10 +155,11 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
 
     for it in range(num_iterations):
         print('\n\n##################################################')
-        print('starting well set {} of {}'.format(it+1, num_iterations))
+        print('starting well set {} of {}'.format(it + 1, num_iterations))
         print('###################################################\n\n')
         private_wells, indexes = create_private_wells_indexes(num_iterations, it)
-        backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), '{}_it{}'.format(run_name,it))
+        backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()),
+                                    '{}_it{}'.format(run_name, it))
         if it == 0:
             first = True
         else:
@@ -153,7 +170,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
         forward_weaks = []
         f_em_paths = get_forward_emulator_paths(model_ids, True)
         for i, path in enumerate(f_em_paths.values()):
-            print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+            print('{}, {} of {}'.format(os.path.basename(path[0]), i + 1, len(f_em_paths)))
             temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
                                               return_packed_bits=True)
             forward_weaks.append(temp)
@@ -173,7 +190,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
         forward_strongs = []
         f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
         for i, path in enumerate(f_em_paths.values()):
-            print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+            print('{}, {} of {}'.format(os.path.basename(path[0]), i + 1, len(f_em_paths)))
             temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes,
                                               return_packed_bits=True)
             forward_strongs.append(temp)
@@ -191,7 +208,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
         print('calculating backward weak\n\n')
         back_weaks = []
         for i, mid in enumerate(model_ids):
-            print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+            print('model: {}, {} of {}'.format(mid, i + 1, len(model_ids)))
             temp = define_source_from_backward(indexes,
                                                mp_ws=os.path.join(backward_dir, 'weak', mid),
                                                mp_name='{}_weak'.format(mid),
@@ -218,7 +235,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
         print('calculating backward strong\n\n')
         back_strongs = []
         for i, mid in enumerate(model_ids):
-            print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+            print('model: {}, {} of {}'.format(mid, i + 1, len(model_ids)))
             temp = define_source_from_backward(indexes,
                                                mp_ws=os.path.join(backward_dir, 'strong', mid),
                                                mp_name='{}_strong'.format(mid),
@@ -296,7 +313,7 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False)
 
     # location add the data
     for site in data.keys():
-        temp_var = outfile.createVariable(site.replace('/','_'), 'u1', ('latitude', 'longitude'))
+        temp_var = outfile.createVariable(site.replace('/', '_'), 'u1', ('latitude', 'longitude'))
         temp_var.setncatts({'units': 'bool or number of realisations',
                             'long_name': site,
                             'comments': 'number of particles from a given cell'})
@@ -418,6 +435,7 @@ def run_multiple_source_zones(num_it_stocastic, recalc=False, recalc_backward_tr
                                                recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(os.path.join(base_outdir, 'stocastic set'))
 
+
 def split_netcdfs(indir):
     """
 
@@ -435,7 +453,8 @@ def split_netcdfs(indir):
 
     # get list of variables (assmue all are teh same) and list of base variables
     variables = list(set(data['forward_strong'].variables.keys()) - {'crs', 'latitude', 'longitude'})
-    base_variables = list(set([e.replace('_number', '').replace('_all', '').replace('_cust', '').replace('_any','') for e in variables]))
+    base_variables = list(
+        set([e.replace('_number', '').replace('_all', '').replace('_cust', '').replace('_any', '') for e in variables]))
 
     for bv in base_variables:
         outfile = nc.Dataset(os.path.join(outdir, bv + '.nc'), 'w')
@@ -494,7 +513,6 @@ def split_netcdfs(indir):
         outfile.history = 'created {}'.format(datetime.datetime.now().isoformat())
         outfile.source = 'script: {}'.format(sys.argv[0])
         outfile.close()
-
 
 
 if __name__ == '__main__':
