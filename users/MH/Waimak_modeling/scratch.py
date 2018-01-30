@@ -12,35 +12,13 @@ from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages im
 from pykrige.ok import OrdinaryKriging as okrig
 import geopandas as gpd
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.extract_data import open_path_file_as_df
+from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
 
-missing_wells = ['M35/0043',
-                 'M35/0575',
-                 'M35/11576',
-                 'M35/11798',
-                 'M35/11865',
-                 'M35/11866',
-                 'M35/5247',
-                 'M35/6456',
-                 'M35/6473',
-                 'M35/6538',
-                 'M35/7254',
-                 'M35/9283',
-                 'M35/9360',
-                 'M35/9362',
-                 'M35/9363',
-                 'M35/9375']
-path_path = r"D:\mh_waimak_models\modpath_reverse_base\test_multiple\weak\NsmcReal000005\NsmcReal000005_weak.mppth"
-group_mapper_path = r"D:\mh_waimak_models\modpath_reverse_base\test_multiple\weak\NsmcReal000005\NsmcReal000005_weak_group_mapper.csv"
-group_mapper = pd.read_csv(group_mapper_path, index_col=0, names=['key', 'val'])['val'].to_dict()
+if __name__ == '__main__':
+    all_wells = get_all_well_row_col()
 
-data = open_path_file_as_df(path_path)
-data.rename(columns={'Layer':'layer','Row':'row', 'Column':'col'}, inplace=True)
-data.replace({'Particle_Group':group_mapper},inplace=True)
-data = data.loc[np.in1d(data.Particle_Group, missing_wells)]
-print 'adding mx,my'
-data = smt.add_mxmy_to_df(data)
-print 'saving data'
-data.to_csv(r"T:\Temp\temp_gw_files\missing_particles.csv")
-print('done')
+    pw = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv", index_col=0)
+    out = pd.merge(all_wells,pw,right_index=True,left_index=True)
+    out.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells_details.csv")
 
 

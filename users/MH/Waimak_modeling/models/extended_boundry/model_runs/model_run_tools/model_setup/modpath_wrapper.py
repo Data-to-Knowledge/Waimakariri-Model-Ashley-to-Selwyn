@@ -216,6 +216,10 @@ def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
         pathdata = [paths.get_data(e) for e in particle_ids]
         paths.write_shapefile(particle_data=pathdata, shpname=shape_file, sr=spatial_ref)
 
+def pathline_file_to_hdf():
+    # todo this would cut the stored size in half with no compression...  plus you can query data within the store
+    raise NotImplementedError
+
 
 if __name__ == '__main__':
     run_model = False
