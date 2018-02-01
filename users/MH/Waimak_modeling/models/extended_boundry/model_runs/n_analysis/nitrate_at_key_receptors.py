@@ -82,10 +82,10 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
                               cbc_path=cbc_path, sfo_path=sfo_path, kstpkpers=None, rel_kstpkpers=-1)
     str_data.to_csv(os.path.join(outdir, '{}_stream_data.csv'.format(model_id)))
     wells = get_well_ids()
-    well_data = get_con_at_wells(well_list=wells.index, unc_file_path=ucn_file_path,
+    well_data = get_con_at_wells(well_list=list(set(wells.index)), unc_file_path=ucn_file_path,
                                  kstpkpers=None, rel_kstpkpers=-1, add_loc=True)
-    out_wells = pd.merge(wells, well_data, left_index=True, right_index=True)
-    out_wells.to_csv(os.path.join(outdir, '{}_well_data.csv'.format(model_id)))
+    well_data = pd.merge(wells, well_data, left_index=True, right_index=True)
+    well_data.to_csv(os.path.join(outdir, '{}_well_data.csv'.format(model_id)))
     zone_sets = [set(well_data.Zone[well_data.Zone.notnull()]),
             set(well_data.Zone_1[well_data.Zone_1.notnull()]),
             set(well_data.zone_2[well_data.zone_2.notnull()])]
@@ -94,8 +94,8 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
         for zone in zone_set:
             idxs = well_data.loc[well_data[key]==zone].index
             temp = well_data.loc[idxs]
-            outdata[zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
-    outdata = pd.DataFrame(outdata).transpose()
+            outdata[zone] = temp['con_gm3_kstp0_kper0'].mean()
+    outdata = pd.Series(outdata)
     outdata.to_csv(os.path.join(outdir, '{}_grouped_well_data.csv'.format(model_id)))
 
 
@@ -113,7 +113,7 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
     str_data.to_csv(os.path.join(outdir, 'stocastic_set_strs.csv'))
 
     all_well_data = calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path,
-                                               ucn_var_name, wells.index,
+                                               ucn_var_name, list(set(wells.index)),
                                                outpath=None)
     well_data = pd.merge(all_well_data.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose(),
                          wells, right_index=True, left_index=True)
@@ -128,7 +128,7 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
             temp = all_well_data.transpose().loc[idxs].mean()
             outdata[zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
     outdata = pd.DataFrame(outdata).transpose()
-    outdata.to_csv(os.path.join(outdir, 'grouped_stocastic_set_wells.csv'))
+    outdata.to_csv(os.path.join(outdir, 'stocastic_set_grouped_wells.csv'))
 
 
 def get_n_ash_opt_stocastic_set(outdir):
