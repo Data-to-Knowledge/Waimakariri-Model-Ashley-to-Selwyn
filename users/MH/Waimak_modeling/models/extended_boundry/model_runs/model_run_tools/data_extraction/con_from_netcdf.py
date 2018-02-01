@@ -86,11 +86,12 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
             raise ValueError('one of drn_fraction, sfr_fraction should be not None')
         outdata.loc[:, site] = outcon
 
+    outdata.index.name='nsmc_num'
     if outpath is not None:
         # save the files
         if not os.path.exists(os.path.dirname(outpath)):
             os.makedirs(os.path.dirname(outpath))
-        outdata.to_csv(os.path.join(outpath, '{}_concentration.csv'.format(ucn_var_name)))
+        outdata.to_csv(outpath)
 
     return outdata
 
@@ -126,11 +127,12 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
 
         outdata.loc[:, site] = well_fraction
 
+    outdata.index.name='nsmc_num'
     if outpath is not None:
         # save the files
         if not os.path.exists(os.path.dirname(outpath)):
             os.makedirs(os.path.dirname(outpath))
-        outdata.to_csv(os.path.join(outpath, '{}_concentration.csv'.format(ucn_var_name)))
+        outdata.to_csv(outpath)
 
     return outdata
 

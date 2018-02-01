@@ -108,13 +108,13 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
     wells = get_well_ids()
 
     str_data = calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, str_sites,
-                                             outpath=None).describe(
+                                             outpath=os.path.join(outdir,'raw_stocastic_set_str_data.csv')).describe(
         percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose()
     str_data.to_csv(os.path.join(outdir, 'stocastic_set_strs.csv'))
 
     all_well_data = calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path,
                                                ucn_var_name, list(set(wells.index)),
-                                               outpath=None)
+                                               outpath=os.path.join(outdir,'raw_stocastic_set_well_data.csv'))
     well_data = pd.merge(all_well_data.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose(),
                          wells, right_index=True, left_index=True)
     well_data.to_csv(os.path.join(outdir, 'stocastic_set_wells.csv'))
