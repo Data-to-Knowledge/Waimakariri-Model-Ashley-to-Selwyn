@@ -15,10 +15,11 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.ex
 from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
 
 if __name__ == '__main__':
-    all_wells = get_all_well_row_col()
 
-    pw = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv", index_col=0)
-    out = pd.merge(all_wells,pw,right_index=True,left_index=True)
-    out.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells_details.csv")
+    pw = pd.read_csv("P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones_detailed.csv", index_col=0)
+    idx = pw.depth>50
+    pw.loc[idx, 'zone_2'] = pw.loc[idx,'Zone_1'] + '_deep'
+    pw.loc[~idx, 'zone_2'] = pw.loc[~idx,'Zone_1'] + '_shallow'
+    pw.to_csv("P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones_detailed.csv")
 
 

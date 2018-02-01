@@ -17,13 +17,34 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_con_at_str, get_samp_points_df
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
     get_stocastic_set
+from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+    get_all_well_row_col
 
 
 def get_well_ids():
     wdc_wells = pd.read_csv(
         r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv",
         index_col=0)
-    return wdc_wells
+
+    all_wells = get_all_well_row_col()
+
+    private_wells = pd.read_csv(
+        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones.csv",
+        index_col=0)
+    private_wells = pd.merge(private_wells, all_wells.loc[:, ['layer', 'row', 'col']], right_index=True,
+                             left_index=True)
+    private_wells = private_wells.dropna()
+    private_wells = pd.merge(private_wells,
+                             pd.DataFrame(all_wells.loc[:, ['depth', 'nztmx', 'nztmy', 'mid_screen_elv']]),
+                             how='left', left_index=True, right_index=True)
+    idx = private_wells.depth > 50
+    private_wells.loc[idx, 'zone_2'] = private_wells.loc[idx, 'Zone_1'] + '_deep'
+    private_wells.loc[~idx, 'zone_2'] = private_wells.loc[~idx, 'Zone_1'] + '_shallow'
+    out_wells = pd.concat((wdc_wells,private_wells.loc[:,['Zone_1', 'zone_2']]))
+    out_wells.loc[:,'private_public'] = 'private'
+    out_wells.loc[out_wells.Zone.notnull(),'private_public'] = 'public'
+
+    return out_wells
 
 
 def get_str_ids():
@@ -53,6 +74,7 @@ def get_str_ids():
     return str_sites
 
 
+# todo make wells the groups of wells rather than the individual? possibly export both sets of data
 def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc_path, sfo_path):
     # run on gw02
     str_sites = get_str_ids()
@@ -64,6 +86,18 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
                                  kstpkpers=None, rel_kstpkpers=-1, add_loc=True)
     out_wells = pd.merge(wells, well_data, left_index=True, right_index=True)
     out_wells.to_csv(os.path.join(outdir, '{}_well_data.csv'.format(model_id)))
+    zone_sets = [set(well_data.Zone[well_data.Zone.notnull()]),
+            set(well_data.Zone_1[well_data.Zone_1.notnull()]),
+            set(well_data.zone_2[well_data.zone_2.notnull()])]
+    outdata = {}
+    for zone_set, key in zip(zone_sets, ['Zone','Zone_1','zone_2']):
+        for zone in zone_set:
+            idxs = well_data.loc[well_data[key]==zone].index
+            temp = well_data.loc[idxs]
+            outdata[zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, '{}_grouped_well_data.csv'.format(model_id)))
+
 
 
 def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
@@ -78,12 +112,23 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
         percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose()
     str_data.to_csv(os.path.join(outdir, 'stocastic_set_strs.csv'))
 
-    well_data = calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path,
+    all_well_data = calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path,
                                                ucn_var_name, wells.index,
-                                               outpath=None).describe(
-        percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose()
-    well_data = pd.merge(well_data, wells, right_index=True, left_index=True)
+                                               outpath=None)
+    well_data = pd.merge(all_well_data.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose(),
+                         wells, right_index=True, left_index=True)
     well_data.to_csv(os.path.join(outdir, 'stocastic_set_wells.csv'))
+    zone_sets = [set(well_data.Zone[well_data.Zone.notnull()]),
+            set(well_data.Zone_1[well_data.Zone_1.notnull()]),
+            set(well_data.zone_2[well_data.zone_2.notnull()])]
+    outdata = {}
+    for zone_set, key in zip(zone_sets, ['Zone','Zone_1','zone_2']):
+        for zone in zone_set:
+            idxs = well_data.loc[well_data[key]==zone].index
+            temp = all_well_data.transpose().loc[idxs].mean()
+            outdata[zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, 'grouped_stocastic_set_wells.csv'))
 
 
 def get_n_ash_opt_stocastic_set(outdir):
