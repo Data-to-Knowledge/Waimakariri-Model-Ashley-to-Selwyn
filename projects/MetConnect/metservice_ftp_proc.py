@@ -8,12 +8,7 @@ Script to process the metservice netcdf files.
 """
 import sys
 from os import path, getcwd
-import traceback
-import logging
-logging.basicConfig(filename=r'E:\ecan\git\Ecan.Science.Python.Base\projects\MetConnect\errors.log', level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
-#sys.stderr = open('errors.txt', 'a+')
 try:
 
     ######################################
@@ -27,7 +22,6 @@ try:
 
     init1 = path.join(py_path, '__init__.py')
     fh = open(init1,'a+')
-
 
     #######################################
     ### Start the work
@@ -44,10 +38,10 @@ try:
     ##########################################
 
     ## Testing parameters - comment out once finished!!!
-    nc_dir = r'E:\ecan\shared\projects\metservice_processing\test\netcdf_combined'
-    server = 'SQL2012DEV01'
-    data_table = 'RainFallPredictionsGrid'
-    nc_output_dir = r'E:\ecan\shared\projects\metservice_processing\test'
+#    nc_dir = r'E:\ecan\shared\projects\metservice_processing\test\netcdf_combined'
+#    server = 'SQL2012DEV01'
+#    data_table = 'RainFallPredictionsGrid'
+#    nc_output_dir = r'E:\ecan\shared\projects\metservice_processing\test'
 
     ### Load in ini parameters
 
@@ -145,5 +139,6 @@ try:
     logging(log_path, str(last_predict_date) + ' was the last model date in the database table. ' + str(model_date) + ' is the new model date. ' + str(len(points)) + ' sites were updated.')
 
 except Exception as err:
-    logger.error(err, exc_info=True)
-    raise err
+    err1 = err
+    logging(log_path, 'Run failed with error: ' + str(err1))
+    raise err1
