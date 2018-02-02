@@ -17,6 +17,10 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 """
 
 from __future__ import division
+import sys
+repository_path = '/path/to/pysolr/' #todo add my new git repository
+if not repository_path in sys.path:
+    sys.path.append(repository_path)
 from core import env
 import numpy as np
 import pandas as pd
@@ -24,6 +28,8 @@ import geopandas as gpd
 from glob import glob
 import time
 import os
+import socket
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import get_well_ids, get_str_ids
 
 
 def _make_dummy_file(outpath):
@@ -68,7 +74,6 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     """
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
-    # todo write some serious assertion errors?
     zone = gpd.read_file(source_area_shp_path)
     assert len(zone) == 1, 'must have only one zone per shapefile'
     org_n_load_name = 'nload_cmp'
@@ -92,24 +97,42 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     org_nload = interest_area.loc[:, org_n_load_name] * area
     stocastic_modifiers = np.atleast_2d([sims[e] for e in (n_type)])
     temp_n_mods = np.repeat(interest_area.loc[:, n_load_name].values[:, np.newaxis],
-                            stocastic_modifiers.shape[1], axis=1) * area[:,np.newaxis]
+                            stocastic_modifiers.shape[1], axis=1) * area[:, np.newaxis]
     temp_n_mods += temp_n_mods * stocastic_modifiers / 100
     n_mods = np.nansum(temp_n_mods, axis=0) / np.nansum(org_nload)
     if outpath is not None:
         np.savetxt(outpath, n_mods)
-    return n_mods #todo how to check this???
+    return n_mods
 
 
-def calc_all_ns(n_load_name, outdir):
-    source_zone_dir = r"C:\Users\MattH\Downloads\dummy_source_zones"  # todo this is just a dummy
-    n_load_path = r"C:\Users\MattH\Downloads\dummy_nload_w_nclass.shp"  # todo this is just a dummy
+def calc_all_ns(n_load_name, outdir, source_zone_dir):
+    headers = ['dairy_l',
+               'dairy_m',
+               'dairy_pd',
+               'sbd_l',
+               'sbd_F',
+               'sbd_S',
+               'lifestyle',
+               'doc']
+    n_load_path = 'P:\\Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp'
     sims = pd.read_csv(r"C:\Users\MattH\Downloads\dummy.csv")  # todo (from kate or dummy for now)
 
     sims = sims.to_dict(orient='list')
+    assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys) - set(headers), headers)
     percentiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
-    source_paths = glob(os.path.join(source_zone_dir, '*.shp'))
+    source_paths = glob(
+        os.path.join(source_zone_dir, '*.shp'))
     names = [os.path.basename(path).replace('.shp', '') for path in source_paths]
+    str_ids = get_str_ids()
+    well_ids = get_well_ids()
+    expected_names = np.array(list(set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)))
+    exists = np.in1d(names, expected_names)
+    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(np.array(names)[~expected_names],expected_names)
     n_load_layer = gpd.read_file(n_load_path)
+    assert 'n_class' in n_load_layer.keys(),'n_class needed in the n load layer'
+
+    assert np.in1d(n_load_layer.n_class, headers), 'unexpected entries for n load layer: {} only expected {}'.format(set(n_load_layer.n_class)-set(headers),headers)
+    assert n_load_name in n_load_layer, 'n_load_name not found in n load layer, only availible: {}'.format(n_load_layer.keys())
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     temp = pd.DataFrame(np.random.rand(10)).describe(percentiles=percentiles)
@@ -120,10 +143,113 @@ def calc_all_ns(n_load_name, outdir):
                                  os.path.join(outdir, 'raw_data', '{}.txt'.format(name)))
         # add the data to a summary sheet with u, sd, and some percentiles to make a quick overview of the PDF
         outdata.loc[name] = pd.Series(temp_n).describe(percentiles=percentiles)
-    outdata.to_csv(os.path.join(outdir, 'n_summary_data.csv'))
-    # todo what is going on with GMP? and/or other future pathways
-    # todo only export modifiers
-    # todo who is making the main shapefiles?
+    outdata.to_csv(os.path.join(outdir, 'n_modifier_summary_data.csv'))
+
+def output_actual_n_vals(outdir, mod_dir):
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    # stocastic set
+    # take raw data both N and modifier and put out values
+    well_ids = get_well_ids()
+    base_well_n = pd.read_csv(env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\raw_stocastic_set_well_data.csv"),
+                              index_col=0).transpose()
+    # well groups
+    zone_sets = [set(well_ids.Zone[well_ids.Zone.notnull()]),
+                 set(well_ids.Zone_1[well_ids.Zone_1.notnull()]),
+                 set(well_ids.zone_2[well_ids.zone_2.notnull()])]
+    outdata = {}
+    for zone_set, key in zip(zone_sets, ['Zone', 'Zone_1', 'zone_2']):
+        for zone in zone_set:
+            idxs = well_ids.loc[well_ids[key] == zone].index
+            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
+            data = base_well_n.loc[idxs].mean().values  # todo check
+            all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
+            outdata[zone] = _np_describe(all_n)
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, 'full_stocastic_n_wells.csv'))
+
+    str_ids = get_str_ids()
+    # sfr_groups
+    base_str_n = pd.read_csv(env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\raw_stocastic_set_str_data.csv"),
+                             index_col=0)
+    outdata = {}
+    for str_id in str_ids:
+        modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(str_id)))
+        data = base_str_n.loc[:, str_id].values
+        all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
+        outdata[str_id] = _np_describe(all_n)
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, 'full_stocastic_n_strs.csv'))
+
+    # ashopt
+    # wells
+    base_well_n = pd.read_csv(env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_grouped_well_data.csv"),
+                              index_col=0)
+
+    outdata = {}
+    for zone_set, key in zip(zone_sets, ['Zone', 'Zone_1', 'zone_2']):
+        for zone in zone_set:
+            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
+            data = np.atleast_1d(base_well_n.loc[zone])  # todo check
+            all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
+            outdata[zone] = _np_describe(all_n)
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, 'Ash_Opt_stocastic_n_wells.csv'))
+
+    # streams
+    base_str_n = pd.read_csv(env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_stream_data.csv"),
+                             index_col=0)
+    outdata = {}
+    for str_id in str_ids:
+        modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(str_id)))
+        data = base_str_n.loc[:, str_id].values
+        all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
+        outdata[str_id] = _np_describe(all_n)
+    outdata = pd.DataFrame(outdata).transpose()
+    outdata.to_csv(os.path.join(outdir, 'Ash_Opt_stocastic_n_strs.csv'))
+
+
+def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99)):
+    outdata = pd.Series()
+    outdata.loc['mean'] = np.nanmean(ndarray)
+    outdata.loc['std'] = np.nanstd(ndarray)
+    outdata.loc['min'] = np.nanmin(ndarray)
+    for i in percentiles:
+        outdata.loc['{}%'.format(int(i * 100))] = np.nanpercentile(ndarray, i * 100)
+    return outdata
+
+
+def run_all_nload_stuffs():
+    base_outdir = env.gw_met_data(r"mh_modeling\stocastic_n_load_results")
+    szdirs = [
+        env.sci(
+            r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely"),
+        env.sci(
+            r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\possible"),
+        env.sci(
+            r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\probable")
+    ]
+    with open(env.gw_met_data(r"mh_modeling\stocastic_n_load_results\n_load_names.txt")) as f:
+        n_names = []
+        for e in f.readlines():
+            if e.strip() != '':
+                n_names.append(e.strip())
+    for sz_dir in szdirs:
+        for n_name in n_names:
+            outdir = os.path.join(base_outdir, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
+            calc_all_ns(n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
+            output_actual_n_vals(outdir=outdir, mod_dir=outdir)
+
+#todo set up so this can be easily run... ie a bat file on RDSPROD03
+#PUT BAT IN "K:\mh_modeling\stocastic_n_load_results"
+#todo fill in the readme IN ABOVE
+#todo set up a new pycharm directory on rds_prod_03 and try to run the bat...
 
 if __name__ == '__main__':
-    calc_all_ns('nload_cmp', r"C:\Users\MattH\Downloads\test_n_transform")
+    assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+    run_all_nload_stuffs()
+    print('done')
