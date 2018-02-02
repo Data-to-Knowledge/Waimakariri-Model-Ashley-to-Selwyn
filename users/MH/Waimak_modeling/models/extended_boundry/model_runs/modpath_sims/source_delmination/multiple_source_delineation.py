@@ -106,14 +106,14 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_
                 temp_number = np.array(data.variables['{}_number'.format(well)])
                 temp_number_cust = np.array(data.variables['{}_number_cust'.format(well)])
 
-                number_array += temp_number
-                number_array_cust += temp_number_cust
+                number_array += temp_number.astype(int)
+                number_array_cust += temp_number_cust.astype(int)
 
-                any_array += temp_number > 0
-                any_array_cust += temp_number_cust > 0
+                any_array += (temp_number > 0).astype(int)
+                any_array_cust += (temp_number_cust > 0).astype(int)
 
-                all_array += temp_all
-                all_array_cust += temp_all_cust
+                all_array += temp_all.astype(int)
+                all_array_cust += temp_all_cust.astype(int)
             outdata['{}_all'.format(site)] = all_array
             outdata['{}_all_cust'.format(site)] = all_array_cust
             outdata['{}_any'.format(site)] = any_array
@@ -121,7 +121,7 @@ def create_amalgimated_source_protection_zones(model_ids, run_name, outdir, num_
             outdata['{}_number'.format(site)] = number_array
             outdata['{}_number_cust'.format(site)] = number_array_cust
 
-        save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part, True)
+        save_source_nc(outdir, 'amalgimated_{}'.format(key), outdata, model_ids, root_num_part, True, dtype=np.uint64)
 
 
 def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, recalc=False,
@@ -260,7 +260,7 @@ def create_zones(model_ids, run_name, outdir, root_num_part, num_iterations=1, r
     return outdata
 
 
-def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False):
+def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False, dtype=np.uint8):
     """
     save the thing as a netcdf file
     dimensions for data(direction, source behavior, amalg_type, row, col) variables of location ids
@@ -312,13 +312,14 @@ def save_source_nc(outdir, name, data, model_ids, root_num_part, new_file=False)
         outfile = nc.Dataset(outpath, 'a')
 
     # location add the data
+
     for site in data.keys():
-        temp_var = outfile.createVariable(site.replace('/', '_'), 'u1', ('latitude', 'longitude'))
+        temp_var = outfile.createVariable(site.replace('/', '_'), dtype, ('latitude', 'longitude'))
         temp_var.setncatts({'units': 'bool or number of realisations',
                             'long_name': site,
                             'comments': 'number of particles from a given cell'})
 
-        t = data[site].astype(np.uint8)
+        t = data[site].astype(dtype)
         t[~np.isclose(no_flow, 1)] = 0
         temp_var[:] = t
 
@@ -516,4 +517,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    run_multiple_source_zones(3, recalc=True, recalc_backward_tracking=False)
+    run_multiple_source_zones(3, recalc=False, recalc_backward_tracking=False) #todo keep running as it seems like the server crashed
