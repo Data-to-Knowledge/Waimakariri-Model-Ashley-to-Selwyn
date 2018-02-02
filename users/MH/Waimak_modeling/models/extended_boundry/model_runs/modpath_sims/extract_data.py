@@ -16,6 +16,7 @@ import pickle
 import numpy as np
 import flopy
 
+
 # particle id moves to 0 indexed
 # particle id links the endpoint file and path file
 # make a unique id from a string of k,i,j
@@ -104,12 +105,13 @@ def save_forward_data(path, outpath):
     data.to_hdf(outpath, 'emulator', mode='w')
 
 
-def extract_back_data(path_path, group_mapper_path, hds_path):
+def extract_back_data(path_path, group_mapper_path, hds_path, return_packed_bits=False, verbose=False):
     """
 
     :param path_path: the pathline file
     :param group_mapper_path: the file to the group mapper produced in set_up_reverse_modpath
     :param hds_path: path to the simulation heads file
+    :param return_packed_bits: bool if True return the array as a boolean array and packedbits
     :return:
     """
     # for now assume that I can hold the full thing in memory, but watch
@@ -124,10 +126,12 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
         'Grid',
         'Local_X',
         'Local_Y',
-        'Local_Z',
         'Line_Segment_Index',
     ]
     print('reading data')
+
+    # set the local grid maximum so that particles are only counted if they are in the top (1-local_z_max)
+    # percent of the cell
 
     data = open_path_file_as_df(path_path)
     print('simplifying data')
@@ -136,22 +140,25 @@ def extract_back_data(path_path, group_mapper_path, hds_path):
     hds = flopy.utils.HeadFile(hds_path).get_alldata()[0]
     active_top_cells = smt.model_where((no_flow[np.newaxis] == 1) & (hds[:1] > -777))
     temp = smt.model_where(hds < -777)
-    temp = [(e[0]+1, e[1], e[2]) for e in temp]
+    temp = [(e[0] + 1, e[1], e[2]) for e in temp]
     active_top_cells.extend(temp)
     # make a ref cell id and make sure it is zero indexed
     data = data.set_index(['Layer', 'Row', 'Column']).loc[active_top_cells]
-    data.index.names = ['Layer','Row','Column']
-    data.dropna(how='all',inplace=True)
+    data.index.names = ['Layer', 'Row', 'Column']
+    data.dropna(how='all', inplace=True)
     data.reset_index(inplace=True)  # just keep all data in top active layer
     outdata = {}
     group_mapper = pd.read_csv(group_mapper_path, index_col=0, names=['key', 'val'])['val'].to_dict()
     print("creating maps")
-    for i,g in enumerate(set(data.Particle_Group)):
-        print('{} of {}'.format(i,len(group_mapper)))
-        temp = data.loc[data.Particle_Group == g, ['Row', 'Column']]
+    for i, g in enumerate(set(data.Particle_Group)):
+        if verbose:
+            print('{} of {}'.format(i, len(group_mapper)))
+        temp = data.loc[(data.Particle_Group == g), ['Row', 'Column']]
         temp = temp.reset_index().groupby(['Row', 'Column']).count().reset_index().values
         temp_out = smt.get_empty_model_grid().astype(int)
         temp_out[temp[:, 0], temp[:, 1]] = temp[:, 2]
+        if return_packed_bits:
+            temp_out = np.packbits(temp_out > 0)
         outdata[group_mapper[g]] = temp_out
 
     return outdata

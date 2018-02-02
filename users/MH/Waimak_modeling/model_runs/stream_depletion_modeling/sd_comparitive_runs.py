@@ -105,7 +105,7 @@ def setup_all_runs():
     # this is not run and may be depreciated
     #ca_no_near_field = deepcopy(base_kwargs)
     #ca_no_near_field['name'] = 'current_abstraction_without_near_field_sd_wells'
-    #ca_no_near_field['wells_to_turn_off'][0] = []  # todo need a list of near field wells
+    #ca_no_near_field['wells_to_turn_off'][0] = []  #  need a list of near field wells
     #runs.append(ca_no_near_field)
 
 

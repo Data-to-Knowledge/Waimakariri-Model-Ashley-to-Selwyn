@@ -76,6 +76,21 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     }
     runs.append(mod_per_rm_car)
 
+    super_gmp = {
+        'model_id': model_id,
+        'name': 'super_gmp',
+        'base_dir': None,
+        'cc_inputs': None,
+        'pc5': False,
+        'wil_eff': 1,
+        'naturalised': False,
+        'full_abs': False,
+        'pumping_well_scale': 1,
+        'org_pumping_wells': False,
+        'super_gmp': True
+    }
+    runs.append(super_gmp)
+
     mod_per = {
         'model_id': model_id,
         'name': 'mod_period_w_ncar',

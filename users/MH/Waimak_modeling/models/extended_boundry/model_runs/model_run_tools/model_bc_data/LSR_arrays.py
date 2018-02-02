@@ -24,7 +24,8 @@ lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_me
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
 
-def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None, amag_type=None, cc_to_waimak_only=False):
+def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None,
+                    amag_type=None, cc_to_waimak_only=False, super_gmp=False):
     """
     get the rch for the forward runs
     :param model_id: which NSMC realisation to use
@@ -39,6 +40,7 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
                                                     None: then use 'mean'
     :param pc5: boolean if true use assumed PC5 efficency (only applied to the WILS and {something} areas)
     :param cc_to_waimak_only: if true only apply the cc rch to the waimakairi zone (use the vcsn data other wise (keep senario)
+    :param super_gmp: boolean if True then use the larger reduction to the will command area
     :return: rch array (11,364,365)
     """
     # I think I need to apply everything as a percent change or somehow normalise the rch so that I do not get any big
@@ -58,6 +60,15 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
         sen = 'pc5'
 
     rch_array = get_lsrm_base_array(sen, rcp, rcm, period, method)
+    if super_gmp:
+        assert sen == 'current', 'for super gmp senario must be current'
+        assert all([e is None for e in [rcp,
+                                        rcm]]), 'rcp, rcm, must all be None, no support for climate change scenarios'
+        mult = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\cmp_gmp_point_sources_n.shp".format(smt.sdp),
+                                             'drn_change', True)
+        mult[np.isnan(mult)]=1
+
+        rch_array *= mult
 
     # apply multiplier array from pest parameraterisation
     rch_mult = get_rch_multipler(model_id)
@@ -70,12 +81,12 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
         rch_array[idx_array] = base_rch[idx_array]
     # handle weirdness from the arrays (e.g. ibound ignore the weirdness from chch/te waihora paw)
 
-    #fix tewai and chch weirdeness
+    # fix tewai and chch weirdeness
     fixer = get_rch_fixer()
-    #chch
-    rch_array[fixer==0] = 0.0002
-    #te wai and coastal
-    rch_array[fixer==1] = 0
+    # chch
+    rch_array[fixer == 0] = 0.0002
+    # te wai and coastal
+    rch_array[fixer == 1] = 0
 
     no_flow = smt.get_no_flow(0)
     no_flow[no_flow < 0] = 0
@@ -144,20 +155,19 @@ def _create_all_lsrm_arrays():
             raise ValueError('shouldnt get here')
 
         hdf_path = _get_rch_hdf_path(base_dir=lsrm_rch_base_dir, naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp)
-        temp,ird = map_rch_to_array(hdf=hdf_path,
-                                method=at,
-                                period_center=per,
-                                mapping_shp=rch_idx_shp_path,
-                                period_length=20,
-                                return_irr_demand=True,
-                                site_list=site_list)
+        temp, ird = map_rch_to_array(hdf=hdf_path,
+                                     method=at,
+                                     period_center=per,
+                                     mapping_shp=rch_idx_shp_path,
+                                     period_length=20,
+                                     return_irr_demand=True,
+                                     site_list=site_list)
         outpath = os.path.join(lsrm_rch_base_dir,
                                'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
         outpath_ird = os.path.join(lsrm_rch_base_dir,
-                               'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
+                                   'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
         np.savetxt(outpath, temp)
-        np.savetxt(outpath_ird,ird)
-
+        np.savetxt(outpath_ird, ird)
 
     # RCP past
     amalg_types = ['period_mean', '3_lowest_con_mean', 'lowest_year']
@@ -177,11 +187,11 @@ def _create_all_lsrm_arrays():
         print ((per, rcp, rcm, at, sen))
         hdf_path = _get_rch_hdf_path(base_dir=lsrm_rch_base_dir, naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp)
         temp, ird = map_rch_to_array(hdf=hdf_path,
-                                method=at,
-                                period_center=per,
-                                mapping_shp=rch_idx_shp_path,
-                                period_length=50,
-                                return_irr_demand=True)
+                                     method=at,
+                                     period_center=per,
+                                     mapping_shp=rch_idx_shp_path,
+                                     period_length=50,
+                                     return_irr_demand=True)
         outpath = os.path.join(lsrm_rch_base_dir,
                                'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
         outpath_ird = os.path.join(lsrm_rch_base_dir,
@@ -207,18 +217,19 @@ def _create_all_lsrm_arrays():
         rcm = None
         print ((per, rcp, rcm, at, sen))
         hdf_path = _get_rch_hdf_path(base_dir=lsrm_rch_base_dir, naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp)
-        temp, ird = map_rch_to_array(hdf=hdf_path, #handle IRD as text files for now
-                                method=at,
-                                period_center=per,
-                                mapping_shp=rch_idx_shp_path,
-                                period_length=20,
+        temp, ird = map_rch_to_array(hdf=hdf_path,  # handle IRD as text files for now
+                                     method=at,
+                                     period_center=per,
+                                     mapping_shp=rch_idx_shp_path,
+                                     period_length=20,
                                      return_irr_demand=True)
         outpath = os.path.join(lsrm_rch_base_dir,
                                'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
         outpath_ird = os.path.join(lsrm_rch_base_dir,
-                               'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
+                                   'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
         np.savetxt(outpath, temp)
         np.savetxt(outpath_ird, ird)
+
 
 def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
     """
@@ -238,8 +249,8 @@ def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
     elif rcp is not None and rcm is not None:
         rcp = 'RCPpast'
         per = 1980
-        at = 'period_mean' # setting based on the period mean for RCP past for all
-    return(sen, rcp, rcm, per, at)
+        at = 'period_mean'  # setting based on the period mean for RCP past for all
+    return (sen, rcp, rcm, per, at)
 
 
 def get_lsrm_base_array(sen, rcp, rcm, per, at):
@@ -256,10 +267,11 @@ def get_lsrm_base_array(sen, rcp, rcm, per, at):
     if not os.path.exists(path):
         raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
     outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows,smt.cols):
+    if outdata.shape != (smt.rows, smt.cols):
         raise ValueError('incorrect shape for rch array: {}'.format(outdata.shape))
 
     return outdata
+
 
 def get_ird_base_array(sen, rcp, rcm, per, at):
     """
@@ -275,20 +287,23 @@ def get_ird_base_array(sen, rcp, rcm, per, at):
     if not os.path.exists(path):
         raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
     outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows,smt.cols):
+    if outdata.shape != (smt.rows, smt.cols):
         raise ValueError('incorrect shape for ird: {}'.format(outdata.shape))
-    if sen =='current':
-        outdata *= 1.2 # this accounts for the 20 % leakage in our current senario which is 80% efficient.  there is no difference between the two irrigation demand arrays otherwise
+    if sen == 'current':
+        outdata *= 1.2  # this accounts for the 20 % leakage in our current senario which is 80% efficient.  there is no difference between the two irrigation demand arrays otherwise
     return outdata
 
 
 if __name__ == '__main__':
     # tests
-    testtype=1
-    if testtype ==1:
+    testtype = 0
+    if testtype == 0:
+        test = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=False, rcm=None, rcp=None, period=None,
+                    amag_type=None, cc_to_waimak_only=False, super_gmp=True)
+    if testtype == 1:
         _create_all_lsrm_arrays()
 
-    if testtype ==2:
+    if testtype == 2:
         {None: 'mean', 'mean': 'mean', 'tym': 'period_mean', 'low_3_m': '3_lowest_con_mean',
          'min': 'lowest_year'}
         periods = range(2010, 2100, 20)
@@ -307,7 +322,8 @@ if __name__ == '__main__':
             elif sen == 'current':
                 pass
 
-            test = get_forward_rch('opt',naturalised=naturalised,pc5=pc5,rcm=rcm,rcp=rcp,period=per,amag_type=at,cc_to_waimak_only=True)
+            test = get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at,
+                                   cc_to_waimak_only=True)
 
         amalg_types = ['tym', 'low_3_m', 'min']
         for rcm, sen, at in itertools.product(rcms, senarios, amalg_types):
@@ -323,7 +339,7 @@ if __name__ == '__main__':
                 raise ValueError('shouldnt get here')
             per = 1980
             rcp = 'RCPpast'
-            get_forward_rch('opt',naturalised=naturalised,pc5=pc5,rcm=rcm,rcp=rcp,period=per,amag_type=at)
+            get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at)
 
         for sen in senarios:
             naturalised = False
@@ -340,7 +356,4 @@ if __name__ == '__main__':
             per = None
             rcp = None
             rcm = None
-            get_forward_rch('opt',naturalised=naturalised,pc5=pc5,rcm=rcm,rcp=rcp,period=per,amag_type=at)
-
-
-
+            get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at)

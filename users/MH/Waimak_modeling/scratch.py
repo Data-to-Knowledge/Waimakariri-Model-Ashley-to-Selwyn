@@ -11,7 +11,15 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages import get_wel_spd
 from pykrige.ok import OrdinaryKriging as okrig
 import geopandas as gpd
-from core.classes.hydro import hydro
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.extract_data import open_path_file_as_df
+from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
 
-path=(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\from_gns\gen_rch\recharge_mul.ref")
-flopy.utils.Util2d.load_txt((364,365),path,float,'(FREE)')
+if __name__ == '__main__':
+
+    pw = pd.read_csv("P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones_detailed.csv", index_col=0)
+    idx = pw.depth>50
+    pw.loc[idx, 'zone_2'] = pw.loc[idx,'Zone_1'] + '_deep'
+    pw.loc[~idx, 'zone_2'] = pw.loc[~idx,'Zone_1'] + '_shallow'
+    pw.to_csv("P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones_detailed.csv")
+
+

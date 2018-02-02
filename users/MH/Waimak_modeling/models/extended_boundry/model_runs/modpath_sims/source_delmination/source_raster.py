@@ -27,15 +27,17 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_cbc, get_cbc_mp
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import \
     modpath_converged
+import gc
 
 
-def define_source_from_forward(emulator_path, bd_type_path, indexes):
+def define_source_from_forward(emulator_path, bd_type_path, indexes, return_packed_bits=False):
     """
     defines the source area for a given integer array
     :param emulator_path: path to the emulator (hdf)
     :param bd_type: the boundary type assement from defineing particles, should be saved with the model run as a text
                     array.
     :param index: a dictionary of boolean arrays of areas of interest False delneates no interest
+    :param return_packed_bits: bool if True return a boolean array as a packed bits array
     :return: dictionary of arrays of shape (smt.layers, rows, cols) with a particle count from source
     """
     # run some checks on inputs
@@ -44,8 +46,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes):
     for key, idx in indexes.items():
         assert isinstance(idx, np.ndarray), 'index for {} must be a nd array'.format(key)
         assert idx.shape == (smt.layers, smt.rows, smt.cols), 'index for {} must be 3d'.format(key)
-        assert idx.dtype == bool, 'index for {} must be some sort of integer array'.format(key)
-
+        assert idx.dtype == bool, 'index for {} must be some sort of boolean array'.format(key)
 
     # load emulator and initialize outdata
     print('loading emulator')
@@ -66,6 +67,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes):
     ids = ['{:02d}_{:03d}_{:03d}'.format(k, i, j) for k, i, j in zip(layers[idx], rows[idx], cols[idx])]
     temp = np.in1d(emulator.index.values, ids)
     emulator = emulator.loc[temp]
+    gc.collect()
     print('took {} s to general identify area'.format(time() - t))
 
     # calculate source percentage
@@ -85,12 +87,15 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes):
         temp_array[temp.index.values - 1] = temp.fraction.values
         outdata[idx] = temp_array
         outdata = outdata.reshape((smt.rows, smt.cols))
+        if return_packed_bits:
+            outdata = np.packbits(outdata > 0)
         all_outdata[g] = outdata
 
     return all_outdata
 
 
-def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False):
+def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False,
+                                return_packed_bits=False):
     """
     define the source area for an integer index
     :param indexes: a dictionary of boolean arrays
@@ -101,6 +106,7 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
                            root3_num_part of 2 places 8 particles in each cell
     :param capt_weak_s: bool if True terminate particles at weak sources
     :param recalc: bool if True rerun the model even if it exists
+    :param return_packed_bits: bool if True retun the data as packed boolean arrays
     :return:
     """
     assert isinstance(indexes, dict), 'indexes must be a dictionary'
@@ -117,7 +123,8 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
                                    root3_num_part=root3_num_part, capt_weak_s=capt_weak_s)
 
     mapper_path = os.path.join(mp_ws, '{}_group_mapper.csv'.format(mp_name))
-    outdata = extract_back_data(path_path, mapper_path, cbc_file.replace('.cbc', '.hds'))
+    outdata = extract_back_data(path_path, mapper_path, cbc_file.replace('.cbc', '.hds'),
+                                return_packed_bits=return_packed_bits)
     return outdata
 
 
@@ -192,7 +199,8 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     t = time()
     # multiprocess the running of things
     outputs = []
-    for kwarg in input_kwargs:
+    for i, kwarg in enumerate(input_kwargs):
+        print('starting {} of {}. weak_sink?, {}'.format(i + 1, len(input_kwargs), capt_weak_s))
         outputs.append(_run_forward_em_one_mp(kwarg))
     now = datetime.datetime.now()
     with open(
@@ -209,7 +217,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
     print('{} runs completed in {} minutes'.format(len(model_ids), ((time() - t) / 60)))
 
 
-def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
+def get_all_cbcs(model_ids, modflow_dir, sleep_time=1, recalc=False):
     """
     a quick multiprocessing wrapper to run all the NSMC realisations I need
     :param model_ids: list of model ids to pass to the get cbc
@@ -220,7 +228,8 @@ def get_all_cbcs(model_ids, modflow_dir, sleep_time=1):
     input_kwargs = []
     for model_id in model_ids:
         input_kwargs.append({'model_id': model_id,
-                             'base_dir': modflow_dir})
+                             'base_dir': modflow_dir,
+                             'recalc': recalc})
 
     multiprocessing.log_to_stderr(logging.DEBUG)
     pool_size = psutil.cpu_count(logical=False)
@@ -267,8 +276,16 @@ def get_base_results_dir(mode, comp):
         out = r"C:\mh_waimak_models\modpath_forward_base"
     elif mode == 'backward' and comp == 'GWATER02':
         out = r"C:\mh_waimak_models\modpath_reverse_base"
+    elif mode == 'cust' and comp == 'GWATER02':
+        out = r'C:\mh_waimak_models\cust_data'
+    elif mode == 'forward' and comp == 'RDSProd03':
+        out = r"D:\mh_waimak_models\modpath_forward_base"
+    elif mode == 'backward' and comp == 'RDSProd03':
+        out = r"D:\mh_waimak_models\modpath_reverse_base"
+    elif mode == 'cust' and comp == 'RDSProd03':
+        out = r'D:\mh_waimak_models\cust_data'
     else:
-        raise ValueError('unexpected (mode, comp): ({},{}'.format(mode, comp))
+        raise ValueError('unexpected (mode, comp): ({},{})'.format(mode, comp))
     return out
 
 
@@ -299,7 +316,7 @@ if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.cwms_index import \
         get_zone_array_index
 
-    test_type = 2
+    test_type = 3
     if test_type == 1:
         temp_index = smt.shape_file_to_model_array(r"C:\Users\MattH\Downloads\test_area.shp", 'Id', True)
         index = smt.get_empty_model_grid(True).astype(bool)
@@ -308,7 +325,8 @@ if __name__ == '__main__':
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis].repeat(11, axis=0)
         index = np.isfinite(index).astype(int)
-        bd_type =(r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
+        bd_type = (
+        r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_runs\NsmcReal-00001.hdf\NsmcReal-00001_forward_bnd_type.txt")
         outdata = define_source_from_forward(
             r"C:\mh_waimak_models\modpath_forward_base\strong_sinks\forward_data\NsmcReal-00001", bd_type,
             index.astype(int))
@@ -318,12 +336,13 @@ if __name__ == '__main__':
 
     elif test_type == 2:
         import pickle
+
         index = smt.get_empty_model_grid(True).astype(bool)
         index = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\rough_chch.shp".format(smt.sdp), 'Id', True)[
             np.newaxis]
         index2 = np.isfinite(index).repeat(11, axis=0)
         index2[1:, :, :] = False
-        index1 = np.full((smt.layers,smt.rows,smt.cols),False)
+        index1 = np.full((smt.layers, smt.rows, smt.cols), False)
         index1[6] = index
         indexes = {'layer0_chch': index2, 'layer7_chch': index1}
         outdata = define_source_from_backward(indexes,
@@ -331,5 +350,10 @@ if __name__ == '__main__':
                                               'test_back',
                                               get_cbc('NsmcBase', get_modeflow_dir_for_source()),
                                               recalc=False)
-        pickle.dump(outdata,open(r"C:\Users\MattH\Downloads\testback_zones.p", 'w'))
+        pickle.dump(outdata, open(r"C:\Users\MattH\Downloads\testback_zones.p", 'w'))
         print('done')
+
+    if test_type==3:
+        nsmc_nums = [2971, 3116, 3310, 3378, 3456, 3513, 3762, 3910]
+        model_ids = ['NsmcReal{:06d}'.format(e) for e in nsmc_nums]
+        get_all_cbcs(model_ids, get_modeflow_dir_for_source(), recalc=True)

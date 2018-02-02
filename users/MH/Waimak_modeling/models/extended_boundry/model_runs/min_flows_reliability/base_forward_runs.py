@@ -36,7 +36,7 @@ def setup_run_forward_run_mp(kwargs):
 def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, pc5_well_reduction=False,
                           pc5_to_waimak_only=False, wil_eff=1, naturalised=False,
                           full_abs=False, pumping_well_scale=1, full_allo=False, org_efficency=None,
-                          org_pumping_wells=False, rm_ncarpet=True):
+                          org_pumping_wells=False, rm_ncarpet=True, super_gmp=False):
     """
     sets up and runs a forward run with a number of options
     :param model_id: which NSMC version to user (see mod_gns_model)
@@ -65,6 +65,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
     :param org_efficency: not used, held to prevent cleaning up!
     :param org_pumping_wells: if True use the model peiod wells if false use the 2014-2015 usage for the waimak wells
     :param rm_ncarpet: boolean if True remove the N carpet drains
+    :param super_gmp: boolean if True run further GMP reductions for will area
     :return: (model name, convergence('convereged'/'did not converge'))
     """
 
@@ -88,7 +89,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
     well_data.loc[(well_data.type == 'race') & (well_data.zone == 'n_wai'), 'flux'] *= wil_eff
     well_data = smt.convert_well_data_to_stresspd(well_data)
 
-    rch = get_forward_rch(model_id, naturalised, pc5, **cc_inputs)
+    rch = get_forward_rch(model_id, naturalised, pc5, super_gmp=super_gmp, **cc_inputs)
 
     # I'm assuming that the stream package will not change
     if rm_ncarpet:

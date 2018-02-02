@@ -347,6 +347,7 @@ def get_full_allo_multipler(org_pumping_wells, recalc=False):
 
 
 if __name__ == '__main__':
-    wells = get_full_consent('NsmcBase', missing_sd_wells=True,recalc=True)
-    wells = get_max_rate('NsmcBase', missing_sd_wells=True,recalc=True)
+    wells_fc = get_full_consent('NsmcBase', missing_sd_wells=True,recalc=False)
+    wells_mr = get_max_rate('NsmcBase', missing_sd_wells=True,recalc=False)
+    wells = get_base_well('NsmcBase',True)
     print('done')

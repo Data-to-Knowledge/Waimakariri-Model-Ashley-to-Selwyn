@@ -25,9 +25,9 @@ if __name__ == '__main__':
     # done on rdsprod03
     #### inputs to define for each run####
     safemode = True
-    run_modelses = [False]
+    run_modelses = [True]
     model_ids = ['NsmcBase']
-    date = '2018-01-09'
+    date = '2018-01-29'
     base_dir = r"D:\mh_waimak_models"
     remove_carpet = True
 

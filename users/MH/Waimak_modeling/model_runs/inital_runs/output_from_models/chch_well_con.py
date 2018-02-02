@@ -15,7 +15,7 @@ ccc = pd.read_table(r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater
 wdc = pd.read_table(r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\Water supply wells\SelectedWDC wells.txt")
 all_wells = mt.get_all_well_data()
 
-well_list = None # todo add chch wells
+well_list = None # add chch wells
 
 output_wells_ccc = all_wells[np.in1d(all_wells.index,ccc)]
 output_wells_wdc = all_wells[np.in1d(all_wells.index,wdc)]
