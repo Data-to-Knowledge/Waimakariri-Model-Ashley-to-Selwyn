@@ -17,8 +17,10 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 """
 
 from __future__ import division
+import socket
+#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03' #todo DADB
 import sys
-repository_path = '/path/to/pysolr/' #todo add my new git repository
+repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
     sys.path.append(repository_path)
 from core import env
@@ -28,7 +30,6 @@ import geopandas as gpd
 from glob import glob
 import time
 import os
-import socket
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import get_well_ids, get_str_ids
 
 
@@ -115,10 +116,10 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
                'lifestyle',
                'doc']
     n_load_path = 'P:\\Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp'
-    sims = pd.read_csv(r"C:\Users\MattH\Downloads\dummy.csv")  # todo (from kate or dummy for now)
+    sims = pd.read_csv(r"C:\Users\MattH\Downloads\dummy.csv", index_col=0)  # todo (from kate or dummy for now)
 
     sims = sims.to_dict(orient='list')
-    assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys) - set(headers), headers)
+    assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys()) - set(headers), headers)
     percentiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
     source_paths = glob(
         os.path.join(source_zone_dir, '*.shp'))
@@ -127,7 +128,7 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
     well_ids = get_well_ids()
     expected_names = np.array(list(set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)))
     exists = np.in1d(names, expected_names)
-    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(np.array(names)[~expected_names],expected_names)
+    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(np.array(names)[~exists],expected_names)
     n_load_layer = gpd.read_file(n_load_path)
     assert 'n_class' in n_load_layer.keys(),'n_class needed in the n load layer'
 
@@ -248,8 +249,12 @@ def run_all_nload_stuffs():
 #PUT BAT IN "K:\mh_modeling\stocastic_n_load_results"
 #todo fill in the readme IN ABOVE
 #todo set up a new pycharm directory on rds_prod_03 and try to run the bat...
+# todo test with some early data when kate give it to me
 
 if __name__ == '__main__':
-    assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
-    run_all_nload_stuffs()
+    #run_all_nload_stuffs()
+    print('testing')
+    outdir = r"C:\Users\MattH\Downloads\test_n_stocastic"
+    calc_all_ns(n_load_name='nload_cm', outdir=outdir, source_zone_dir=r"C:\Users\MattH\Downloads\dummy_source_zones")
+    output_actual_n_vals(outdir, mod_dir=outdir)
     print('done')
