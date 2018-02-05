@@ -15,7 +15,12 @@ import os
 import pandas as pd
 
 
-def part_group_cell_mapper(bd_type):
+def _part_group_cell_mapper(bd_type):
+    """
+    build a partical grouping cell mapper form a boundary type option... a interal function
+    :param bd_type:
+    :return:
+    """
     js, iss = np.meshgrid(range(smt.cols), range(smt.rows))  # zero indexed to agree with python interpretation
     idx = bd_type.flatten() != -1
     out = dict(zip(range(1, idx.sum() + 1), list(zip(iss.flatten()[idx], js.flatten()[idx]))))
@@ -66,7 +71,7 @@ def make_mp_forward_particles(cbc_path, min_part=1, max_part=None):
     js, iss = np.meshgrid(range(1, smt.cols + 1), range(1, smt.rows + 1))  # this is passed to the file as 1 indexed
 
     idx = bd_type.flatten() != -1
-    group_dict = part_group_cell_mapper(bd_type)
+    group_dict = _part_group_cell_mapper(bd_type)
     start_idx = 0
     print('generating particles')
     for l, (num, i, j, bt) in enumerate(

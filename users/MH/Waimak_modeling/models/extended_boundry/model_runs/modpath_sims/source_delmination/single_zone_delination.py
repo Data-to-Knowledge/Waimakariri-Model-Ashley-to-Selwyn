@@ -596,6 +596,12 @@ def _add_data_variations(out, org_arrays, name, sfr_data, model_ids, run_name):
 
 
 def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
+    """
+    run the singel source zones... final wrapper
+    :param recalc: bool if True recalculate the netcdf file
+    :param recalc_backward_tracking: bool if True recalculate the modpath particle tracking simulations
+    :return:
+    """
     indexes = create_single_zone_indexs()
     base_outdir = r"C:\mh_waimak_models\single_source_zones"
     print('running for AshOpt')
@@ -617,7 +623,7 @@ def run_single_source_zones(recalc=False, recalc_backward_tracking=False):
 
 def split_netcdfs(indir):
     """
-
+    split up the netcdfs into netcdfs for the sites
     :param indir: the dir with the 3 netcdfs  the new files are put in a file labeled individuals
     :return:
     """

@@ -20,6 +20,10 @@ from glob import glob
 import os
 
 def get_rch_through_time():
+    """
+    exploritory plots
+    :return:
+    """
     periods = range(2010, 2100, 20)
     rcps = ['RCP4.5', 'RCP8.5']
     rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
@@ -49,6 +53,10 @@ def get_rch_through_time():
     print'done'
 
 def model_average_rcp_past():
+    """
+    didn't finish this
+    :return:
+    """
     paths = glob(r"K:\niwa_netcdf\lsrm\lsrm_results\water_year_means\wym_RCPpast_*_80perc.h5")
     outdata = {}
     for path in paths:

@@ -27,6 +27,12 @@ import gc
 
 
 def create_private_wells_indexes(num_iterations=1, iteration=0):
+    """
+    get the private well indexes
+    :param num_iterations: the number of itterations to break this up into
+    :param iteration: which iteration
+    :return: out_private_wells, indexes
+    """
     all_wells = get_all_well_row_col()
 
     private_wells = pd.read_csv(
@@ -420,6 +426,13 @@ def _add_data_variations(out, org_arrays_packed, name, sfr_data, model_ids, run_
 
 
 def run_multiple_source_zones(num_it_stocastic, recalc=False, recalc_backward_tracking=False):
+    """
+    the raper to
+    :param num_it_stocastic: the number of iterations for the stocastic
+    :param recalc: bool if true recalculate the netcdf
+    :param recalc_backward_tracking: bool, if true re-run the modpath simulations
+    :return:
+    """
     base_outdir = r"D:\mh_waimak_models\private_domestic_supply"
     print('running for AshOpt')
     create_amalgimated_source_protection_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
@@ -439,7 +452,7 @@ def run_multiple_source_zones(num_it_stocastic, recalc=False, recalc_backward_tr
 
 def split_netcdfs(indir):
     """
-
+    split the output netcdfs into netcdfs by variables
     :param indir: the dir with the 3 netcdfs  the new files are put in a file labeled individuals
     :return:
     """

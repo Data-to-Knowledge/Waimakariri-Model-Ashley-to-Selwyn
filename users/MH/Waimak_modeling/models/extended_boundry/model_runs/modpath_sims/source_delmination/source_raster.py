@@ -129,6 +129,11 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
 
 
 def _run_forward_em_one_mp(kwargs):
+    """
+    a wrapper to run the modpath as a multiprocessing (not that the multiprocessing was used
+    :param kwargs:
+    :return:
+    """
     model_id = kwargs['model_id']
     try:
         needed_keys = ['model_id', 'mp_runs_dir', 'emulator_dir', 'modflow_dir', 'min_part', 'max_part', 'capt_weak_s',
@@ -161,7 +166,7 @@ def _run_forward_em_one_mp(kwargs):
 def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=True, min_part=1, max_part=None,
                           capt_weak_s=False, notes=''):
     """
-
+    runs the forward emulators for the model ids
     :param model_ids: a list of model ids to run
     :param results_dir: the dir to put the modpath models and the results
     :param modflow_dir: the dir to put the necissary modflow models for modpath
@@ -255,7 +260,7 @@ def start_process():
 def get_modeflow_dir_for_source(version=1):
     """
     somethign to keep the modflow dirs for the modpath sernarios straight
-    :param version: which version
+    :param version: which version (so far only 1 version)
     :return:
     """
     if version == 1:
@@ -267,7 +272,7 @@ def get_modeflow_dir_for_source(version=1):
 
 def get_base_results_dir(mode, comp):
     """
-
+    keeps track fo the base dirs for the forward and backward particles
     :param mode:'forward' or 'backward'
     :param comp: the socket host name
     :return:
