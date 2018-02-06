@@ -18,7 +18,7 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03' #todo DADB
+assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
@@ -137,8 +137,7 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
     sims = sims.to_dict(orient='list')
     assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys()) - set(headers), headers)
     percentiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
-    source_paths = glob(
-        os.path.join(source_zone_dir, '*.shp'))
+    source_paths = glob(os.path.join(source_zone_dir, '*.shp'))
     names = [os.path.basename(path).replace('.shp', '') for path in source_paths]
     str_ids = get_str_ids()
     well_ids = get_well_ids()
@@ -313,4 +312,4 @@ if __name__ == '__main__':
     outdir = r"C:\Users\MattH\Downloads\test_n_stocastic"
     calc_all_ns(n_load_name='nload_cmp', outdir=outdir, source_zone_dir=r"C:\Users\MattH\Downloads\dummy_source_zones")
     output_actual_n_vals(outdir, mod_dir=outdir)
-    print('done')
+    print('done press any key to close')
