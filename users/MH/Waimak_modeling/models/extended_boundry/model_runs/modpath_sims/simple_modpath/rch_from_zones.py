@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
         # set up and run modpath models
 
-        # waimak
+        # zones
         for zone in ['waimak','chch','selwyn']:
             print('starting zone {}'.format(zone))
             temp = np.array(smt.model_where(get_zone_array_index([zone])))

@@ -12,6 +12,12 @@ import pandas as pd
 import os
 
 def save_sd_metadata(outpath, data_dir):
+    """
+    save the sd metatdata (E.g. convergence)
+    :param outpath:
+    :param data_dir:
+    :return:
+    """
     all_paths = glob('{}/*/*.nam'.format(data_dir))
     all_paths = [e.replace('.nam', '') for e in all_paths]
     names = [os.path.basename(e) for e in all_paths]

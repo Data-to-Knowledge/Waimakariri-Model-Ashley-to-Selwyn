@@ -18,11 +18,11 @@ import os
 
 def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     """
-
+    create particles (np.recarray)
     :param grid_locs: a list of tuples(k,i,j) or tuple (k,i,j)
     :param group: a list of groups of same length gridlocs
     :param root3_num_part: the cubed root of the number of particles to put in each cell
-    :return: starting location data
+    :return: groupmapper, starting location data
     """
     # grid_locs a list of tuples(k,i,j)
     # take a list of cell locations (k,i,j) and return a record array for starting location data

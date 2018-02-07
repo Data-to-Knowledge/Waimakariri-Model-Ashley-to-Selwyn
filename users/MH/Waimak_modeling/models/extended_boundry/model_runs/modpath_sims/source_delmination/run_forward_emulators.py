@@ -13,6 +13,18 @@ import socket
 
 def run_all_forward_emulators(nsmc_nums, notes, base_results_dir, other_model_ids=None, minparts=1, maxparts=100,
                               create_weak_sink_emulators=True, create_strong_sink_emulators=True):
+    """
+    run all the forward emulators a big wrapper
+    :param nsmc_nums: the nsmc numbers
+    :param notes: note to write to readmes
+    :param base_results_dir: where to put the results
+    :param other_model_ids: other model ids to run (e.g. text model ids)
+    :param minparts: the minimum number of particles per cell
+    :param maxparts: the maximum number of particles per cell
+    :param create_weak_sink_emulators: Bool if True then run for the weak sink emulators
+    :param create_strong_sink_emulators: bool if True the run for the strong sink emulators
+    :return:
+    """
     notes = notes + ' minimum particles: {} maximum particles: {}'.format(minparts, maxparts)
     model_ids = ['NsmcReal{:06d}'.format(e) for e in nsmc_nums]
     if other_model_ids is not None:
