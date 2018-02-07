@@ -18,7 +18,7 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
@@ -234,7 +234,7 @@ def output_actual_n_vals(outdir, mod_dir):
                 with open(os.path.join(outdir,'missing_sites.txt'),'a') as f:
                     f.write('missing: {}, exception: {}\n'.format(zone,val))
                     continue
-            data = np.atleast_1d(base_well_n.loc[zone])  # todo check
+            data = np.atleast_1d(base_well_n.loc[zone])
             all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
             outdata[zone] = _np_describe(all_n)
     outdata = pd.DataFrame(outdata).transpose()
@@ -300,10 +300,7 @@ def run_all_nload_stuffs():
             calc_all_ns(n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
             output_actual_n_vals(outdir=outdir, mod_dir=outdir)
 
-#todo set up so this can be easily run... ie a bat file on RDSPROD03
-#todo PUT BAT IN "K:\mh_modeling\stocastic_n_load_results"
-#todo set up a new pycharm directory on rds_prod_03 and try to run the bat...
-# todo test with some early data when kate give it to me
+# todo test bat with some early data when kate give it to me
 
 if __name__ == '__main__':
     #run_all_nload_stuffs()
