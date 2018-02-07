@@ -18,7 +18,7 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
@@ -141,7 +141,7 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
     names = [os.path.basename(path).replace('.shp', '') for path in source_paths]
     str_ids = get_str_ids()
     well_ids = get_well_ids()
-    expected_names = np.array(list(set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)))
+    expected_names = np.array(list((set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2))-{np.nan}))
     exists = np.in1d(names, expected_names)
     assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(np.array(names)[~exists],expected_names)
     n_load_layer = gpd.read_file(n_load_path)
@@ -302,7 +302,6 @@ def run_all_nload_stuffs():
 
 #todo set up so this can be easily run... ie a bat file on RDSPROD03
 #todo PUT BAT IN "K:\mh_modeling\stocastic_n_load_results"
-#todo fill in the readme IN ABOVE
 #todo set up a new pycharm directory on rds_prod_03 and try to run the bat...
 # todo test with some early data when kate give it to me
 
