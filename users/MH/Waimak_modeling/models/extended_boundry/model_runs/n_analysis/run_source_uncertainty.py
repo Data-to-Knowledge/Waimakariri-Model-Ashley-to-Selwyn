@@ -124,7 +124,7 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
                'lifestyle',
                'doc']
     n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
-    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\dummy_uncertainty_data.csv"), index_col=0)  # todo (from kate or dummy for now)
+    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\component_uncertainty_data.csv"), index_col=0)  # todo confim this is right from kate
 
     sims = sims.to_dict(orient='list')
     assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys()) - set(headers), headers)
