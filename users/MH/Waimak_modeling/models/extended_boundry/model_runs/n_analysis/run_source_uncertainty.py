@@ -91,16 +91,8 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     # do intersection
     print('starting intersection')
     t = time.time()
-    geometry = zone['geometry'].iloc[0]
-    sindex = n_zone_shp.sindex
-    possible_matches_index = list(sindex.intersection(geometry.bounds))
-    possible_matches = n_zone_shp.iloc[possible_matches_index]
-    print('took {} s to find possible matches'.format(time.time() - t))
-    t = time.time()
-    interest_area = gpd.overlay(possible_matches, zone,
-                                how='intersection')
-    # this was really slow... do a r-tree spatial: http://geoffboeing.com/2016/10/r-tree-spatial-index-python/
-    print('took {} s to find specific matches'.format(time.time() - t))
+    interest_area = spatial_overlays(n_zone_shp, zone)
+    print('took {} s for intersection'.format(time.time() - t))
     # shift to numpy
     area = interest_area.geometry.area.values
     n_type = interest_area.loc[:, 'n_class'].values
@@ -131,8 +123,8 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
                'sbd_S',
                'lifestyle',
                'doc']
-    n_load_path = 'P:\\Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp'
-    sims = pd.read_csv(r"C:\Users\MattH\Downloads\dummy.csv", index_col=0)  # todo (from kate or dummy for now)
+    n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\dummy_uncertainty_data.csv"), index_col=0)  # todo (from kate or dummy for now)
 
     sims = sims.to_dict(orient='list')
     assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys()) - set(headers), headers)
@@ -296,16 +288,61 @@ def run_all_nload_stuffs():
                 n_names.append(e.strip())
     for sz_dir in szdirs:
         for n_name in n_names:
+            print('starting N analysis for {} load and {} polygons'.format(n_name, os.path.basename(sz_dir)))
             outdir = os.path.join(base_outdir, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
             calc_all_ns(n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
             output_actual_n_vals(outdir=outdir, mod_dir=outdir)
 
 # todo test bat with some early data when kate give it to me
 
+def spatial_overlays(df1, df2, how='intersection'): # also in core, but I want a copy in my scripts
+    '''Compute overlay intersection of two
+        GeoPandasDataFrames df1 and df2
+    '''
+
+    df1 = df1.copy()
+    df2 = df2.copy()
+
+    if how == 'intersection':
+        # Spatial Index to create intersections
+        spatial_index = df2.sindex
+        df1['bbox'] = df1.geometry.apply(lambda x: x.bounds)
+        df1['histreg'] = df1.bbox.apply(lambda x: list(spatial_index.intersection(x)))
+        pairs = df1['histreg'].to_dict()
+        nei = []
+        for i, j in pairs.items():
+            for k in j:
+                nei.append([i, k])
+
+        pairs = gpd.GeoDataFrame(nei, columns=['idx1', 'idx2'], crs=df1.crs)
+        pairs = pairs.merge(df1, left_on='idx1', right_index=True)
+        pairs = pairs.merge(df2, left_on='idx2', right_index=True, suffixes=['_1', '_2'])
+        pairs['Intersection'] = pairs.apply(lambda x: (x['geometry_1'].intersection(x['geometry_2'])).buffer(0), axis=1)
+        pairs = gpd.GeoDataFrame(pairs, columns=pairs.columns, crs=df1.crs)
+        cols = pairs.columns.tolist()
+        cols.remove('geometry_1')
+        cols.remove('geometry_2')
+        cols.remove('histreg')
+        cols.remove('bbox')
+        cols.remove('Intersection')
+        dfinter = pairs[cols + ['Intersection']].copy()
+        dfinter.rename(columns={'Intersection': 'geometry'}, inplace=True)
+        dfinter = gpd.GeoDataFrame(dfinter, columns=dfinter.columns, crs=pairs.crs)
+        dfinter = dfinter.loc[dfinter.geometry.is_empty == False]
+        return (dfinter)
+    elif how == 'difference':
+        spatial_index = df2.sindex
+        df1['bbox'] = df1.geometry.apply(lambda x: x.bounds)
+        df1['histreg'] = df1.bbox.apply(lambda x: list(spatial_index.intersection(x)))
+        df1['new_g'] = df1.apply(
+            lambda x: reduce(lambda x, y: x.difference(y).buffer(0), [x.geometry] + list(df2.iloc[x.histreg].geometry)),
+            axis=1)
+        df1.geometry = df1.new_g
+        df1 = df1.loc[df1.geometry.is_empty == False].copy()
+        df1.drop(['bbox', 'histreg', 'new_g'], axis=1, inplace=True)
+        return (df1)
+
+
 if __name__ == '__main__':
-    #run_all_nload_stuffs()
-    print('testing')
-    outdir = r"C:\Users\MattH\Downloads\test_n_stocastic"
-    calc_all_ns(n_load_name='nload_cmp', outdir=outdir, source_zone_dir=r"C:\Users\MattH\Downloads\dummy_source_zones")
-    output_actual_n_vals(outdir, mod_dir=outdir)
-    print('done press any key to close')
+    run_all_nload_stuffs()
+    print('success, script ran without problems')
