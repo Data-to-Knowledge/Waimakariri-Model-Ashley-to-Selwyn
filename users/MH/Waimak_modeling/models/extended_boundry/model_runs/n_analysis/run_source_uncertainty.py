@@ -18,8 +18,10 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+
+assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
+
 repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
     sys.path.append(repository_path)
@@ -123,24 +125,32 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
                'sbd_S',
                'lifestyle',
                'doc']
-    n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
-    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\component_uncertainty_data.csv"), index_col=0)  # todo confim this is right from kate
+    n_load_path = env.sci(
+        'Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\component_uncertainty_data.csv"),
+                       index_col=0)  # todo confim this is right from kate #todo WTF WITH TRANS VARIABLE AND SHIT
 
     sims = sims.to_dict(orient='list')
-    assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(set(sims.keys()) - set(headers), headers)
+    assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(
+        set(sims.keys()) - set(headers), headers)
     percentiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
     source_paths = glob(os.path.join(source_zone_dir, '*.shp'))
     names = [os.path.basename(path).replace('.shp', '') for path in source_paths]
     str_ids = get_str_ids()
     well_ids = get_well_ids()
-    expected_names = np.array(list((set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2))-{np.nan}))
+    expected_names = np.array(
+        list((set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)) - {np.nan}))
     exists = np.in1d(names, expected_names)
-    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(np.array(names)[~exists],expected_names)
+    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(
+        np.array(names)[~exists], expected_names)
     n_load_layer = gpd.read_file(n_load_path)
-    assert 'n_class' in n_load_layer.keys(),'n_class needed in the n load layer'
+    assert 'n_class' in n_load_layer.keys(), 'n_class needed in the n load layer'
 
-    assert np.in1d(n_load_layer.n_class, headers).all(), 'unexpected entries for n load layer: {} only expected {}'.format(set(n_load_layer.n_class)-set(headers),headers)
-    assert n_load_name in n_load_layer, 'n_load_name: {} not found in n load layer, only availible: {}'.format(n_load_name, n_load_layer.keys())
+    assert np.in1d(n_load_layer.n_class,
+                   headers).all(), 'unexpected entries for n load layer: {} only expected {}'.format(
+        set(n_load_layer.n_class) - set(headers), headers)
+    assert n_load_name in n_load_layer, 'n_load_name: {} not found in n load layer, only availible: {}'.format(
+        n_load_name, n_load_layer.keys())
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     temp = pd.DataFrame(np.random.rand(10)).describe(percentiles=percentiles)
@@ -153,6 +163,7 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
         outdata.loc[name] = pd.Series(temp_n).describe(percentiles=percentiles)
     outdata.to_csv(os.path.join(outdir, 'n_modifier_summary_data.csv'))
 
+
 def output_actual_n_vals(outdir, mod_dir):
     """
     load the n modifiers, and applies them to the raw n data (calculated via Nitrate at key receptors) for both the
@@ -164,14 +175,14 @@ def output_actual_n_vals(outdir, mod_dir):
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    if os.path.exists(os.path.join(outdir,'missing_sites.txt')):
-        os.remove(os.path.join(outdir,'missing_sites.txt'))
+    if os.path.exists(os.path.join(outdir, 'missing_sites.txt')):
+        os.remove(os.path.join(outdir, 'missing_sites.txt'))
     # stocastic set
     # take raw data both N and modifier and put out values
     well_ids = get_well_ids()
     base_well_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\raw_stocastic_set_well_data.csv"),
-                              index_col=0).transpose()
+        index_col=0).transpose()
     # well groups
     zone_sets = [set(well_ids.Zone[well_ids.Zone.notnull()]),
                  set(well_ids.Zone_1[well_ids.Zone_1.notnull()]),
@@ -182,8 +193,8 @@ def output_actual_n_vals(outdir, mod_dir):
             try:
                 modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
             except IOError as val:
-                with open(os.path.join(outdir,'missing_sites.txt'),'a') as f:
-                    f.write('missing: {}, exception: {}\n'.format(zone,val))
+                with open(os.path.join(outdir, 'missing_sites.txt'), 'a') as f:
+                    f.write('missing: {}, exception: {}\n'.format(zone, val))
                     continue
             idxs = well_ids.loc[well_ids[key] == zone].index
             data = base_well_n.loc[idxs].mean().values
@@ -196,7 +207,7 @@ def output_actual_n_vals(outdir, mod_dir):
     # sfr_groups
     base_str_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\raw_stocastic_set_str_data.csv"),
-                             index_col=0)
+        index_col=0)
     outdata = {}
     for str_id in str_ids:
         try:
@@ -215,7 +226,7 @@ def output_actual_n_vals(outdir, mod_dir):
     # wells
     base_well_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_grouped_well_data.csv"),
-                              index_col=0, names=['n_con'])
+        index_col=0,  names=['n_con'])
 
     outdata = {}
     for zone_set, key in zip(zone_sets, ['Zone', 'Zone_1', 'zone_2']):
@@ -223,8 +234,8 @@ def output_actual_n_vals(outdir, mod_dir):
             try:
                 modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
             except IOError as val:
-                with open(os.path.join(outdir,'missing_sites.txt'),'a') as f:
-                    f.write('missing: {}, exception: {}\n'.format(zone,val))
+                with open(os.path.join(outdir, 'missing_sites.txt'), 'a') as f:
+                    f.write('missing: {}, exception: {}\n'.format(zone, val))
                     continue
             data = np.atleast_1d(base_well_n.loc[zone])
             all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
@@ -235,7 +246,7 @@ def output_actual_n_vals(outdir, mod_dir):
     # streams
     base_str_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_stream_data.csv"),
-                             index_col=0)
+        index_col=0)
     outdata = {}
     for str_id in str_ids:
         try:
@@ -293,9 +304,10 @@ def run_all_nload_stuffs():
             calc_all_ns(n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
             output_actual_n_vals(outdir=outdir, mod_dir=outdir)
 
+
 # todo test bat with some early data when kate give it to me
 
-def spatial_overlays(df1, df2, how='intersection'): # also in core, but I want a copy in my scripts
+def spatial_overlays(df1, df2, how='intersection'):  # also in core, but I want a copy in my scripts
     '''Compute overlay intersection of two
         GeoPandasDataFrames df1 and df2
     '''
@@ -344,7 +356,5 @@ def spatial_overlays(df1, df2, how='intersection'): # also in core, but I want a
 
 
 if __name__ == '__main__':
-    outdir = r"K:\mh_modeling\stocastic_n_load_results\nload_cmp_likely"
-    output_actual_n_vals(outdir, outdir)
-    #run_all_nload_stuffs()
+    run_all_nload_stuffs()
     print('success, script ran without problems')
