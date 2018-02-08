@@ -18,7 +18,7 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+#assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
 if not repository_path in sys.path:
@@ -200,10 +200,10 @@ def output_actual_n_vals(outdir, mod_dir):
     outdata = {}
     for str_id in str_ids:
         try:
-            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
+            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(str_id)))
         except IOError as val:
             with open(os.path.join(outdir, 'missing_sites.txt'), 'a') as f:
-                f.write('missing: {}, exception: {}\n'.format(zone, val))
+                f.write('missing: {}, exception: {}\n'.format(str_id, val))
                 continue
         data = base_str_n.loc[:, str_id].values
         all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
@@ -215,7 +215,7 @@ def output_actual_n_vals(outdir, mod_dir):
     # wells
     base_well_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_grouped_well_data.csv"),
-                              index_col=0)
+                              index_col=0, names=['n_con'])
 
     outdata = {}
     for zone_set, key in zip(zone_sets, ['Zone', 'Zone_1', 'zone_2']):
@@ -239,12 +239,12 @@ def output_actual_n_vals(outdir, mod_dir):
     outdata = {}
     for str_id in str_ids:
         try:
-            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(zone)))
+            modifiers = np.loadtxt(os.path.join(mod_dir, 'raw_data', '{}.txt'.format(str_id)))
         except IOError as val:
             with open(os.path.join(outdir, 'missing_sites.txt'), 'a') as f:
-                f.write('missing: {}, exception: {}\n'.format(zone, val))
+                f.write('missing: {}, exception: {}\n'.format(str_id, val))
                 continue
-        data = base_str_n.loc[:, str_id].values
+        data = base_str_n.loc[str_id].values
         all_n = data[:, np.newaxis] * modifiers[np.newaxis, :]
         outdata[str_id] = _np_describe(all_n)
     outdata = pd.DataFrame(outdata).transpose()
@@ -344,5 +344,7 @@ def spatial_overlays(df1, df2, how='intersection'): # also in core, but I want a
 
 
 if __name__ == '__main__':
-    run_all_nload_stuffs()
+    outdir = r"K:\mh_modeling\stocastic_n_load_results\nload_cmp_likely"
+    output_actual_n_vals(outdir, outdir)
+    #run_all_nload_stuffs()
     print('success, script ran without problems')
