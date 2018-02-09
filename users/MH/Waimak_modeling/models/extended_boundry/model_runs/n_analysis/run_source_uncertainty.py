@@ -108,10 +108,10 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
         np.savetxt(outpath, n_mods)
     return n_mods
 
-
-def calc_all_ns(n_load_name, outdir, source_zone_dir):
+def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
     """
 
+    :param sims_org: the simulation data (from Kate) (pd.DataFrame
     :param n_load_name: the name of the load variable to use in the shapefile
     :param outdir: the directory to save teh data
     :param source_zone_dir: the directory with all the source zone shape files.  these must be 1 shape files
@@ -127,10 +127,8 @@ def calc_all_ns(n_load_name, outdir, source_zone_dir):
                'doc']
     n_load_path = env.sci(
         'Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
-    sims = pd.read_csv(env.gw_met_data("mh_modeling\stocastic_n_load_results\component_uncertainty_data.csv"),
-                       index_col=0)  # todo confim this is right from kate #todo WTF WITH TRANS VARIABLE AND SHIT
 
-    sims = sims.to_dict(orient='list')
+    sims = sims_org.to_dict(orient='list')
     assert set(headers) == set(sims.keys()), 'unexpected keys for sims: {} only expected: {}'.format(
         set(sims.keys()) - set(headers), headers)
     percentiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
@@ -275,6 +273,7 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
     outdata.loc['min'] = np.nanmin(ndarray)
     for i in percentiles:
         outdata.loc['{}%'.format(int(i * 100))] = np.nanpercentile(ndarray, i * 100)
+    outdata.loc['max'] = np.nanmax(ndarray)
     return outdata
 
 
@@ -284,6 +283,8 @@ def run_all_nload_stuffs():
     :return:
     """
     base_outdir = env.gw_met_data(r"mh_modeling\stocastic_n_load_results")
+
+
     szdirs = [
         env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely"),
@@ -297,12 +298,16 @@ def run_all_nload_stuffs():
         for e in f.readlines():
             if e.strip() != '':
                 n_names.append(e.strip())
-    for sz_dir in szdirs:
-        for n_name in n_names:
-            print('starting N analysis for {} load and {} polygons'.format(n_name, os.path.basename(sz_dir)))
-            outdir = os.path.join(base_outdir, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
-            calc_all_ns(n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
-            output_actual_n_vals(outdir=outdir, mod_dir=outdir)
+    for sim_end in ['without_trans', 'with_trans']:
+        for sz_dir in szdirs:
+            for n_name in n_names:
+                print('starting N analysis for {} load, {} sims, and {} polygons'.format(n_name, sim_end, os.path.basename(sz_dir)))
+                outdir = os.path.join(base_outdir,sim_end, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
+                sims = pd.read_csv(env.gw_met_data(
+                    "mh_modeling\stocastic_n_load_results\component_uncertainty_data_{}.csv".format(sim_end)),
+                                   index_col=0)
+                calc_all_ns(sims_org=sims, n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
+                output_actual_n_vals(outdir=outdir, mod_dir=outdir)
 
 
 # todo test bat with some early data when kate give it to me
