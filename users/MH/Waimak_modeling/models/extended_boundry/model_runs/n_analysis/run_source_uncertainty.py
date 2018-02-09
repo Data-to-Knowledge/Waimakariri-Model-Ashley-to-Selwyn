@@ -32,7 +32,8 @@ import geopandas as gpd
 from glob import glob
 import time
 import os
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import get_well_ids, get_str_ids
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
+    get_well_ids, get_str_ids
 
 
 def _make_dummy_file(outpath):
@@ -107,6 +108,7 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     if outpath is not None:
         np.savetxt(outpath, n_mods)
     return n_mods
+
 
 def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
     """
@@ -224,7 +226,7 @@ def output_actual_n_vals(outdir, mod_dir):
     # wells
     base_well_n = pd.read_csv(env.sci(
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points\AshOpt_grouped_well_data.csv"),
-        index_col=0,  names=['n_con'])
+        index_col=0, names=['n_con'])
 
     outdata = {}
     for zone_set, key in zip(zone_sets, ['Zone', 'Zone_1', 'zone_2']):
@@ -284,7 +286,6 @@ def run_all_nload_stuffs():
     """
     base_outdir = env.gw_met_data(r"mh_modeling\stocastic_n_load_results")
 
-
     szdirs = [
         env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely"),
@@ -301,16 +302,15 @@ def run_all_nload_stuffs():
     for sim_end in ['without_trans', 'with_trans']:
         for sz_dir in szdirs:
             for n_name in n_names:
-                print('starting N analysis for {} load, {} sims, and {} polygons'.format(n_name, sim_end, os.path.basename(sz_dir)))
-                outdir = os.path.join(base_outdir,sim_end, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
+                print('starting N analysis for {} load, {} sims, and {} polygons'.format(n_name, sim_end,
+                                                                                         os.path.basename(sz_dir)))
+                outdir = os.path.join(base_outdir, sim_end, '{}_{}'.format(n_name, os.path.basename(sz_dir)))
                 sims = pd.read_csv(env.gw_met_data(
                     "mh_modeling\stocastic_n_load_results\component_uncertainty_data_{}.csv".format(sim_end)),
-                                   index_col=0)
+                    index_col=0)
                 calc_all_ns(sims_org=sims, n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir)
                 output_actual_n_vals(outdir=outdir, mod_dir=outdir)
 
-
-# todo test bat with some early data when kate give it to me
 
 def spatial_overlays(df1, df2, how='intersection'):  # also in core, but I want a copy in my scripts
     '''Compute overlay intersection of two
