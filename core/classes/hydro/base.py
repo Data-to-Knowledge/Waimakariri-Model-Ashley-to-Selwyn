@@ -6,6 +6,8 @@ Created on Thu Feb 16 15:41:08 2017
 """
 from collections import OrderedDict
 from itertools import product
+#import sys
+#sys.path.remove('E:\\ecan\\git\\HydroPandas')
 
 #######################################
 ### Dictionaries to relate the long names to the acronyms

@@ -19,7 +19,7 @@ from core.spatial.vector import sel_sites_poly
 #### Time series data
 
 ### Primary import functions
-
+#h1.add_data(df, time='time', sites='site', mtypes='mtype', values='data', dformat='long')
 
 def add_data(self, data, time=None, sites=None, mtypes=None, values=None, dformat=None, add=True):
     """
@@ -334,7 +334,7 @@ def rd_csv(self, csv_path, time=None, sites=None, mtypes=None, values=None, dfor
         ts.columns.names = ['mtype', 'site']
         ts.index.name = 'time'
     else:
-        ts = read_csv(csv_path, parse_dates=[time], infer_datetime_format=True, dayfirst=True, skiprows=skiprows, header='infer')
+        ts = read_csv(csv_path, parse_dates=[time], infer_datetime_format=True, dayfirst=True, skiprows=skiprows, header='infer', index_col=0)
     self.add_data(ts, time=time, sites=sites, mtypes=mtypes, values=values, dformat=dformat)
     return(self)
 
