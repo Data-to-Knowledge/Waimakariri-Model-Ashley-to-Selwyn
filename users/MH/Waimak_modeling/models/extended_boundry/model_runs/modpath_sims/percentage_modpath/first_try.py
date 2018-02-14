@@ -19,6 +19,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.se
     setup_run_forward_modpath
 
 if __name__ == '__main__':
+    #just a test
     run_model = True
     t = time()
     mp_ws = r"D:\mh_waimak_models\modpath_emulator\try_truncation"

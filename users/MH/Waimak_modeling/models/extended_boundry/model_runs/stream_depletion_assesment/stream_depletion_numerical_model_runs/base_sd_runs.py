@@ -18,6 +18,11 @@ import itertools
 
 
 def _get_str_dep_base_path_mp(kwargs):
+    """
+    quick wrapper
+    :param kwargs:
+    :return:
+    """
     return get_str_dep_base_path(**kwargs)
 
 def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False):
@@ -109,6 +114,11 @@ def start_process():
     p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 def gen_all_sd_base(model_id):
+    """
+    create all of the base sd runs
+    :param model_id:
+    :return:
+    """
     input_kwargs = []
     for sv, sdv in itertools.product([2,3,4],['sd7','sd30','sd150']):
         input_kwargs.append({'model_id':model_id, 'sd_version':sdv, 'ss_sy_version':sv})

@@ -22,6 +22,10 @@ from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.a
 
 
 def get_well_ids():
+    """
+    the well number and other key info
+    :return: pd.Dataframe
+    """
     wdc_wells = pd.read_csv(
         r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv",
         index_col=0)
@@ -48,6 +52,10 @@ def get_well_ids():
 
 
 def get_str_ids():
+    """
+    get teh stream reaches for the N analysis
+    :return: list
+    """
     str_sites = ['ashley_sh1',
                  'cust_skewbridge',
                  'cam_bramleys_s',
@@ -76,6 +84,16 @@ def get_str_ids():
 
 # todo make wells the groups of wells rather than the individual? possibly export both sets of data
 def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc_path, sfo_path):
+    """
+    saves streams and well data for a transport run from a single model
+    :param outdir: directory to save the output in
+    :param model_id: the model id
+    :param ucn_file_path: the path to the ucn file
+    :param sobs_path: the path to the sobs path
+    :param cbc_path:  the path to the cbc path
+    :param sfo_path: the path to the stream flow file
+    :return:
+    """
     # run on gw02
     str_sites = get_str_ids()
     str_data = get_con_at_str(sites=str_sites, ucn_file_path=ucn_file_path, sobs_path=sobs_path,
@@ -103,6 +121,15 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
 def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
                        ucn_nc_path=r"C:\mh_waimak_model_data\mednload_ucn.nc",
                        cbc_nc_path="C:\mh_waimak_model_data\post_filter1_budget.nc"):
+    """
+    pulls out the concentration data from a netcdf file for the given nsmc_nums save both grouped and raw data
+    :param outdir: directory to save the data in
+    :param nsmc_nums: the nsmc numbers to pull data out for
+    :param ucn_var_name: the variable name for nitrate
+    :param ucn_nc_path: the path to the ucn netcdf file, must have sobs
+    :param cbc_nc_path: the path to the cbc netcdf file
+    :return:
+    """
     # run on gw02
     str_sites = get_str_ids()
     wells = get_well_ids()
@@ -132,6 +159,11 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
 
 
 def get_n_ash_opt_stocastic_set(outdir):
+    """
+    a wrapper the gets teh data from AshOpt and and the stocastic set
+    :param outdir:
+    :return:
+    """
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     nsmc_nums = get_stocastic_set(False)

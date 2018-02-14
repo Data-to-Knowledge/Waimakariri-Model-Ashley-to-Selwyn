@@ -77,7 +77,7 @@ def calc_stream_dep(model_path, ss_sy_version, sd_version='sd150'):
 
 def calc_str_dep_all_wells(out_path, base_path, sd_version='sd150', ss_sy_version=1):
     """
-
+    calculate the stream depletion
     :param out_path: the path to save the csv to
     :param base_path: path to the well by well stream depletion folder
     :param sd_version: either sd150 sd30 sd7,  this defines which base mod path to use.

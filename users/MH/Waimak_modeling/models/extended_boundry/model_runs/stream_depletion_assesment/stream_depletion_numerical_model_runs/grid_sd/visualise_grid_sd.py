@@ -164,10 +164,6 @@ def plot_all_streams_sd(nc_path, outdir):
             plt.close(fig)
 
 
-def plot_relationship_3_fluxes():  # I really don't know how to visualise this maybe hold off?
-    raise NotImplementedError
-
-
 def krig_plot_sd_grid(data_path, outdir):
     nc_path = os.path.join(outdir, 'interpolated_{}.nc'.format(os.path.basename(data_path).replace('.csv', '')))
     extract_all_stream_krig(data_path, nc_path)

@@ -15,6 +15,12 @@ from time import time
 # stocastic simulation
 
 def get_group_number(index, bd_type):
+    """
+
+    :param index:
+    :param bd_type:
+    :return:
+    """
     assert isinstance(index,np.ndarray)
     assert index.dtype == bool
     if index.shape != (smt.rows,smt.cols):

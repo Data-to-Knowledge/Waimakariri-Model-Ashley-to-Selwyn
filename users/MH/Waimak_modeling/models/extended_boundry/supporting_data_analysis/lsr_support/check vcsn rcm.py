@@ -64,7 +64,7 @@ def make_save_vcsn_year_mean(variable, amalg_type, groupby=['year'], outpath=Non
         at = np.nanmean
     elif variable == 'rain':
         at = np.nansum
-    path = r"Y:\VirtualClimate\vcsn_precip_et_2016-06-06.nc"
+    path = r"\\fileservices02\managedshares\data\VirtualClimate\vcsn_precip_et_2016-06-06.nc"
     data = nc.Dataset(path)
     lat, lon = np.array(data['latitude']), np.array(data['longitude'])
     lat_idx = np.where((lat >= lats[0]) & (lat <= lats[1]))

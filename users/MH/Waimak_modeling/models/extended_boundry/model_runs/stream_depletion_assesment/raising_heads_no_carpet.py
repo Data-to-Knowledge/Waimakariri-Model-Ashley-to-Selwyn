@@ -41,6 +41,7 @@ def raise_top_elv(model):
 
 
 if __name__ == '__main__':
+    # look for difference with and without carpet drains and/or raised elevations
     test_type = [4]
     if 1 in test_type:
         model_id = 'StrOpt'

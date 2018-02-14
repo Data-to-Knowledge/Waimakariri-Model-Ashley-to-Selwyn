@@ -52,6 +52,11 @@ def make_inital_sfr_dataframe(ashley, cust, eyre, waimak):
 
 
 def _make_mednload_approx(bnd_type):
+    """
+    make an n load
+    :param bnd_type:
+    :return:
+    """
 
     sfr = make_inital_sfr_dataframe(0.1,0.35,0.35,0.1)
     temp_well = pd.read_table(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\median_n_load_wells.txt",
