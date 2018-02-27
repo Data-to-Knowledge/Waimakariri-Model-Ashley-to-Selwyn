@@ -2,13 +2,17 @@
 """
 General time series functions.
 """
+from pandas.core.groupby import SeriesGroupBy, GroupBy
+from pandas import infer_freq, TimeGrouper, Timestamp, Grouper, DataFrame
+from numpy import nan, array
+from os import path
+from core.misc.misc import time_switch
 
 
 def pd_grouby_fun(fun_name):
     """
     Function to make a function specifically to be used on pandas groupby objects from a string code of the associated function.
     """
-    from pandas.core.groupby import SeriesGroupBy, GroupBy
 
     if fun_name in GroupBy.__dict__.keys():
         fun1 = GroupBy.__dict__[fun_name]
@@ -16,7 +20,7 @@ def pd_grouby_fun(fun_name):
         fun1 = SeriesGroupBy.__dict__[fun_name]
     else:
         raise ValueError('Need to use the right function name.')
-    return(fun1)
+    return (fun1)
 
 
 def pd_ts_code(period, n_periods):
@@ -26,12 +30,10 @@ def pd_ts_code(period, n_periods):
     period -- A string of common time period names (e.g. 'day', 'month', 'year', 'water year').\n
     n_periods -- The number of periods.
     """
-    from core.misc import time_switch
 
     time_code = str(n_periods) + time_switch(period)
 
-    return(time_code)
-
+    return (time_code)
 
 
 def tsreg(ts, freq=None, interp=False):
@@ -45,15 +47,13 @@ def tsreg(ts, freq=None, interp=False):
     interp -- Should linear interpolation be applied on all missing data?
     """
 
-    from pandas import infer_freq
-
     if freq is None:
         freq = infer_freq(ts.index[:3])
     ts1 = ts.resample(freq).mean()
     if interp:
         ts1 = ts1.interpolate('time')
 
-    return(ts1)
+    return (ts1)
 
 
 def w_agg(x, fun='sum', axis=1):
@@ -67,10 +67,10 @@ def w_agg(x, fun='sum', axis=1):
     elif fun == 'sum':
         agg1 = x.sum(axis=axis)
 
-    return(agg1)
+    return (agg1)
 
 
-def grp_ts_agg(df, grp_col, ts_col, freq_code, agg_fun, transform=False):
+def grp_ts_agg(df, grp_col, ts_col, freq_code):
     """
     Simple function to aggregate time series with dataframes with a single column of sites and a column of times.
 
@@ -81,34 +81,46 @@ def grp_ts_agg(df, grp_col, ts_col, freq_code, agg_fun, transform=False):
     freq_code -- The pandas frequency code for the aggregation (e.g. 'M', 'A-JUN').\n
     agg_fun -- Either 'mean' or 'sum'.
     """
-    from pandas import TimeGrouper, Timestamp
-    from core.ts import pd_grouby_fun
-
-    fun1 = pd_grouby_fun(agg_fun)
 
     df1 = df.copy()
-    if type(df[ts_col][0]) is Timestamp:
+    if type(df[ts_col].iloc[0]) is Timestamp:
         df1.set_index(ts_col, inplace=True)
-        val_col = df1.columns.drop(grp_col)
         if type(grp_col) is list:
             grp_col.extend([TimeGrouper(freq_code)])
         else:
             grp_col = [grp_col, TimeGrouper(freq_code)]
         df_grp = df1.groupby(grp_col)
-        if transform:
-            df1a = df_grp.transform(agg_fun)
-            df2 = df1.copy()
-            df2.loc[:, val_col] = df1a
-        else:
-            df2 = fun1(df_grp)
-        df3 = df2.reset_index()
-        return(df3)
+        return (df_grp)
     else:
         print('Make one column a timeseries!')
 
 
-def w_resample(x, period='water year', n_periods=1, fun='sum', min_ratio=0.75, agg=False, agg_fun='mean', digits=3, interp=False, export=False, export_path='', export_name='precip_stats.csv'):
+def interp_resample(df, res_code, level=None):
     """
+    Function to properly set up a resampling class for discrete data. This assumes a linear interpolation between data points.
+
+    Parameters
+    ----------
+    df: DataFrame
+        DataFrame with a time index.
+    res_code: str
+        Pandas resampling code. e.g. 'D'.
+    level: str or int
+        For a MultiIndex, level (name or number) to use for resampling. Level must be datetime-like.
+
+    Returns
+    -------
+    Resampling class
+    """
+    df1 = (df + df.shift(-1))/2
+    out1 = df1.resample(res_code, level=level)
+    return out1
+
+
+def w_resample(x, period='water year', n_periods=1, fun='sum', min_ratio=0.75, agg=False, agg_fun='mean', digits=3, interp=False, discrete=False, export=False, export_path='', export_name='precip_stats.csv'):
+    """
+    NEED TO UPDATE! CLEAN AND INCLUDE THE discrete PARAMETER USING interp_resample.
+
     Function to resample time series precip or flow data.
 
     Arguments:\n
@@ -123,12 +135,6 @@ def w_resample(x, period='water year', n_periods=1, fun='sum', min_ratio=0.75, a
     export_path -- Directory where the results will be exported.\n
     export_name -- The name of the csv file to be exported.
     """
-
-    from pandas import DataFrame
-    from numpy import nan
-    from os import path
-    from core.ts import tsreg, w_agg
-    from core.misc import time_switch
 
     # Make sure the object is a data frame and regular
     df = x.copy()
@@ -167,21 +173,23 @@ def w_resample(x, period='water year', n_periods=1, fun='sum', min_ratio=0.75, a
         if isinstance(res1, DataFrame):
             for i in res1.columns:
                 if interp:
-                    res1.loc[ratio1[i] < 0.95, i] = res1.loc[ratio1[i] < 0.95, i] + mean1.loc[ratio1[i] < 0.95, i] * diff_count.loc[ratio1[i] < 0.95, i]
+                    res1.loc[ratio1[i] < 0.95, i] = res1.loc[ratio1[i] < 0.95, i] + mean1.loc[ratio1[i] < 0.95, i] * \
+                                                                                    diff_count.loc[ratio1[i] < 0.95, i]
                 res1.loc[ratio1[i] < min_ratio, i] = nan
         else:
             if interp:
-                res1.loc[ratio1 < 0.95] = res1.loc[ratio1 < 0.95] + mean1.loc[ratio1 < 0.95] * diff_count.loc[ratio1 < 0.95]
+                res1.loc[ratio1 < 0.95] = res1.loc[ratio1 < 0.95] + mean1.loc[ratio1 < 0.95] * diff_count.loc[
+                    ratio1 < 0.95]
             res1.loc[ratio1 < min_ratio] = nan
 
     # Export data and return dataframe
     if export:
         res1.round(digits).to_csv(path.join(export_path, export_name))
-    return(res1.round(digits))
+    return (res1.round(digits))
 
 
-
-def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='sum', min_ratio=0.75, agg=False, agg_fun='mean', digits=3, interp=False, export=False, export_path='', export_name='precip_stats.csv'):
+def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='sum', min_ratio=0.75, agg=False,
+        agg_fun='mean', digits=3, interp=False, export=False, export_path='', export_name='precip_stats.csv'):
     """
     Function to resample time series precip or flow data.
 
@@ -197,12 +205,6 @@ def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='s
     export_path -- Directory where the results will be exported.\n
     export_name -- The name of the csv file to be exported.
     """
-
-    from pandas import DataFrame, Grouper
-    from numpy import nan
-    from os import path
-    from core.ts import w_agg
-    from core.misc import time_switch
 
     # Make sure the object is a data frame and regular
     df = ts.copy()
@@ -226,7 +228,11 @@ def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='s
         if sum(df.index.levels[0].duplicated()) > 0:
             raise ValueError("Duplicate stations!!! Please check!!!")
 
-        df_grp = df.groupby([Grouper(level=wide_index[0]), Grouper(level=wide_index[1], freq=str(n_periods) + time_switch(period))])
+        df_grp = df.groupby(
+            [Grouper(level=wide_index[0]), Grouper(level=wide_index[1], freq=str(n_periods) + time_switch(period))])
+
+    else:
+        raise ValueError('dformat must be either long or wide')
 
     # Determine number of days in each period
     count1 = df_grp.count()
@@ -252,11 +258,14 @@ def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='s
             if isinstance(res1, DataFrame):
                 for i in res1.columns:
                     if interp:
-                        res1.loc[ratio1[i] < 0.95, i] = res1.loc[ratio1[i] < 0.95, i] + mean1.loc[ratio1[i] < 0.95, i] * diff_count.loc[ratio1[i] < 0.95, i]
+                        res1.loc[ratio1[i] < 0.95, i] = res1.loc[ratio1[i] < 0.95, i] + mean1.loc[ratio1[i] < 0.95, i] * \
+                                                                                        diff_count.loc[
+                                                                                            ratio1[i] < 0.95, i]
                     res1.loc[ratio1[i] < min_ratio, i] = nan
             else:
                 if interp:
-                    res1.loc[ratio1 < 0.95] = res1.loc[ratio1 < 0.95] + mean1.loc[ratio1 < 0.95] * diff_count.loc[ratio1 < 0.95]
+                    res1.loc[ratio1 < 0.95] = res1.loc[ratio1 < 0.95] + mean1.loc[ratio1 < 0.95] * diff_count.loc[
+                        ratio1 < 0.95]
                 res1.loc[ratio1 < min_ratio] = nan
 
     elif dformat == 'long':
@@ -270,16 +279,13 @@ def res(ts, dformat, wide_index=[0, 1], period='water year', n_periods=1, fun='s
     # Export data and return dataframe
     if export:
         res1.round(digits).to_csv(path.join(export_path, export_name))
-    return(res1.round(digits))
+    return (res1.round(digits))
 
 
 def ts_comp(df, freq='water year', n_periods=1, fun='mean', min_ratio=0.75, digits=3, start='1900', end='2020'):
     """
     Function to compare two sets of time series over a given period.
     """
-    from ts_stats_fun import flow_stats, w_resample
-    from pandas import DataFrame
-    from numpy import array
 
     ### Resample data
     res1 = w_resample(df, freq, n_periods, fun, min_ratio, digits=digits)[start:end]
@@ -290,6 +296,7 @@ def ts_comp(df, freq='water year', n_periods=1, fun='mean', min_ratio=0.75, digi
     res1_mean_inner = res1.dropna().mean()
 
     ### Organize results
-    df2 = DataFrame(array([res1_count, res1_mean, res1_mean_inner]), index=['n_yrs', 'Mean_long_record', 'Mean_short_record'], columns=res1.columns)
+    df2 = DataFrame(array([res1_count, res1_mean, res1_mean_inner]),
+                    index=['n_yrs', 'Mean_long_record', 'Mean_short_record'], columns=res1.columns)
 
-    return(df2)
+    return (df2)

@@ -6,5 +6,5 @@ Date Created: 28/02/2017 1:12 PM
 """
 
 from __future__ import division
-from Wells_database import wells_db
-from Consents_database import consent_db
+from core.ecan_io.SQL_databases.Wells_database import wells_db
+from core.ecan_io.SQL_databases.sql_arg_class import sql_arg

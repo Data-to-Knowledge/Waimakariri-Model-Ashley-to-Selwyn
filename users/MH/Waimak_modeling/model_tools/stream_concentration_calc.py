@@ -8,7 +8,7 @@ from core import env
 import pandas as pd
 import numpy as np
 import flopy
-# todo where segments overlap cell by cell flow is likely doubled look at further.
+# where segments overlap cell by cell flow is likely doubled look at further.
 str_seg_trib_dict = { # dictionary to link stream segments to tributaries
     1: None,
     2: (1,),
@@ -55,7 +55,7 @@ str_seg_trib_dict = { # dictionary to link stream segments to tributaries
     43: (39,42),
     44: (26,40)}
 
-#todo carefully look at behavior when streams don't flood
+#carefully look at behavior when streams don't flood
 
 def calc_full_stream_conc(mt3d, stress_period, time_step):
     # return a dataframe will full stream concentrations for all model cells with streams
@@ -64,7 +64,7 @@ def calc_full_stream_conc(mt3d, stress_period, time_step):
     segments = range(1,45)
     out_data = _fill_stream_conc_data(segments, mt3d, stress_period, time_step)
     # assume that there are no subterrainan streams
-    # todo watch trib overlap
+    #  watch trib overlap
     out_data.index = pd.MultiIndex.from_tuples([(0,out_data.loc[m,'i'],out_data.loc[m,'j']) for m in out_data.index])
 
     return out_data
@@ -84,7 +84,7 @@ def calc_stream_conc_at_pt(row, col, mt3d, stress_period, time_step):
 
     out_data = _fill_stream_conc_data(segments,mt3d,stress_period,time_step)
     # assume that there are no subterrainan streams
-    # todo watch trib overlap
+    # watch trib overlap
     out_data.index = pd.MultiIndex.from_tuples([(0,out_data.loc[m,'i'],out_data.loc[m,'j']) for m in out_data.index])
 
     return out_data
@@ -108,7 +108,7 @@ def _fill_stream_conc_data (segments, mt3d, stress_period, time_step):
     str_recharge_data = flopy.utils.CellBudgetFile('{}/{}'.format(m.model_ws,m.get_output(unit=743)
                                                               )).get_data(kstpkper=(time_step,stress_period),
                                                                           full3D=True)[0]
-    gw_conc_data = None #todo once MT3D is up and running
+    gw_conc_data = None # once MT3D is up and running
 
     # load flow and concentration data into the dataframe
     for i in out_data.index[np.in1d(out_data.segment, segments)]:
@@ -118,14 +118,14 @@ def _fill_stream_conc_data (segments, mt3d, stress_period, time_step):
         out_data.loc[i,'c_gw'] = gw_conc_data[loc_idx]
 
     #set inital surface water concentrations
-    # todo discuss surface water concentration setting This is not non-complex
+    # discuss surface water concentration setting This is not non-complex
     # possibly set from the inital concentrations of MT3D (so as not to have to pass further arguments)
     for key in str_seg_trib_dict.keys():
         if str_seg_trib_dict[key] is not None:
             continue
 
         idx = out_data.index[(out_data.segment == key) & (out_data.reach ==1)]
-        out_data.loc[idx,'c_sw'] = 0 # set influx of water to zero concentration # todo a start for now fix with actual bc concentrations
+        out_data.loc[idx,'c_sw'] = 0 # set influx of water to zero concentration #  a start for now fix with actual bc concentrations
 
     # calculate concentration data downstream
     seg_completed = pd.Series(index=range(1,45),data=False)
@@ -139,10 +139,10 @@ def _fill_stream_conc_data (segments, mt3d, stress_period, time_step):
                 if pd.notnull(out_data.c_sw.loc[(seg,re)]):
                     continue
 
-                # special case for reach 1 #todo
-                    #special case for overlapping #todo watch trib overlap behavior
+                # special case for reach 1
+                    #special case for overlapping #watch trib overlap behavior
 
-                # special case for overlapping #todo watch trib overlap behavior
+                # special case for overlapping #watch trib overlap behavior
 
                 # all others
                 gwf = out_data.loc[(seg,re),'flow_gw']
@@ -184,7 +184,6 @@ def get_all_segs(segment_id):
 
     return segments
 
-#todo debug
 
 if __name__ == '__main__':
     print(get_all_segs(18))

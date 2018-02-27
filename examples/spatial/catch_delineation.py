@@ -1,71 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Script example to delineate catchments based on site locations.
+Created on Thu Sep 07 08:54:54 2017
+
+@author: MichaelEK
+
+Example script to delineate catchments from the REC streams and catchments.
 """
 
-from spatial_fun import grid_interp_iter, catch_net, pts_poly_join, grid_catch_agg, flow_sites_to_shp, agg_catch
-from geopandas import read_file
+from core.spatial import rec_catch_del
+from os.path import join
+from core.ecan_io import rd_sw_rain_geo
+from core.misc import select_sites
 
 ###################################
 #### Parameters
 
-allo_loc_shp = r'C:\ecan\shared\GIS_base\vector\allocations\allo_loc.shp'
-catch_del_shp = r'C:\ecan\local\Projects\otop\GIS\vector\malf_check\catch_sites_join.shp'
-catch_sites_csv = r'C:\ecan\local\Projects\otop\GIS\vector\malf_check\results\catch_sites.csv'
-export_sites_shp = 'C:/ecan/local/Projects/otop/GIS/vector/malf_check/flow_sites.shp'
-crc_col = 'crc'
+base_dir = r'\\fileservices02\ManagedShares\Data\VirtualClimate\examples'
 
-################################
-#### First define the necessary sites for the delineation
-#### This can come from anywhere as long as they are int flow sites
+sites_csv = 'flow_sites.csv'
+sites_shp = 'sites.shp'
+catch_del_shp = 'catch_del.shp'
 
-sites_all = [46, 66, 1698, 70105]
+####################################
+#### Create points shapefile and go into GIS and adjust the points if needed
 
-## Convert sites to shapefile
-sites_geo = flow_sites_to_shp(sites_all, export=True, export_path=export_sites_shp)
+sites = select_sites(join(base_dir, sites_csv)).astype('int32').tolist()
+sites_geo = rd_sw_rain_geo(sites).reset_index()
+sites_geo.to_file(join(base_dir, sites_shp))
+
+#### MAKE SURE YOU GO INTO GIS AND ADJUST THE SITE POINTS BEFORE THE NEXT STEP!!!
 
 ###############################
-#### The run the arcgis catchment delineation script in arcgis
-#### Use the export from sites_geo as the sites_in path and use a polygon shpaefile that defines the desired boundary
-#### Define the output working directory and run the script through!
+#### Catchment delination from the REC streams layers
 
-#### Make sure to check that the sites are in the correct location!!!
-#### check that after the processing that the delineations make sense!!!
-
-##############################
-#### Then aggregate the catchments to get all of the upstream area for each location
-
-catch_del = agg_catch(catch_del_shp, catch_sites_csv)
-
-#############################
-#### The result of the last function can be used to extract many types of point data
-#### For example to return all abstractions within each catchment
-
-allo_loc = read_file(allo_loc_shp)[[crc_col, 'geometry']]
-crc_catch2, catch4 = pts_poly_join(allo_loc, catch_del, 'site', pts_id_col=crc_col)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+catch1 = rec_catch_del(sites_shp=join(base_dir, sites_shp), sites_col='site', catch_output=join(base_dir, catch_del_shp))
 

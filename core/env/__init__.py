@@ -4,4 +4,4 @@ Author: matth
 Date Created: 23/03/2017 2:20 PM
 """
 
-from env_paths import *
+from core.env.env_paths import *

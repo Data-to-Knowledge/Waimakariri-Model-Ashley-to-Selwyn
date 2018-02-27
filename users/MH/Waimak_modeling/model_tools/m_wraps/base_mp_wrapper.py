@@ -89,7 +89,7 @@ def create_mp(m, start_time, trackdir='forward', packages='RCH', simtype='pathli
         sim.options_dict['WeakSourceOption'] = 1
         sim.option_flags[2:4] = [1,1]
 
-    # set timepoint values #todo check this
+    # set timepoint values # check this
     if simtype == 'endpoint':
         sim.options_dict['TimePointOption'] = 1
         sim.option_flags[7] = 1
@@ -110,7 +110,7 @@ def create_mp(m, start_time, trackdir='forward', packages='RCH', simtype='pathli
     return mp
 
 def create_mp_slf (m, particle_data, prsity=0.3, prsityCB = 0.3, mp_name=None, direction='forward',
-                   simulation_type='endpoint', capt_weak_s=False, time_pts=1): #todo debug this
+                   simulation_type='endpoint', capt_weak_s=False, time_pts=1): # debug this
     """
     create a modpath simulation which derives particles from point data.  assumptions are listed below
     :param m: modflow object which has been run
@@ -185,7 +185,7 @@ def create_mp_slf (m, particle_data, prsity=0.3, prsityCB = 0.3, mp_name=None, d
 
 
     sim = flopy.modpath.ModpathSim(mp,
-                                   option_flags=[sim_type, #todo check these are right against dictionary
+                                   option_flags=[sim_type, # check these are right against dictionary
                                                  t_dir,
                                                  wk_s,
                                                  wk_s,
@@ -257,7 +257,7 @@ def particle_loc_from_grid(grid_locs, root3_num_part = 2):
     outdata['yloc0'] = ploc[:, 4]
     outdata['zloc0'] = ploc[:, 5]
     outdata['initialtime'] = 1 # should not matter for now as I am releasing all at once
-
+    # for future note that this needs a lable string
     return outdata
 
 def particle_ring_around_screens(radius, n_pts, xs, ys, screen_zs, labels=None, forgive=False):

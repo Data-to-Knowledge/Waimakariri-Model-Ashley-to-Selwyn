@@ -70,7 +70,7 @@ def plt_default_map(m, lyr, a=None, plt_grid=False, vmin=None, vmax=None, title=
     return fig, ax, mmap
 
 
-def plt_default_xsection(m, line, a=None, c_step=25, clab=True, map_a=None, grid=False):  # todo set up if line is a path to shapefile #todo needs updating for new model
+def plt_default_xsection(m, line, a=None, c_step=25, clab=True, map_a=None, grid=False):  # set up if line is a path to shapefile # needs updating for new model
     model_xs, model_ys = get_model_x_y()
     fig, (ax, ax2) = plt.subplots(2, 1, figsize=(18.5, 9.5))
     ax.set_aspect('equal')
@@ -99,7 +99,7 @@ def plt_default_xsection(m, line, a=None, c_step=25, clab=True, map_a=None, grid
     else:
         line_vals = line.values()[0]
         ax.plot(line_vals[:,0], line_vals[:,1], color='red')
-    # todo plot the line for the xsection
+
 
 
     mc = flopy.plot.ModelCrossSection(ax=ax2, line=line, model=m, xul=1512162.53275, yul=5215083.5772)
@@ -114,7 +114,7 @@ def plt_default_xsection(m, line, a=None, c_step=25, clab=True, map_a=None, grid
         levels = [np.round(e) for e in levels]
         ct = mc.contour_array(a, colors='k', alpha=0.75, levels=levels)
         if clab:
-            ax.clabel(ct, fontsize=9, inline=1) #todo figure out precision of these labels
+            ax.clabel(ct, fontsize=9, inline=1)
 
     mc.plot_ibound()
     fig.tight_layout()

@@ -2,23 +2,24 @@
 """
 Functions for importing data from various sources.
 """
+import xarray as xr
+from core.spatial import xy_to_gpd, pts_poly_join
+from geopandas import read_file
+from pandas import merge
+
 
 #####################################
 ### General data import
 
 
-def rd_nc(poly_shp, nc_path, poly_epsg=4326, poly_id='Station_ID', x_col='longitude', y_col='latitude', data_col='rain', as_ts=True, export=True, export_path='nc_data.csv'):
+def rd_nc(poly_shp, nc_path, poly_epsg=4326, poly_id='Station_ID', x_col='longitude', y_col='latitude', data_col='rain',
+          as_ts=True, export=True, export_path='nc_data.csv'):
     """
     Function to read in netCDF files, select locations based on a polygon, and export the results.
     """
-    import xarray as xr
-    from core.spatial import sel_sites_poly, xy_to_gpd, pts_poly_join
-    from geopandas import read_file
-    from numpy import in1d
-    from pandas import merge
 
     ### Read in all data
-    poly = read_file(poly_shp)[[poly_id, 'geometry']]
+    poly = read_file(poly_shp)[[poly_id, 'geometry']].to_crs(epsg=poly_epsg)
     nc = xr.open_dataset(nc_path)
 
     ### Filter nc data
@@ -31,7 +32,7 @@ def rd_nc(poly_shp, nc_path, poly_epsg=4326, poly_id='Station_ID', x_col='longit
     pts = xy_to_gpd('id', x_col, y_col, df1_xy, poly_epsg)
 
     ### Mask the points from the polygon
-    join1, poly2 = pts_poly_join(pts, poly, poly_id, dissolve=False)
+    join1, poly2 = pts_poly_join(pts, poly, poly_id)
     join2 = join1[['id', poly_id]]
 
     ### Select the associated data
@@ -49,4 +50,4 @@ def rd_nc(poly_shp, nc_path, poly_epsg=4326, poly_id='Station_ID', x_col='longit
         if export:
             df4.to_csv(export_path)
 
-    return(df4)
+    return df4

@@ -2,6 +2,8 @@
 """
 Functions for processing vcsn met data from NIWA.
 """
+from xarray import open_dataset, DataArray
+from os.path import splitext
 
 
 def nc_add_gis(nc, x_coord, y_coord):
@@ -12,8 +14,6 @@ def nc_add_gis(nc, x_coord, y_coord):
     x_coord -- The x coordinate name (str).\n
     y_coord -- The y coordinate name (str).
     """
-    from xarray import open_dataset, DataArray
-    from os.path import splitext
 
     ### Attributes for the various datasets
     nc_crs = {'inverse_flattening': 298.257223563, 'longitude_of_prime_meridian': 0, 'semi_major_axis': 6378137, 'grid_mapping_name': 'latitude_longitude'}

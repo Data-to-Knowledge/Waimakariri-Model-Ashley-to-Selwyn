@@ -1,0 +1,6 @@
+{
+  "test_ecan_get_data.py": true, 
+  "test_indexing.py": true, 
+  "test_io_fun.py": true, 
+  "test_stats_fun.py": true
+}

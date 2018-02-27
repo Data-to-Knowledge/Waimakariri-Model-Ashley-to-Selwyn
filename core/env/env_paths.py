@@ -2,6 +2,8 @@
 Author: matth
 Date Created: 23/03/2017 2:20 PM
 """
+# this could be made better to retun the UNC(//gisdata/Projects/SCI/) as default or mapped path (P://) if I ever have time.
+# or could simple make a function to convert UNC to mapped for supporting the odd thing that needs it (e.g. DOS)
 
 def gisdata(path):
     return '{}/{}'.format('//GISDataFS/GISData',path)
@@ -17,4 +19,7 @@ def transfers(path):
 
 def temp(path):
     return transfers('Temp/{}'.format(path))
+
+def gw_met_data(path):
+    return '//fs02/GroundWaterMetData$/{}'.format(path)
 

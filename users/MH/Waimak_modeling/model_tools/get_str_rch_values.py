@@ -15,7 +15,7 @@ import pandas as pd
 from basic_tools import df_to_array
 from drain_concentration import get_drn_samp_pts_dict
 
-# todo these are only for m_strong_vert
+# these are only for m_strong_vert
 def get_base_str(recalc=False):
     picklepath = '{}/inputs/pickeled_files/base_stream_spd.p'.format(sdp)
 
@@ -132,7 +132,7 @@ def get_nat_rch(recalc=False):
 
 
 def get_stream_duplication_array(recalc=False):
-    # todo it looks like things are not working perfectly with this... really tease this out for N
+    # it looks like things are not working perfectly with this... really tease this out for N
     picklepath = '{}/inputs/pickeled_files/str_dup_array.p'.format(sdp)
 
     if os.path.exists(picklepath) and not recalc:

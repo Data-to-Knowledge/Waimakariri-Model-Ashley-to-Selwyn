@@ -24,12 +24,14 @@ if __name__ == '__main__':
             if adder < min_to_add:
                 adder = min_to_add
             data.loc[i,'interp'] = val - adder
+            data.loc[i,'adder'] = adder
         elif zone == 'selwyn':
             val = data.loc[i,'selwyn']
             adder = val* per_to_add
             if adder < min_to_add:
                 adder = min_to_add
             data.loc[i,'interp'] = val - adder
+            data.loc[i,'adder'] = adder
         elif 'conf' in zone:
             val = data.loc[i,'confin']
             data.loc[i,'interp'] = val
@@ -39,6 +41,7 @@ if __name__ == '__main__':
             if adder < min_to_add:
                 adder = min_to_add
             data.loc[i,'interp'] = val - adder
+            data.loc[i,'adder'] = adder
         else:
             raise ValueError('unexpedted zone {}'.format(zone))
     if data.interp.min() < -999:

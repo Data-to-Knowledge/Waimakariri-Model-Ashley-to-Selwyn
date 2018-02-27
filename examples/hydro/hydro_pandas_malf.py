@@ -13,7 +13,7 @@ from core.classes.hydro import hydro
 ## Import
 mtypes1 = 'flow'
 sites1 = [70105, 69607, 69602, 65101, 69505]
-qual_codes = [10, 18, 20, 30]
+qual_codes = [10, 18, 20, 30, 50]
 
 ## MALF
 intervals = [10, 20]

@@ -2,10 +2,18 @@
 """
 Raster and spatial interpolation functions.
 """
+from pandas import DataFrame, TimeGrouper, Grouper, to_datetime
+from numpy import tile, repeat, column_stack, nan, arange, meshgrid
+from shapely.geometry import Point
+from geopandas import GeoDataFrame, read_file
+from scipy.interpolate import griddata, Rbf
+from core.spatial.vector import convert_crs
+from rasterio import open as ras_open
+from rasterio import transform
+from os import path
 
 
-
-def grid_interp_ts(df, time_col, x_col, y_col, data_col, grid_res, from_crs=None, to_crs=2193, interp_fun='multiquadric', agg_ts_fun=None, period=None, digits=3):
+def grid_interp_ts(df, time_col, x_col, y_col, data_col, grid_res, from_crs=None, to_crs=2193, interp_fun='cubic', agg_ts_fun=None, period=None, digits=2):
     """
     Function to take a dataframe of z values and interate through and resample both in time and space. Returns a DataFrame structured like df.
 
@@ -22,13 +30,6 @@ def grid_interp_ts(df, time_col, x_col, y_col, data_col, grid_res, from_crs=None
     period -- The pandas time series code to resample the data in time (i.e. '2H' for two hours).\n
     digits -- the number of digits to round to (int).
     """
-    from numpy import arange, meshgrid, tile, repeat, array
-    from pandas import DataFrame, TimeGrouper, Grouper
-    from core.spatial.raster import grid_resample
-    from core.spatial.vector import xy_to_gpd
-    from core.spatial import convert_crs
-    from shapely.geometry import Point
-    from geopandas import GeoDataFrame
 
     #### Create the grids
     df1 = df.copy()
@@ -61,6 +62,8 @@ def grid_interp_ts(df, time_col, x_col, y_col, data_col, grid_res, from_crs=None
         x = gpd1.geometry.apply(lambda p: p.x).round(digits).values
         y = gpd1.geometry.apply(lambda p: p.y).round(digits).values
 
+    xy = column_stack((x, y))
+
     max_x = x.max()
     min_x = x.min()
 
@@ -74,29 +77,119 @@ def grid_interp_ts(df, time_col, x_col, y_col, data_col, grid_res, from_crs=None
     #### Create new df
     x_int2 = x_int.flatten()
     y_int2 = y_int.flatten()
+    xy_int = column_stack((x_int2, y_int2))
     time_df = repeat(time, len(x_int2))
     x_df = tile(x_int2, len(time))
     y_df = tile(y_int2, len(time))
     new_df = DataFrame({'time': time_df, 'x': x_df, 'y': y_df, data_col: repeat(0, len(time) * len(x_int2))})
 
     new_lst = []
-    for t in time:
+    for t in to_datetime(time):
         set1 = df2.loc[df2[time_col] == t, data_col]
 #        index = new_df[new_df['time'] == t].index
-        new_z = grid_resample(x, y, set1.values, x_int, y_int, digits, interp_fun)
+        new_z = griddata(xy, set1.values, xy_int, method=interp_fun).round(digits)
+        new_z[new_z < 0] = 0
         new_lst.extend(new_z.tolist())
-        print(t)
+#        print(t)
     new_df.loc[:, data_col] = new_lst
 
     #### Export results
-    return(new_df)
+    return(new_df[new_df[data_col].notnull()])
+
+
+def point_interp_ts(df, time_col, x_col, y_col, data_col, point_shp, point_site_col, from_crs, to_crs=None, interp_fun='cubic', agg_ts_fun=None, period=None, digits=2):
+    """
+    Function to take a dataframe of z values and interate through and resample both in time and space. Returns a DataFrame structured like df.
+
+    df -- DataFrame containing four columns as shown in the below parameters.\n
+    time_col -- The time column name (str).\n
+    x_col -- The x column name (str).\n
+    y_col -- The y column name (str).\n
+    data_col -- The data column name (str).\n
+    from_crs -- The projection info for the input data (either a proj4 str or epsg int).\n
+    point_shp -- Path to shapefile of points to be interpolated (str) or a GeoPandas GeoDataFrame.\n
+    point_site_col -- The column name of the site names/numbers of the point_shp (str).\n
+    to_crs -- The projection for the output data similar to from_crs.\n
+    interp_fun -- The scipy Rbf interpolation function to be applied (see https://docs.scipy.org/doc/scipy-0.16.1/reference/generated/scipy.interpolate.Rbf.html).\n
+    agg_ts_fun -- The pandas time series resampling function to resample the data in time (either 'mean' or 'sum'). If None, then no time resampling.\n
+    period -- The pandas time series code to resample the data in time (i.e. '2H' for two hours).\n
+    digits -- the number of digits to round to (int).
+    """
+
+    #### Read in points
+    if isinstance(point_shp, str) & isinstance(point_site_col, str):
+        points = read_file(point_shp)[[point_site_col, 'geometry']]
+        to_crs1 = points.crs
+    elif isinstance(point_shp, GeoDataFrame) & isinstance(point_site_col, str):
+        points = point_shp[[point_site_col, 'geometry']]
+        to_crs1 = points.crs
+    else:
+        raise ValueError('point_shp must be a str path to a shapefile or a GeoDataFrame and point_site_col must be a str.')
+
+    #### Create the grids
+    df1 = df.copy()
+
+    #### Resample the time series data
+    if agg_ts_fun is not None:
+        df1a = df1.set_index(time_col)
+        if agg_ts_fun == 'sum':
+            df2 = df1a.groupby([TimeGrouper(period), Grouper(y_col), Grouper(x_col)])[data_col].sum().reset_index()
+        elif agg_ts_fun == 'mean':
+            df2 = df1a.groupby([TimeGrouper(period), Grouper(y_col), Grouper(x_col)])[data_col].mean().reset_index()
+        else:
+            raise ValueError("agg_ts_fun should be either 'sum' or 'mean'.")
+        time = df2[time_col].unique()
+    else:
+        df2 = df1
+
+    time = df2[time_col].sort_values().unique()
+
+    #### Convert input data to crs of points shp and create input xy
+    data1 = df2.loc[df2[time_col] == time[0]]
+    from_crs1 = convert_crs(from_crs, pass_str=True)
+
+    if to_crs is not None:
+        to_crs1 = convert_crs(to_crs, pass_str=True)
+        points = points.to_crs(to_crs1)
+    geometry = [Point(xy) for xy in zip(data1[x_col], data1[y_col])]
+    gpd = GeoDataFrame(data1.index, geometry=geometry, crs=from_crs1)
+    gpd1 = gpd.to_crs(crs=to_crs1)
+    x = gpd1.geometry.apply(lambda p: p.x).round(digits).values
+    y = gpd1.geometry.apply(lambda p: p.y).round(digits).values
+
+    xy = column_stack((x, y))
+
+    #### Prepare the x and y of the points geodataframe output
+    x_int = points.geometry.apply(lambda p: p.x).round(digits).values
+    y_int = points.geometry.apply(lambda p: p.y).round(digits).values
+    sites = points[point_site_col]
+
+    xy_int = column_stack((x_int, y_int))
+
+    #### Create new df
+    sites_ar = tile(sites, len(time))
+    time_ar = repeat(time, len(xy_int))
+    x_ar = tile(x_int, len(time))
+    y_ar = tile(y_int, len(time))
+    new_df = DataFrame({'site': sites_ar, 'time': time_ar, 'x': x_ar, 'y': y_ar, data_col: repeat(0, len(time) * len(xy_int))})
+
+    new_lst = []
+    for t in to_datetime(time):
+        set1 = df2.loc[df2[time_col] == t, data_col]
+        new_z = griddata(xy, set1.values, xy_int, method=interp_fun).round(digits)
+        new_z[new_z < 0] = 0
+        new_lst.extend(new_z.tolist())
+#        print(t)
+    new_df.loc[:, data_col] = new_lst
+
+    #### Export results
+    return(new_df[new_df[data_col].notnull()])
 
 
 def grid_resample(x, y, z, x_int, y_int, digits=3, method='multiquadric'):
     """
     Function to interpolate and resample a set of x, y, z values.
     """
-    from scipy.interpolate import Rbf
 
     interp1 = Rbf(x, y, z, function=method)
     z_int = interp1(x_int, y_int).round(digits)
@@ -120,12 +213,6 @@ def save_geotiff(df, data_col, crs, x_col='x', y_col='y', time_col=None, nfiles=
     path -- The save path.\n
     grid_res -- The grid resolution of the output raster (int). The default None will output the the resolution based on the point spacing of a regular grid.
     """
-    from core.spatial import convert_crs
-    from rasterio import open as ras_open
-    from rasterio import transform
-    from numpy import nan
-    from os import path
-    from pandas import to_datetime
 
     ### create the xy coordinates
     if time_col is None:
@@ -153,7 +240,7 @@ def save_geotiff(df, data_col, crs, x_col='x', y_col='y', time_col=None, nfiles=
     ### Make the rasters
     if time_col is None:
         z = df.set_index([y_col, x_col])[data_col].unstack().values[::-1]
-        new_dataset = ras_open(export_path, 'w', driver='GTiff', height=len(xy1[y_col].unique()), width=len(xy1[x_col].unique()), count=1, dtype=df[data_col].dtype, crs=convert_crs(crs), transform=trans2)
+        new_dataset = ras_open(export_path, 'w', driver='GTiff', height=len(xy1[y_col].unique()), width=len(xy1[x_col].unique()), count=1, dtype=df[data_col].dtype, crs=convert_crs(crs, pass_str=True), transform=trans2)
         new_dataset.write(z, 1)
         new_dataset.close()
     else:

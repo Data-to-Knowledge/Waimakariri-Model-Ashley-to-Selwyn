@@ -177,11 +177,11 @@ def gen_backward_output(path):
         rows = part_ends['i'][part_ends['label'] == well]
         cols = part_ends['j'][part_ends['label'] == well]
 
-        outdata[rows,cols] += 1 #todo check this thourouly
+        outdata[rows,cols] += 1 # check this thourouly
 
     return outdata
 
-def gen_forward_output(path): #todo the labels are not working only keeping the first bit replace / with _ and see if that sorts it
+def gen_forward_output(path): # the labels are not working only keeping the first bit replace / with _ and see if that sorts it
     well_data = mt.get_all_well_data()
     wdc_path = "{}/inputs/wells/WDC groundwater takes.xlsx".format(sdp)
 
@@ -200,7 +200,7 @@ def gen_forward_output(path): #todo the labels are not working only keeping the 
         rch_start = epo.get_destination_endpoint_data(dest_cells=[(layer,row,col)])
         rows = rch_start['i']
         cols = rch_start['j']
-        outdata[rows, cols] += 1  # todo check this thourouly
+        outdata[rows, cols] += 1  # check this thourouly
 
     return outdata
 
@@ -235,7 +235,7 @@ def main(recalc = False):
         fig.savefig('{}/{}.png'.format(outdir,key))
 
 if __name__ == '__main__':
-    #main() #todo fix after debug
+    #main() # fix after debug
 
     outdir = '{}/well_flow_paths/output'.format(base_mod_dir)
     if not os.path.exists(outdir):

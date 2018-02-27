@@ -24,7 +24,7 @@ def write_vistas_matrix (path, array):
 
 bc_path = env.sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts/BCs.txt")
 
-no_flow = np.invert((np.loadtxt(bc_path)[0:190,:]).astype(bool)) #todo needs updating for new model
+no_flow = np.invert((np.loadtxt(bc_path)[0:190,:]).astype(bool)) # needs updating for new model
 
 if __name__ == '__main__':
     test = read_visas_matrix(r"C:\Users\MattH\Downloads\BHMODEL_OPTFLOW2.DAT")

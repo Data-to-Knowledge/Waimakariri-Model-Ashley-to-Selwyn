@@ -15,6 +15,7 @@ from copy import deepcopy
 import pickle
 import os
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
+from stream_elvs import get_reach_elv
 
 
 def create_sfr_package(m, version=1, seg_v=1, reach_v=1):
@@ -94,6 +95,11 @@ def _get_reach_data(reach_v):
 
 
 def _reach_data_v1(recalc=False):
+    """
+    load reach version one (the only version used the extended boundary waimakariri proces as of 20/10/2017)
+    :param recalc: boolean whether to recalc (True) or load from pickle if avalible
+    :return: modflow sfr stress period data.  numpy record array
+    """
     pickle_path = '{}/sfr_reach_v1.p'.format(smt.pickle_dir)
 
     if os.path.exists(pickle_path) and not recalc:
@@ -101,6 +107,7 @@ def _reach_data_v1(recalc=False):
         return reach_data
 
     temp_str_data = _get_base_stream_values()
+
     outdata = flopy.modflow.ModflowSfr2.get_empty_reach_data(len(temp_str_data.index),default_value=0)
     data_to_pass = {'i': 'i', 'j': 'j', 'k': 'k', 'reach': 'ireach', 'segment': 'iseg', 'slope': 'slope',
                     'stop': 'strtop'}
@@ -124,10 +131,40 @@ def _reach_data_v1(recalc=False):
         temp_str_data.loc[temp_str_data['segment']==seg, 'width'] = width
     outdata['strhc1'] = temp_str_data.loc[:,'cond']/(outdata['rchlen'] * temp_str_data['width'])
 
+    outdata['strtop'] = np.array(get_reach_elv()) - 0.5
+
+    # fix wierd segment numbering for reaches
+    temp_str_data = pd.DataFrame(outdata)
+    old_to_temp_seg = dict([[38,125],[42,127],[41,126],[39,136],[43,137],[25,138],[26,139],[44,141],[27,142],[36,143],[37,144]])
+    temp_str_data = temp_str_data.replace({'iseg':old_to_temp_seg})
+    temp_to_new_seg = dict([[125,25],[127,27],[126,26],[136,36],[137,37],[138,38],[139,39],[141,41],[142,42],[143,43],[144,44]])
+    temp_str_data = temp_str_data.replace({'iseg':temp_to_new_seg})
+
+    #fix one backwards flowing reach
+    temp_str_data.loc[temp_str_data.iseg==19,'strtop'] = 72.44
+
+    outdata = temp_str_data.to_records(False).astype(flopy.modflow.ModflowSfr2.get_default_reach_dtype())
+
+
+    elv = smt.calc_elv_db()
+    temp = pd.DataFrame(outdata)
+    str_tops = smt.df_to_array(temp,'strtop')
+    if any((str_tops > elv[0]).flatten()):
+        raise ValueError('streams with elevation above surface')
+
+    if any((str_tops-1 <= elv[1]).flatten()):
+        raise ValueError('streams below layer 1')
+
+
     pickle.dump(outdata,open(pickle_path,'w'))
     return outdata
 
 def _seg_data_v1(recalc=False):
+    """
+    get segment version 1 the only version used in the extended waimakariri model as of 20/10/2017
+    :param recalc: boolean whether to recalc (True) or load from pickle if avalible
+    :return: sfr seg data (np.record array)
+    """
     pickle_path = '{}/sfr_seg_v1.p'.format(smt.pickle_dir)
 
     if os.path.exists(pickle_path) and not recalc:
@@ -186,8 +223,15 @@ def _seg_data_v1(recalc=False):
     seg_data['width1'][np.isclose(seg_data['width1'], 0)] = 1 # define all undefined widths as 1 m these should just be the drains
     seg_data['width2'][np.isclose(seg_data['width2'], 0)] = 1 #define all undefined widths as 1 m
 
-    # some stream segments are listed in a incorrect order this does not cause a problem; however it can require an
-    # extra iteration to converge.
+    #fix inconsistant ordering
+    seg_data = pd.DataFrame(seg_data)
+    old_to_temp_seg = dict([[38,125],[42,127],[41,126],[39,136],[43,137],[25,138],[26,139],[44,141],[27,142],[36,143],[37,144]])
+    seg_data = seg_data.replace({'nseg':old_to_temp_seg,'outseg':old_to_temp_seg})
+    temp_to_new_seg = dict([[125,25],[127,27],[126,26],[136,36],[137,37],[138,38],[139,39],[141,41],[142,42],[143,43],[144,44]])
+    seg_data = seg_data.replace({'nseg':temp_to_new_seg,'outseg':temp_to_new_seg}).sort_values('nseg')
+    seg_data.loc[18,'flow'] = 3456
+    seg_data = seg_data.to_records(False).astype(flopy.modflow.ModflowSfr2.get_default_segment_dtype())
+
     pickle.dump(seg_data,open(pickle_path,'w'))
     return seg_data
 
@@ -297,5 +341,26 @@ def _define_reach_length(reach_data, mode='cornering'):
     return wrd
 
 if __name__ == '__main__':
-    test = pd.DataFrame(_reach_data_v1())
-    print test
+    # tests
+    save = True
+    seg = pd.DataFrame(_seg_data_v1(False))
+    reach = pd.DataFrame(_reach_data_v1(False))
+    if save:
+        reach = smt.add_mxmy_to_df(reach)
+        reach.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\all_sfr.csv")
+    else:
+        elv = smt.calc_elv_db()
+        g=reach.groupby(['iseg'])
+        bot = g.aggregate({'strtop':np.min})
+        top = g.aggregate({'strtop':np.max})
+        problems = []
+        for i in seg.index:
+            segment, outseg = seg.loc[i,['nseg','outseg']]
+            if outseg ==0:
+                continue
+            ttop = top.loc[outseg, 'strtop']
+            tbot = bot.loc[segment, 'strtop']
+            if ttop>tbot:
+                problems.append((segment,outseg))
+
+        print(problems)

@@ -38,6 +38,7 @@ class LR(object):
         self.fitted = self.model.fittedvalues
         self.residuals = self.model.resid
         self.stand_res = self.residuals / self.stderr ** (1 / 2)
+        #todo add intercept and slope
 
     def predict(self, x):
         if type(x) is int or type(x) is float or type(x) is long or type(x) is np.float64:
@@ -49,8 +50,10 @@ class LR(object):
             x = np.array(x)
             x = sm.add_constant(x)
         y_hat = self.model.predict(x)
-        if return_only_value:
-            y_hat = y_hat[0]
+
+        if type(x) is int or type(x) is float or type(x) is long or type(x) is np.float64:
+            if return_only_value:
+                y_hat = y_hat[0]
 
         return y_hat
 

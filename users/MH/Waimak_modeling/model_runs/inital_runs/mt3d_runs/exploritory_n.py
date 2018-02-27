@@ -17,7 +17,7 @@ from copy import deepcopy
 import multiprocessing
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 
-base_dir = '{}/component_con_n_zero_start'.format(base_mod_dir) #todo add to notes
+base_dir = '{}/component_con_n_zero_start'.format(base_mod_dir) # add to notes
 if not os.path.exists(base_dir):
     os.makedirs(base_dir)
 itype = flopy.mt3d.Mt3dSsm.itype_dict()
@@ -90,7 +90,7 @@ def con_n_wai():
     stress_data['j'] = str_data['j']
     stress_data['css'] = 10
     stress_data['itype'] = 21
-    stress_data = {0: list(stress_data.values)} #todo this might cause problems later with different data types ssee if can pass DF
+    stress_data = {0: list(stress_data.values)} # this might cause problems later with different data types ssee if can pass DF
 
     mt3d_input_constant_con = {
         'm': None, 'mt3d_name': 'constant_concentration',
@@ -186,7 +186,7 @@ def con_n_eyre():
                                    log="C:/Users/matth/Desktop/constant_con_eyre2.txt", safe_mode=False)
 
 #constant N for injection wells
-#todo debug
+# debug
 def con_n_races():
     well_data = mt.wraps.mflow.get_base_mf_ss().wel.stress_period_data.data[0]
     well_data = pd.DataFrame(well_data[well_data['flux'] > 0])

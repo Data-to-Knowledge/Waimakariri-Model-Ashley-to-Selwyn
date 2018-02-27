@@ -7,17 +7,16 @@ from pandas import DataFrame, concat, Series
 from core.ts.sw.stats import malf7d as malf_fun
 from core.ts.sw.stats import malf_reg as malf_reg_fun
 from core.ts.sw.stats import flow_reg as flow_reg_fun
-from numpy import in1d
 
 #######################################
 #### Adapted functions
 
-def malf7d(self, sites=None, w_month='JUN', max_missing=90, malf_min=0.9, intervals=[10, 20, 30, 40], return_alfs=False, num_years=False, export=False, export_path='', export_name_malf='malf.csv', export_name_alf='alf.csv', export_name_mis='alf_missing_data.csv'):
+def malf7d(self, sites=None, w_month='JUN', max_missing=90, malf_min=0.9, intervals=[10, 20, 30, 40], return_alfs=False, num_years=False, export_path=None, export_name_malf='malf.csv', export_name_alf='alf.csv', export_name_mis='alf_missing_data.csv'):
 
-    data = self.sel_ts(mtypes='flow', sites=sites, pivot=True)
+    data = self.sel_ts(mtypes='river_flow_cont', sites=sites, pivot=True)
     if data.index.inferred_freq != 'D':
         data = data.resample('D').mean()
-    malf_set = malf_fun(data, w_month, max_missing, malf_min, intervals, return_alfs, num_years, export, export_path, export_name_malf, export_name_alf, export_name_mis)
+    malf_set = malf_fun(data, w_month, max_missing, malf_min, intervals, return_alfs, num_years, export_path, export_name_malf, export_name_alf, export_name_mis)
     return(malf_set)
 
 
@@ -85,7 +84,7 @@ def malf7d(self, sites=None, w_month='JUN', max_missing=90, malf_min=0.9, interv
 #    return(malf, reg)
 
 
-def flow_reg(self, y, x=None, y_mtype='flow_m', x_mtype='flow', buffer_dis=None, min_yrs=10, min_obs=10, logs=False, p_val=0.05, below_median=False):
+def flow_reg(self, y, x=None, y_mtype='river_flow_disc_qc', x_mtype='river_flow_cont_qc', buffer_dis=None, min_yrs=10, min_obs=10, logs=False, p_val=0.05, below_median=False):
     """
     Function to do a simple linear regression between gauging sites and recorder sites.
     The output is a hydro class object and the regression info.
@@ -96,32 +95,32 @@ def flow_reg(self, y, x=None, y_mtype='flow_m', x_mtype='flow', buffer_dis=None,
 
     #### Remove data based on restriction parameters
 
-    if x_mtype == 'flow':
+    if x_mtype == 'river_flow_cont_qc':
         ### recorder flow removal
-        if 'flow' in self.mtypes:
-            fstats = self.stats(mtypes='flow')
+        if 'river_flow_cont_qc' in self.mtypes:
+            fstats = self.stats(mtypes='river_flow_cont_qc')
             x_sites = fstats[fstats['Tot data yrs'] >= min_yrs].index.tolist()
         else:
             raise ValueError('Load some flow data in!')
-    elif x_mtype == 'flow_m':
+    elif x_mtype == 'river_flow_disc_qc':
         ### gauging flow removal
-        if 'flow_m' in self.mtypes:
-            x_count = self.sel_ts('flow_m', x).groupby(level='site').count()
+        if 'river_flow_disc_qc' in self.mtypes:
+            x_count = self.sel_ts('river_flow_disc_qc', x).groupby(level='site').count()
             x_sites = x_count[x_count >= min_obs].index.tolist()
         else:
             raise ValueError('Load some flow data in!')
 
-    if y_mtype == 'flow':
+    if y_mtype == 'river_flow_cont_qc':
         ### recorder flow removal
-        if 'flow' in self.mtypes:
-            sites1 = list(self.mtypes_sites['flow'])
+        if 'river_flow_cont_qc' in self.mtypes:
+            sites1 = list(self.mtypes_sites['river_flow_cont_qc'])
             y_sites = Series(y)[Series(y).isin(sites1)].tolist()
         else:
             raise ValueError('Load some flow data in!')
-    elif y_mtype == 'flow_m':
+    elif y_mtype == 'river_flow_disc_qc':
         ### gauging flow removal
-        if 'flow_m' in self.mtypes:
-            y_count = self.sel_ts('flow_m', y).groupby(level='site').count()
+        if 'river_flow_disc_qc' in self.mtypes:
+            y_count = self.sel_ts('river_flow_disc_qc', y).groupby(level='site').count()
             y_sites = y_count[y_count >= min_obs].index.tolist()
         else:
             raise ValueError('Load some flow data in!')
@@ -146,7 +145,7 @@ def flow_reg(self, y, x=None, y_mtype='flow_m', x_mtype='flow', buffer_dis=None,
     reg = DataFrame()
     for j in comp_dict:
         x_data = hydro2.sel_ts(mtypes=x_mtype, sites=comp_dict[j], pivot=True)
-        y_data = hydro2.sel_ts(mtypes=y_mtype, sites=j, pivot=True, resample=False)
+        y_data = hydro2.sel_ts(mtypes=y_mtype, sites=j, pivot=True)
         y_data.name = j
         y_data = DataFrame(y_data)
         try:
@@ -155,8 +154,9 @@ def flow_reg(self, y, x=None, y_mtype='flow_m', x_mtype='flow', buffer_dis=None,
             reg = concat([reg, reg1])
             new_ts = concat([new_ts, y_new1], axis=1)
         except:
+            print('Site ' + str(j) + ' did not work with the regression.')
             pass
-    new1 = self.add_data(new_ts, mtypes='flow', dformat='wide', add=False)
+    new1 = self.add_data(new_ts, mtypes='river_flow_cont_qc', dformat='wide', add=False)
     return(new1, reg)
 
 

@@ -15,7 +15,7 @@ from osgeo.gdal import Open as gdalOpen
 import numpy as np
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 
-def well_depth_base_layer_1(targets): # TODO DO THE SAME FOR THE 5+ READINGS
+def well_depth_base_layer_1(targets):
     top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(sdp)).ReadAsArray()
     top[np.isclose(top, -3.40282306074e+038)] = 0
 

@@ -153,9 +153,9 @@ for i in dir2:
 
 
 
-path1 = r'C:\ecan\ftp\niwa\topnet\waimak'
+path1 = r'I:\niwa_data\topnet\Climate'
 
-unarchive_dir(path1, 'gz')
+unarchive_dir(path1, 'gz', True)
 
 folder = path1
 ext = 'gz'
@@ -168,13 +168,41 @@ for root, dirs, files in os.walk(folder):
         os.remove(os.path.join(root, filename))
 
 
+##########################################
+#### New Topnet set
+
+from xarray import open_dataset, open_mfdataset, Dataset, concat
+from os import path, walk
+from core.misc import rd_dir
+import fnmatch
+
+### Parameters
+base_dir = r'I:\niwa_data\topnet\Climate'
+base_dir = r'I:\niwa_data\topnet\Climate\RCP8.5\HadGEM2-ES'
+
+### Reading nc files
+
+ext = 'nc'
+
+for root, dirs, files in walk(base_dir):
+    for filename in fnmatch.filter(files, '*.' + ext):
+        if '_snw' not in filename:
+            path2 = path.join(root, filename)
+            x0 = open_dataset(path2)
+#            print(x0)
+            if 'x1' in locals():
+                x1 = x1.merge(x0)
+            else:
+                x1 = x0.copy()
+#            x0.close()
+    if 'x1' in locals():
+        print(x1)
+        x1.close()
+        del x1
 
 
 
-
-
-
-
+j = files[11]
 
 
 

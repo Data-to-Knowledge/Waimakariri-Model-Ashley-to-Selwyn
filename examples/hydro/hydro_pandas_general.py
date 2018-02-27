@@ -4,7 +4,7 @@ Examples on how to use HydroPandas.
 """
 
 #### Import hydro class
-from core.classes.hydro import hydro
+from core.classes.hydro import hydro, all_mtypes
 
 #################################################
 #### Load data
@@ -17,11 +17,14 @@ mtypes3 = 'swl'
 mtypes4 = 'gwl'
 mtypes5 = 'gwl_m'
 mtypes6 = 'usage'
+mtypes7 = 'flow_tel'
 sites1 = [70105, 69607, 69602, 65101, 69505]
 sites2 = [66, 137]
 sites3 = ['BT27/5020']
 sites4 = ['J38/0774', 'J38/0874', 'J38/0811', 'I39/0033']
-qual_codes = [10, 18, 20, 30]
+qual_codes = [10, 18, 20, 30, 50]
+from_date = '2015-01-01'
+to_date = '2017-06-30'
 poly = r'S:\Surface Water\backups\MichaelE\Projects\otop\GIS\vector\min_flow\catch1.shp'
 
 ### From the MSSQL server (the easy way) - Loads in both the time series data and the geo locations
@@ -35,8 +38,10 @@ gwl2 = hydro().get_data(mtypes=mtypes5, sites=sites3)
 
 use1 = hydro().get_data(mtypes=mtypes6, sites=sites4)
 
+tel1 = hydro().get_data(mtypes=mtypes7, sites=sites1, from_date=from_date, to_date=to_date)
+
 ## Find sites based on a polygon shapefile with a 100 m buffer distance (for m_flow)
-h4 = hydro().get_data(mtypes=[mtypes1, mtypes2], sites=poly, buffer_dis=100)
+h4 = hydro().get_data(mtypes=[mtypes1, mtypes2], sites=poly, buffer_dis=100, qual_codes=qual_codes)
 
 
 ##################################################
@@ -137,7 +142,7 @@ malf5
 ## Two gauging sites with a 40 km buffer distance to determine recorder sites
 ## Only uses gaugings with the regressions...so far
 
-new1, reg = h2.flow_reg(y=[137, 66, 70103], buffer_dis=40000)
+new1, reg = h2.flow_reg(y=[137, 66], buffer_dis=40000)
 malf6 = new1.malf7d()
 new1
 reg
@@ -159,21 +164,21 @@ export_nc = r'S:\Surface Water\temp\test_hydro1.nc'
 ### Export a time series csv
 
 ## Only recorders and pivot
-h1.to_csv(export_csv1, mtypes='flow', pivot=True)
+h2.to_csv(export_csv1, mtypes='flow', pivot=True)
 
 ## Only gauging data in long format
-h1.to_csv(export_csv2, mtypes='flow_m')
+h2.to_csv(export_csv2, mtypes='flow_m')
 
 ### Export a shapfile
 
 ## of the gauging sites - combining two functions
-h1.sel(mtypes='flow_m').to_shp(export_shp)
+h2.sel(mtypes='flow_m').to_shp(export_shp)
 
 ## All sites
-h1.to_shp(export_shp)
+h2.to_shp(export_shp)
 
 ### Make an exact copy of the hydro class object as a netcdf file
-h1.to_netcdf(export_nc)
+h2.to_netcdf(export_nc)
 
 
 #### Reading the saved data
@@ -198,6 +203,8 @@ new3.geo_loc
 ## hydrograph
 h3 = h2.sel('flow', 70105, start='2000', end='2002')
 plt1 = h3.plot_hydrograph(70105, x_period='month', time_format='%Y-%m')
+
+plt2 = h2.plot_hydrograph(x_period='month', x_n_periods=4, time_format='%Y-%m', start='2010', end='2011')
 
 ## Regressions
 plt2, reg2 = h2.plot_reg('flow', 69602, 'flow_m', 137)

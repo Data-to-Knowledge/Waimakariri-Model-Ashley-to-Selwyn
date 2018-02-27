@@ -7,9 +7,9 @@ Created on Thu May 19 08:55:47 2016
 
 from numpy import nan, logical_and, where, round, array, in1d, concatenate, isreal, floor, logical_or, sum
 from pandas import read_table, DataFrame, concat, merge, Timedelta, datetime, to_datetime, DateOffset, date_range, Timestamp, read_csv, to_numeric, read_hdf
-from core.misc import printf
+from core.misc import printf, save_df
 from core.ecan_io import rd_sql, rd_hydstra_csv
-from core.allo_use import allo_proc, allo_ts_proc, allo_errors, allo_use_proc, hist_sd_use, est_use, ros_proc, w_use_proc
+from core.allo_use import allo_proc, allo_ts_proc, allo_errors, allo_use_proc, hist_sd_use, est_use, ros_proc, w_use_proc, allo_gis_proc
 from core.ts import w_resample
 from core.spatial import pts_sql_join
 from geopandas import read_file
@@ -17,30 +17,30 @@ from geopandas import read_file
 ########################################
 #### Parameters
 
-max_date_allo = '2016-06-30'
+max_date_allo = '2017-06-30'
 max_date_use_est = '2015-06-30'
 sql_join_codes = ['swaz_gis', 'catch_gis', 'cwms_gis']
-vcn_grid_shp = r'E:\ecan\shared\GIS_base\vector\niwa\NIWA_rain_grid_Canterbury.shp'
-vcn_data_path = 'E:/ecan/shared/base_data/precip/VCN_data'
+vcn_grid_shp = r'S:\Surface Water\shared\GIS_base\vector\niwa\NIWA_rain_grid_Canterbury.shp'
+#vcn_data_path = 'E:/ecan/shared/base_data/precip/VCN_data'
 
 ## Export
-base_export_path = 'E:/ecan/shared/base_data/usage/'
+base_export_path = 'S:/Surface Water/shared/base_data/usage/'
 
-allo_export_path = 'E:/ecan/shared/base_data/usage/allo.csv'
-allo_loc_export_path = r'E:\ecan\shared\GIS_base\vector\allocations\allo_gis.shp'
-crc_waps_export_path = 'E:/ecan/shared/base_data/usage/crc_waps.csv'
-allo_gis_csv = 'E:/ecan/shared/base_data/usage/allo_gis.csv'
+allo_export_path = 'S:/Surface Water/shared/base_data/usage/allo.csv'
+allo_loc_export_path = r'S:\Surface Water\shared\GIS_base\vector\allocations\allo_gis.shp'
+crc_waps_export_path = 'S:/Surface Water/shared/base_data/usage/crc_waps.csv'
+allo_gis_csv = 'S:/Surface Water/shared/base_data/usage/allo_gis.csv'
 
-allo_ts_mon_export = 'E:/ecan/shared/base_data/usage/allo_ts_mon_results.h5'
-allo_ts_ann_export = 'E:/ecan/shared/base_data/usage/allo_ts_ann_results.csv'
-allo_use_export = 'E:/ecan/shared/base_data/usage/allo_use_ts_mon_results.h5'
-use_ros_export_path = 'E:/ecan/shared/base_data/usage/allo_use_ros_mon.csv'
-ann_use_ros_export_path = 'E:/ecan/shared/base_data/usage/allo_use_ros_ann.csv'
-usage_mon_est_export_path = 'E:/ecan/shared/base_data/usage/allo_est_use_mon.h5'
-export_mon_path = 'E:/ecan/shared/base_data/usage/sd_est_recent_mon_vol.csv'
-export_sd_est_path = 'E:/ecan/shared/base_data/usage/sd_est_all_mon_vol.csv'
-export_reg_path = 'E:/ecan/shared/base_data/usage/sd_est_reg.csv'
-export_use_daily = 'E:/ecan/shared/base_data/usage/usage_daily.h5'
+allo_ts_mon_export = 'S:/Surface Water/shared/base_data/usage/allo_ts_mon_results.h5'
+allo_ts_ann_export = 'S:/Surface Water/shared/base_data/usage/allo_ts_ann_results.csv'
+allo_use_export = 'S:/Surface Water/shared/base_data/usage/allo_use_ts_mon_results.h5'
+use_ros_export_path = 'S:/Surface Water/shared/base_data/usage/allo_use_ros_mon.csv'
+ann_use_ros_export_path = 'S:/Surface Water/shared/base_data/usage/allo_use_ros_ann.csv'
+usage_mon_est_export_path = 'S:/Surface Water/shared/base_data/usage/allo_est_use_mon.h5'
+export_mon_path = 'S:/Surface Water/shared/base_data/usage/sd_est_recent_mon_vol.csv'
+export_sd_est_path = 'S:/Surface Water/shared/base_data/usage/sd_est_all_mon_vol.h5'
+export_reg_path = 'S:/Surface Water/shared/base_data/usage/sd_est_reg.csv'
+export_use_daily = 'S:/Surface Water/shared/base_data/usage/usage_daily_all.h5'
 #export_use_mon = 'C:/ecan/shared/base_data/usage/usage_mon.csv'
 
 
@@ -63,7 +63,7 @@ usage_est = read_hdf(usage_mon_est_export_path)
 #### Run functions
 
 ### allocation processing
-allo = allo_proc(export=True, export_path=allo_export_path)
+allo = allo_proc(export_path=allo_export_path)
 
 ### Determine locations based on a single WAP per consent...and stuff...
 allo_gis = allo_gis_proc(allo, export_shp=allo_loc_export_path, export_csv=allo_gis_csv)
@@ -72,24 +72,26 @@ allo_gis = allo_gis_proc(allo, export_shp=allo_loc_export_path, export_csv=allo_
 allo_ts_ann = allo_ts_proc(allo_gis, end=max_date_allo, freq='A')
 allo_ts_mon = allo_ts_proc(allo_gis, end=max_date_allo, freq='M')
 
-allo_ts_ann.to_csv(allo_ts_ann_export, index=False)
-allo_ts_mon.to_csv(allo_ts_mon_export, index=False)
+save_df(allo_ts_ann, allo_ts_ann_export, index=False)
+save_df(allo_ts_mon, allo_ts_mon_export, index=False)
 
 ### Usage
 usage = w_use_proc(export=True, export_path=export_use_daily)
-allo_use = allo_use_proc(allo_ts_mon, usage, export=True, export_path=allo_use_export)
+allo_use = allo_use_proc(allo_ts_mon, usage.reset_index(), export_path=allo_use_export)
 
 ### ROS
-allo_use_ros, allo_use_ros_ann = ros_proc(allo_use, export=True, export_use_ros_path=use_ros_export_path, export_ann_use_ros_path=ann_use_ros_export_path)
+allo_use_ros, allo_use_ros_ann = ros_proc(allo_use, export_use_ros_path=use_ros_export_path, export_ann_use_ros_path=ann_use_ros_export_path)
 
 ### Estimate usage for missing data from the years 2012 - 2016
 usage_est = est_use(allo_use, allo_use_ros, allo_gis, export=True, export_path=usage_mon_est_export_path, date_end=max_date_use_est)
 
 ### Spatial joins of all relevant spatial data to the vcsn shp
+vcn_grid = read_file(vcn_grid_shp)[['Data VCN_s', 'Network', 'geometry']]
+vcn_grid.columns = ['ecan_id', 'niwa_id', 'geometry']
 vcn_grid2 = pts_sql_join(vcn_grid, sql_join_codes).dropna(subset=['cwms'])
 
-### Estimate Stream depletiing usage for earlier years (1972-2012)
-sd_est_all_mon_vol, sd_est_mon_vol, sd_reg = hist_sd_use(usage_est, allo_gis, vcn_grid2, vcn_data_path, export=True, export_mon_path=export_mon_path, export_sd_est_path=export_sd_est_path, export_reg_path=export_reg_path)
+### Estimate Stream depleting usage for earlier years (1972-2012)
+sd_est_all_mon_vol, sd_est_mon_vol, sd_reg = hist_sd_use(usage_est, allo_gis, vcn_grid2, export=True, export_mon_path=export_mon_path, export_sd_est_path=export_sd_est_path, export_reg_path=export_reg_path)
 
 
 ###########################################################
@@ -204,19 +206,21 @@ a2.to_csv('E:/ecan/shared/base_data/usage/bad_fmDate_toDate.csv', index=False)
 
 
 
+crc_wap = rd_sql(code='crc_wap_act_acc')
+
+
+c1 = usage_est.sort_values('crc')
+
+c1[c1.crc == 'CRC000265.2'].wap
+allo[allo.crc == 'CRC000345.1']
+allo[allo.crc == 'CRC000265.2']
+
+sd[sd.wap == 'J38/0342']
 
 
 
 
-
-
-
-
-
-
-
-
-
+allo_ts_rates = allo_ts_proc(allo_gis, start='2000-01-01', end=max_date_allo, freq='sw_rates')
 
 
 

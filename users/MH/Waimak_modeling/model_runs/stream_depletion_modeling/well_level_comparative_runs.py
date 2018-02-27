@@ -16,7 +16,7 @@ import warnings
 def main():
     model_paths = glob.glob("{}/sd_comparative_runs/*/*.hds".format(base_mod_dir))
 
-    wells = None #todo define as list
+    wells = None # define as list
     all_wells = mt.get_all_well_data()
     well_data = all_wells[np.in1d(all_wells.index.values, wells)]
     if len(well_data.index) != len(wells):

@@ -6,24 +6,38 @@ Created on Thu Jun 29 11:17:26 2017
 
 Functions for processing MetService data.
 """
+from os import path
+from xarray import open_dataset
+from numpy import tile, arange
+from shapely.geometry import Point
+from geopandas import GeoDataFrame
+from pandas import to_datetime, merge, to_numeric
+from core.ecan_io.mssql import rd_sql
+from core.spatial.vector import xy_to_gpd
 
 
-def proc_metservice_nc(nc, lat_coord='south_north', lon_coord='west_east', time_coord='Time', time_var='Times'):
+def proc_metservice_nc(nc, lat_coord='south_north', lon_coord='west_east', time_coord='Time', time_var='Times', export_dir=None):
     """
     Function to process MetService netcdf files so that it is actually complete. The function adds in the appropriate coordinate arrays for the data and resaves the file with '_corr" added to the end of the name.
 
-    nc -- Full path to the MetService nc file (str).\n
-    lat_coord -- The name of the lat coordinate that should be added (str).\n
-    lon_coord -- Same as lat_coord except for the lon.\n
-    time_coord -- Ditto for the time.\n
-    time_var -- The existing name of the time variable (that should be converted and removed).
+    nc : str
+        Full path to the MetService nc file (str).
+    lat_coord : str
+        The name of the lat coordinate that should be added (str).
+    lon_coord : str
+        Same as lat_coord except for the lon.
+    time_coord : str
+        Ditto for the time.
+    time_var : str
+        The existing name of the time variable (that should be converted and removed).
+    export_dir : str or None
+        The export directory for the processed netcdf file. If None, then the new file is put into the same directory as the original file.
+
+    Returns
+    -------
+    str
+        The new path to the processed netcdf file.
     """
-    from xarray import open_dataset
-    from os import path
-    from numpy import arange
-    from pandas import to_datetime
-    from core.ecan_io.met import ACPR_to_rate
-    from core.spatial.vector import convert_crs
 
     ### Parameters
     proj1 = '+proj=lcc +lat_1=-60 +lat_2=-30 +lat_0=-60 +lon_0=167.5 +x_0=211921 +y_0=-1221320 +a=6367470 +b=6367470 +no_defs'
@@ -57,8 +71,8 @@ def proc_metservice_nc(nc, lat_coord='south_north', lon_coord='west_east', time_
 
     ### Remove the first time step (as there is no data for it)
     x4 = x3.sel(time=precip.time.unique())
-#
-#    ### Put in the hourly rate
+
+    ### Put in the hourly rate
     precip_ds = precip.set_index(['time', 'y', 'x']).to_xarray()
     x5 = x4.merge(precip_ds)
 
@@ -82,22 +96,36 @@ def proc_metservice_nc(nc, lat_coord='south_north', lon_coord='west_east', time_
     x5.attrs['spatial_ref'] =  proj1
 
     ### Save the new file and close them
-    new_path = path.splitext(nc)[0] + '_corr.nc'
+    if export_dir is None:
+        new_path = path.splitext(nc)[0] + '_corr.nc'
+    elif isinstance(export_dir, (str, unicode)):
+        nc_file = path.splitext(path.split(nc)[1])[0] + '_corr.nc'
+        new_path = path.join(export_dir, nc_file)
+
     x5.to_netcdf(new_path)
     x1.close()
     x5.close()
+    return(new_path)
 
 
 def ACPR_to_rate(df, lat_coord='y', lon_coord='x', time_coord='time'):
     """
     Function to convert cummulative precip to hourly rate.
 
-    df -- DataFrame of the cummulative precip.\n
-    lat_coord -- The name of the lat coordinate that should be added (str).\n
-    lon_coord -- Same as lat_coord except for the lon.\n
-    time_coord -- Ditto for the time.
+    df : DataFrame
+        DataFrame of the cummulative precip.
+    lat_coord : str
+        The name of the lat coordinate that should be added (str).
+    lon_coord : str
+        Same as lat_coord except for the lon.
+    time_coord : str
+        Ditto for the time.
+
+    Returns
+    -------
+    DataFrame
+        Three dimensions with hourly precip rate.
     """
-    from pandas import merge
 
     ### Extract data into dataframe
     df1 = df.copy().set_index(time_coord)
@@ -113,21 +141,32 @@ def MetS_nc_to_df(nc, lat_coord='y', lon_coord='x', time_coord='time', precip_va
     """
     Function to convert a MetService nc file to the components of precip and sites with x y locations.
 
-    nc -- The path to the corrected MetService netcdf file.\n
-    lat_coord -- The name of the lat coordinate that should be added (str).\n
-    lon_coord -- Same as lat_coord except for the lon.\n
-    time_coord -- Ditto for the time.\n
-    precip_var -- The precip variable name.\n
-    proj4 -- The proj4 coordinate system attribute name.
+    nc : str
+        The path to the corrected MetService netcdf file.
+    lat_coord : str
+        The name of the lat coordinate that should be added (str).
+    lon_coord : str
+        Same as lat_coord except for the lon.
+    time_coord : str
+        Ditto for the time.
+    precip_var : str
+        The precip variable name.
+    proj4 : str
+        The proj4 coordinate system attribute name.
+
+    Returns
+    -------
+    DataFrame
+        Precip rate by time, x, and y (with site)
+    GeoDataFrame
+        Site locations dataframe
+    Timestamp
+        The model date start time
     """
-    from xarray import open_dataset
-    from numpy import tile
-    from shapely.geometry import Point
-    from geopandas import GeoDataFrame
 
     ### Extract all data to dataframes
-    ds = open_dataset(nc)
-    precip = ds[precip_var].to_dataframe().reset_index()
+    with open_dataset(nc) as ds:
+        precip = ds[precip_var].to_dataframe().reset_index()
     proj1 = str(ds.attrs[proj4])
 
     ### Create geodataframe
@@ -139,9 +178,85 @@ def MetS_nc_to_df(nc, lat_coord='y', lon_coord='x', time_coord='time', precip_va
     geometry = [Point(xy) for xy in zip(sites0[lon_coord], sites0[lat_coord])]
     sites = GeoDataFrame(sites0.index, geometry=geometry, crs=proj1)
 
+    start_date = to_datetime(ds.attrs['START_DATE'], format='%Y-%m-%d_%H:%M:%S')
+
     ### Return
     ds.close()
-    return(precip, sites)
+    return(precip, sites, start_date)
+
+
+def metconnect_id_loc(sites=None, mc_server='SQL2012PROD03', mc_db='MetConnect', mc_site_table='RainFallPredictionSites', mc_cols=['MetConnectID', 'SiteString', 'TidedaID'], gis_server='SQL2012PROD05'):
+    """
+    Function to extract the metconnect id table with geometry location.
+
+    Parameters
+    ----------
+    sites : list of int or None
+        The site numbers to extract from the table, or None for all.
+
+    Returns
+    -------
+    GeoDataFrame
+    """
+
+    ### Input parameters
+#    hy_server = 'SQL2012PROD05'
+#    hy_db = 'Hydrotel'
+#    pts_table = 'Points'
+#    objs_table = 'Objects'
+#    sites_table = 'Sites'
+#
+#    pts_cols = ['Point', 'Object']
+#    objs_cols = ['Object', 'Site']
+#    sites_cols = ['Site', 'ExtSysId']
+
+    loc_db = 'Bgauging'
+    loc_table = 'RSITES'
+
+    loc_cols = ['SiteNumber', 'NZTMX', 'NZTMY']
+
+    ## Import tables
+    mc1 = rd_sql(mc_server, mc_db, mc_site_table, mc_cols)
+    mc2 = mc1[~mc1.SiteString.str.startswith('M')]
+    mc2.columns = ['MetConnectID', 'site_name', 'ExtSysId']
+    mc2 = mc2[(mc2.MetConnectID != 7) & mc2.ExtSysId.notnull()]
+    mc2.loc[:, 'ExtSysId'] = mc2.loc[:, 'ExtSysId'].astype(int)
+
+#    hy_pts = rd_sql(hy_server, hy_db, pts_table, pts_cols, 'Point', mc2.Point.tolist())
+#    hy_objs = rd_sql(hy_server, hy_db, objs_table, objs_cols, 'Object', hy_pts.Object.tolist())
+#    hy_sites = rd_sql(hy_server, hy_db, sites_table, sites_cols, 'Site', hy_objs.Site.tolist())
+#    hy_sites['ExtSysId'] = to_numeric(hy_sites['ExtSysId'])
+    hy_loc = rd_sql(gis_server, loc_db, loc_table, loc_cols, 'SiteNumber', mc2.ExtSysId.tolist())
+    hy_loc.columns = ['ExtSysId', 'x', 'y']
+
+#    t1 = merge(mc2, hy_pts, on='Point')
+#    t2 = merge(t1, hy_objs, on='Object')
+#    t3 = merge(t2, hy_sites, on='Site')
+    t4 = merge(mc2, hy_loc, on='ExtSysId')
+
+    hy_xy = xy_to_gpd('MetConnectID', 'x', 'y', t4)
+
+    return(hy_xy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -4,7 +4,6 @@ Misc functions for the hydro class.
 """
 from pandas import DataFrame, Series, DatetimeIndex, to_datetime, MultiIndex, concat
 from numpy import array, ndarray, in1d, unique, append, nan, argmax
-from geopandas import GeoDataFrame, read_file
 
 ### Internal checking functions
 
@@ -30,7 +29,5 @@ def _base_stats_fun(self):
 def _mtype_check(self, name):
     cond = name in self.mtypes
     return(cond)
-
-
 
 

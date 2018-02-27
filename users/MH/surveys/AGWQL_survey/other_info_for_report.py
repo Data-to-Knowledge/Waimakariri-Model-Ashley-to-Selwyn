@@ -12,7 +12,7 @@ from users.MH.Well_classes import qual_parameters
 data = pd.read_csv(r"P:\Groundwater\Annual groundwater quality survey 2016\data\all_output.csv")
 data = data[data.NO3_N_trend.notnull()]
 
-#todo move the below into data processing and not getting exactly the same results as hill's
+# move the below into data processing and not getting exactly the same results as hill's
 
 # charge check
 charge_balance_pos = np.zeros((len(data.index)))

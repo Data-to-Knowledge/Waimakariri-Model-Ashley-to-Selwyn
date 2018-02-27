@@ -14,42 +14,34 @@ from core.stats import lin_reg
 ############################################
 #### Parameters
 
-catch_sites_csv = 'C:/ecan/local/Projects/otop/GIS/vector/min_flow/results/catch_sites.csv'
-catch_shp = 'C:/ecan/local/Projects/otop/GIS/vector/min_flow/catch1.shp'
+sites = [69618, 69607, 69619, 69615, 69614, 69635, 69602, 69644]
+catch_shp=r'P:\cant_catch_delin\recorders\catch_del.shp'
+include_gw=True
+max_date='2015-06-30'
+sd_hdf='S:/Surface Water/shared/base_data/usage/sd_est_all_mon_vol.h5'
+flow_csv=None
+crc_shp=r'S:\Surface Water\shared\GIS_base\vector\allocations\allo_gis.shp'
+catch_col='site'
+norm_area=False
+export=False
+export_rec_flow_path='rec_flow_nat.csv'
+export_gauge_flow_path='gauge_flow_nat.csv'
 
-norm_area = True
+norm_area = False
 
-export_rec_flow_path = 'C:/ecan/shared/base_data/flow/otop/rec_flow_nat_v03.csv'
-export_gauge_flow_path = 'C:/ecan/shared/base_data/flow/otop/gauge_flow_nat_v03.csv'
+export_path = r'E:\ecan\shared\projects\otop\naturalisation\nat_test1.csv'
 
 ###########################################
 #### Run stream naturalization
 
-#flow_norm, gaugings_norm, nat_flow_norm, nat_gauge_norm = stream_nat(catch_shp, catch_sites_csv, norm_area=norm_area)
-
-flow, gaugings, nat_flow, nat_gauge = stream_nat(catch_shp, catch_sites_csv, export=True, export_rec_flow_path=export_rec_flow_path, export_gauge_flow_path=export_gauge_flow_path)
+flow_nat = stream_nat(sites, pivot=True, export_path=export_path)
 
 
 
 ##########################################
 #### Testing
-date = '2015'
-sites = [70103, 70105]
-diff = nat_flow - flow
 
-diff[sites][date].plot(ylim=[0,0.8])
-nat_flow[sites][date].plot()
-flow[sites][date].plot()
-
-## Linear reg
-t1 = lin_reg(nat_gauge, nat_flow)
-t2 = [i[i['n-obs'] > 5] for i in t1]
-t3 = [i for i in t2 if not i.empty]
-
-t4 = DataFrame(i[i.NRMSE == min(i.NRMSE)].values.flatten() for i in t3)
-t4.columns = t3[0].columns
-
-
+#sd1a[sd1a.wap == 'J37/0306']
 
 
 

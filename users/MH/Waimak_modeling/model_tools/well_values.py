@@ -15,7 +15,6 @@ from users.MH.Waimak_modeling.supporting_data_path import sdp, temp_file_dir
 from core.ecan_io import rd_sql,sql_db
 from warnings import warn
 
-#todo these need updating for new version
 
 def get_race_data(recalc = False):
     # load race data either from modflow or from pickle object

@@ -6,31 +6,31 @@ Created on Thu Jun 29 11:16:40 2017
 
 Interpolation functions for Met data.
 """
+from core.spatial.vector import sel_sites_poly, xy_to_gpd
+from core.spatial.raster import grid_interp_ts, save_geotiff
+from geopandas import read_file, GeoDataFrame, GeoSeries
+from numpy import tile, ceil, min
+from os import path
+from pandas import merge
 
 
-def sel_interp_agg(precip, precip_crs, poly, grid_res, data_col, time_col, x_col, y_col, buffer_dis=10000, interp_fun='multiquadric', agg_ts_fun=None, period=None, digits=3, agg_xy=False, output_format=None, nfiles='many', output_path=None):
+def poly_interp_agg(precip, precip_crs, poly, data_col, time_col, x_col, y_col, interp_buffer_dis=10000, poly_buffer_dis=0, grid_res=None, interp_fun='cubic', agg_ts_fun=None, period=None, digits=2, agg_xy=False, nfiles='many', output_path=None):
     """
     Function to select the precip sites within a polygon with a certain buffer distance, then interpolate/resample the data at a specific resolution, then output the results.
     precip -- dataframe of time, x, y, and precip.\n
     precip_crs -- The crs of the x and y coordinates of the precip dataframe.\n
-    poly -- String path of a shapefile polygon.\n
-    res -- Resolution in meters of the resampling.\n
-    buffer_dis -- Buffer distance of the polygon selection.\n
-    interp_fun -- The scipy Rbf interpolation function to be applied (see https://docs.scipy.org/doc/scipy-0.16.1/reference/generated/scipy.interpolate.Rbf.html).\n
+    poly -- str path of a shapefile polygon or a polygon GeoDataFrame.\n
+    interp_buffer_dis -- Buffer distance of the polygon selection when performing the interpolation.\n
+    poly_buffer_dis -- Buffer distance of the polygon selection when outputting the results.\n
+    grid_res -- The resulting grid resolution in meters (or the unit of the final projection).\n
+    interp_fun -- The scipy griddata interpolation function to be applied (see https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.interpolate.griddata.html).\n
     agg_ts_fun -- The pandas time series resampling function to resample the data in time (either 'mean' or 'sum'). If None, then no time resampling.\n
-    agg_ts_fun -- The pandas time series code to resample the data in time (i.e. '2H' for two hours).\n
+    period -- The pandas time series code to resample the data in time (i.e. '2H' for two hours).\n
     digits -- the number of digits to round to (int).\n
     agg_xy -- Should all of the interpolated points within the polygon area be aggregated (mean) to a single time series?\n
-    output_format -- Either a str or list of 'csv', 'geotiff', and/or 'netcdf'.\n
-    nfiles -- If 'geotiff' is in the output_format, then 'one' or 'many' geotiffs to be created.\n
-    output_path -- Full path string where the output should be stored.
+    nfiles -- If output_path is a geotiff, then 'one' or 'many' geotiffs to be created.\n
+    output_path -- Full path string where the output should be stored. The file extension should be one of '.tif' for geotiff, '.nc' for netcdf, or '.csv' for csv.
     """
-
-    from core.spatial import sel_sites_poly, grid_interp_ts, xy_to_gpd, save_geotiff
-    from geopandas import read_file
-    from numpy import tile
-    from os import path
-    from pandas import merge
 
     ### Convert x and y of precip to geodataframe
     sites0 = precip[[x_col, y_col]].drop_duplicates().reset_index(drop=True)
@@ -38,12 +38,21 @@ def sel_interp_agg(precip, precip_crs, poly, grid_res, data_col, time_col, x_col
     sites.columns = ['site', 'geometry']
 
     ### Select the locations within the polygon
-    poly1 = read_file(poly)
+    if isinstance(poly, (GeoDataFrame, GeoSeries)):
+        poly1 = poly.copy()
+    elif isinstance(poly, str):
+        poly1 = read_file(poly)
     sites1 = sites.to_crs(poly1.crs)
-    sites_sel = sel_sites_poly(sites1, poly, buffer_dis)
+    sites_sel = sel_sites_poly(sites1, poly, interp_buffer_dis)
     sites2 = sites0.loc[sites_sel['site']]
-#    sites3 = precip[precip[x_col].isin(sites2[x_col].unique()) & precip[y_col].isin(sites2[y_col].unique())]
-#    sites2 = sites[sites.site.isin(sites_sel.site)]
+
+    ### Determine the grid resolution if not set
+    if not isinstance(grid_res, (int, float)):
+        bounds = poly1.unary_union.bounds
+        x_range = bounds[2] - bounds[0]
+        y_range = bounds[3] - bounds[1]
+        min1 = min([x_range, y_range])
+        grid_res = int(ceil(min1/20))
 
     ### Select the precip data from the sites
     precip2 = merge(precip, sites2, on=['x', 'y']).dropna()
@@ -61,7 +70,7 @@ def sel_interp_agg(precip, precip_crs, poly, grid_res, data_col, time_col, x_col
     new_precip['site'] = tile(sites_new_df.index.values, len(time))
 
     ### Select sites from polygon
-    sites_sel2 = sel_sites_poly(sites_new, poly)
+    sites_sel2 = sel_sites_poly(sites_new, poly, poly_buffer_dis)
     new_precip2 = new_precip.loc[new_precip.site.isin(sites_sel2.site), [time_col, x_col, y_col, data_col]]
 
     ### Agg to polygon if required
@@ -72,8 +81,8 @@ def sel_interp_agg(precip, precip_crs, poly, grid_res, data_col, time_col, x_col
         new_precip3 = new_precip2.set_index([time_col, x_col, y_col])[data_col]
 
     ### Save results
-    path1 = path.splitext(output_path)[0]
     if isinstance(output_path, str):
+        path1 = path.splitext(output_path)[0]
         if '.csv' in output_path:
             new_precip3.to_csv(path1 + '.csv', header=True)
 

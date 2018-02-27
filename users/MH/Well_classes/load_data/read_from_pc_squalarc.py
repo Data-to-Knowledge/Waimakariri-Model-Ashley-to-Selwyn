@@ -67,7 +67,7 @@ _KEYS_TO_IGNORE = [
  'Chromium',
  'Zinc']
 
-#todo this eventually needs to be integrated with mike's rd_squalarc
+# this eventually needs to be integrated with mike's rd_squalarc
 def read_from_pc_squalarc_csv_to_dataframe(path, param_list):
     # read in raw data
     # read units and number of lines

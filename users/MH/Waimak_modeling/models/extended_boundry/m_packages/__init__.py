@@ -11,6 +11,6 @@ from dis_packages import create_dis_package
 from drn_packages import create_drn_package
 from lpf_packages import create_lay_prop_package
 from rch_packages import create_rch_package
-from wel_packages import create_wel_package
+from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages import create_wel_package
 from dis_packages import create_dis_package
 

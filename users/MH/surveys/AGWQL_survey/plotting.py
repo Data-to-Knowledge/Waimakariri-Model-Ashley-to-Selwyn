@@ -21,7 +21,7 @@ def plot_background(gis_dir):
 
     fig, ax = plt.subplots(1, figsize=(10,12.25))
     image = mpimg.imread(gis_dir + "background.tif")
-    ax.imshow(image, extent=[ll[0], ur[0], ll[1], ur[1]])  # todo make this a function at somepoint
+    ax.imshow(image, extent=[ll[0], ur[0], ll[1], ur[1]])  # make this a function at somepoint
     lakes = gpd.read_file(gis_dir + "lakes.shp")
     seds = gpd.read_file(gis_dir + "cen_seds.shp")
     cwms = gpd.read_file(gis_dir + "cwms_zones.shp")

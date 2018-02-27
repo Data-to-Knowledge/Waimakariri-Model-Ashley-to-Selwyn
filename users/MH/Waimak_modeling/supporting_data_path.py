@@ -28,6 +28,9 @@ elif _comp == 'DHI-Runs02':
 elif _comp == 'GWATER02':
     base_mod_dir = "D:/mh_waimak_models"
     base_mod_dir2 = base_mod_dir
+elif _comp == 'RDSProd03':
+    base_mod_dir = r"C:\Users\matth\Desktop\base_mod"
+    base_mod_dir2 = base_mod_dir
 else:
     raise ValueError('unidentified machine {} no default path for models'.format(_comp))
 

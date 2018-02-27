@@ -17,7 +17,7 @@ daily_quant_type_codes = {
     'Y': 'Weekly Instantaneous Recorded (Wed)'
 }
 
-# todo debug
+# debug
 # the following load scripts bring in the well level data to the well quant item
 def load_yearly(well_list, df=None, start_date=None, end_date=None):
     if df is None:

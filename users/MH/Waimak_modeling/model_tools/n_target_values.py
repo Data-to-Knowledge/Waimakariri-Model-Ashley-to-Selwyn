@@ -34,7 +34,7 @@ def concentration_at_wells(well_nums, con, mt3d_kskper = None):
 
     return outdata
 
-def get_n_at_targets(con,m=None, mt3d_kskper=None, mf_kskper=None): #todo add multipel time periods or all some day?
+def get_n_at_targets(con,m=None, mt3d_kskper=None, mf_kskper=None): #add multipel time periods or all some day?
     if isinstance(con, str):
         con = flopy.utils.UcnFile(con)
 
@@ -52,7 +52,7 @@ def get_n_at_targets(con,m=None, mt3d_kskper=None, mf_kskper=None): #todo add mu
     drn_points = get_drn_samp_pts()
     drain_values = get_drn_concentration(drn_points, m, con, mt3d_kskper, mf_kskper)
 
-    #streams #todo
+    #streams #not done
 
     return target_wells, drain_values
 

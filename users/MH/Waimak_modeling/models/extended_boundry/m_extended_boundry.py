@@ -9,9 +9,23 @@ import flopy
 import m_packages
 import os
 import shutil
+from future.builtins import input
 from users.MH.Waimak_modeling.supporting_data_path import sdp
+from extended_boundry_model_tools import smt
 
-def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, version='a', mfv='mfnwt'):
+def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, version=smt.model_version, mfv='mfnwt',n_car_dns=True):
+    """
+    this was used to provide brioch with most of the boundary conditions
+    :param name: model name
+    :param dir_path: model dir path
+    :param safe_mode: normal safe modes
+    :param mt3d_link: boolean include mt3d link
+    :param version: model versino
+    :param mfv: modflow version
+    :param n_car_dns: include north carpet drains
+    :return: model
+    """
+
     # sort out paths for the model
     name = 'm_ex_bd_v{}-{}'.format(version, name)
     dir_path = '{}/m_ex_bd_v{}-{}'.format(os.path.dirname(dir_path), version, os.path.basename(dir_path))
@@ -39,20 +53,19 @@ def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, v
 
     # add packages
     if version == 'a':
-        sfr_version, seg_v, reach_v = 1, 1, 1
-        k_version = 1
-        rch_version = 1
-        wel_version = 1
+        sfr_version, seg_v, reach_v = smt.sfr_version, smt.seg_v, smt.reach_v
+        wel_version = smt.wel_version
+        k_version = smt.k_version
 
     else:
         raise NotImplementedError('model version {} has not yet been defined'.format(version))
 
     m_packages.create_dis_package(m)
     m_packages.create_bas_package(m)
-    m_packages.create_lay_prop_package(m, k_version)
-    m_packages.create_rch_package(m, rch_version)
+    m_packages.create_lay_prop_package(m, mfv,k_version)
+    m_packages.create_rch_package(m)
     m_packages.create_wel_package(m, wel_version)
-    m_packages.create_drn_package(m, wel_version=wel_version, reach_version=reach_v)
+    m_packages.create_drn_package(m, wel_version=wel_version, reach_version=reach_v,n_car_dns=n_car_dns)
     m_packages.create_sfr_package(m, sfr_version, seg_v, reach_v)
 
     # add simple packages
@@ -113,9 +126,16 @@ def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, v
                                                               'save budget', 'print budget'],
                                                      (-1, -1): []},
                                  extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'], unitnumber=[22,30,31,32,33])
-    #todo handle output in name file might be fixed by re-defining oc
 
-
-
-    raise NotImplementedError()
     return m
+if __name__ == '__main__':
+    #tests
+    outdir = r"C:\Users\MattH\Desktop\to_test_write"
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    m = create_m_extended_boundry('to_test_load',r"{}\with_n_carpet".format(outdir),safe_mode=False,
+                                  mt3d_link=True, n_car_dns=True)
+    m.write_name_file()
+    m.write_input()
+    m.check()
+    print('done')

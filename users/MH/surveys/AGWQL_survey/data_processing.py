@@ -63,7 +63,7 @@ class AGWQL_survey(object):
             self.trend_wells[well] = WellQual(well, startdate="{}/06/01".format(year - 9), enddate="{}/02/01".format(year + 1))
 
     def load_data(self, df_yearly=None, df_trend=None):
-        #todo replace with mike's read from squalarc
+        # replace with mike's read from squalarc
         print('loading annual quality data')
         all_base_data = get_base_well_data_df(self.well_list)
         for well in self.yearly_wells.values():
@@ -156,7 +156,7 @@ class AGWQL_survey(object):
                         pro_id_temp2 = data['proj_id'][time_idx2]
                         # pull data from all GWM samples in the date range where all are <lod use lod otherwise mean
                         # of detection values.  This assumes LOD values are negative
-                        pro_id_idx = (pro_id_temp2.str.contains('GWM',na=False)) | (pro_id_temp2.str.contains('GWI',na=False)) #todo check this
+                        pro_id_idx = (pro_id_temp2.str.contains('GWM',na=False)) | (pro_id_temp2.str.contains('GWI',na=False)) # check this
                         temp = pro_id_temp2[pro_id_idx]
                         if len(temp) == 0:
                             missing_well_years.append(('no entries trend', well.well_num, year))

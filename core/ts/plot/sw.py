@@ -4,7 +4,7 @@ Surface water plotting functions.
 """
 
 
-def hydrograph_plot(flow, precip=None, x_period='day', x_n_periods=1, time_format='%d-%m %H', x_rot=45, alpha=0.6, flow_units='m^{3}/s', precip_units='mm', x_grid=False,  export=False, export_path='hydrograph.png'):
+def hydrograph_plot(flow, precip=None, x_period='day', x_n_periods=1, time_format='%d-%m %H', x_rot=45, alpha=0.6, flow_units='m^{3}/s', precip_units='mm', x_grid=False, export_path=None):
     """
     Plotting function for hydrographs with/without a precipitation data set.
 
@@ -69,7 +69,7 @@ def hydrograph_plot(flow, precip=None, x_period='day', x_n_periods=1, time_forma
     plot = ax1.get_figure()
 
     #### Save plot
-    if export:
+    if isinstance(export_path, str):
         plot.savefig(export_path)
 
     return(plot)
@@ -346,8 +346,8 @@ def reg_plot(x, y, freq='day', n_periods=1, fun='mean', min_ratio=0.75, digits=3
         ax.set_ylim(0, y_max)
 #    else:
 #        ax.set_ylim(0, y_lim[1])
-    plt.xlabel(col_names[0] + ' recorder $(m^{3}/s)$')
-    plt.ylabel(col_names[1] + ' recorder $(m^{3}/s)$')
+    plt.xlabel(col_names[0] + ' $(m^{3}/s)$')
+    plt.ylabel(col_names[1] + ' $(m^{3}/s)$')
 
     plot2 = ax.get_figure()
     if export:

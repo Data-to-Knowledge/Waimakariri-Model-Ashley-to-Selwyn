@@ -15,8 +15,6 @@ from users.MH.Waimak_modeling.supporting_data_path import sdp
 import rasterio
 import matplotlib.pyplot as plt
 
-#todo someday add to core
-
 def get_mean_water_level(min_reading = 2):
     well_details_org = rd_sql(**sql_db.wells_db.well_details)
     well_details = well_details_org[(well_details_org['WMCRZone'] == 4) | (well_details_org['WMCRZone'] == 7) |

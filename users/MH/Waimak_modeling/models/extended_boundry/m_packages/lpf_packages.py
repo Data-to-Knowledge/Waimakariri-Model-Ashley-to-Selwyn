@@ -9,13 +9,20 @@ import flopy
 import numpy as np
 
 def create_lay_prop_package(m, mfv,k_version=1):
-    layer_type = np.array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    """
+    create the layer property package
+    :param m: a flopy model instance
+    :param mfv: the modflow version mf2005 or mfnwt (e.g. lpf vs upw package)
+    :param k_version: the ks to use, this was never really used
+    :return:
+    """
+    layer_type = np.array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
     layer_avg = 0
     chani = -1
     layer_vka = 0
-    hk = _get_hk(k_version)
+    hk = 1 # brioch is pulling these from the SC data (via the pilot points) so will not populate
     hani = 1
-    vka = _get_vka(k_version)
+    vka = 1 # brioch is pulling these from the SC data (via the pilot points) so will not populate
     ss = 0
     sy = 0
 
@@ -66,12 +73,3 @@ def create_lay_prop_package(m, mfv,k_version=1):
     else:
         raise ValueError('unexpected modflow version {}'.format(mfv))
 
-
-def _get_hk(version=1): #todo
-    # there are pump test data in julians report also k zones defined
-    # extend chch ks southward
-
-    raise NotImplementedError()
-
-def _get_vka(version=1): #todo
-    raise NotImplementedError()

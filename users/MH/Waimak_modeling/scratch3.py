@@ -9,6 +9,9 @@ import model_tools as mt
 import flopy
 import numpy as np
 import matplotlib as mpl
+from pykrige.ok import OrdinaryKriging
+
+
 
 
 m = mt.get_base_mf_ss()

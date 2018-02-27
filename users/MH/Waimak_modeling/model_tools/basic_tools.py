@@ -67,7 +67,7 @@ def model_where(condition):
 
 
 def get_well_postions(well_nums, screen_handling = 'middle', raise_exct = True, error_log_path=None,
-                      one_val_per_well = False): #todo update for new model version
+                      one_val_per_well = False):
     """
     gets model indexs from a well position
     :param well_nums: value or iterable of well numbers
@@ -196,7 +196,7 @@ def get_well_postions(well_nums, screen_handling = 'middle', raise_exct = True, 
         return layer, row, col
 
 
-def convert_matrix_to_coords(row, col, layer=None, elv_db=None): #todo update for new model version
+def convert_matrix_to_coords(row, col, layer=None, elv_db=None):
     """
     convert from matix indexing to real world coordinates
     :param row:
@@ -222,7 +222,7 @@ def convert_matrix_to_coords(row, col, layer=None, elv_db=None): #todo update fo
         return lon, lat, elv
 
 
-def calc_elv_db(recalc=False): #todo update for new model version
+def calc_elv_db(recalc=False):
     """
     calculates the elevation database (bottoms with the top of layer one on top or loads pickel
     :param recalc: force recalculates the elv_db from the gns data even if it is not present
@@ -239,7 +239,7 @@ def calc_elv_db(recalc=False): #todo update for new model version
 
     return elv_db
 
-def convert_coords_to_matix(lon, lat, elv=None, elv_db=None, return_AE=False): #todo update for new model version
+def convert_coords_to_matix(lon, lat, elv=None, elv_db=None, return_AE=False):
     """
     convert from real world coordinates to model indexes by comparing value to center point of array.  Where the value
     is on an edge defaults to top left corner (e.g. row 1, col 1, layer 1)
@@ -299,7 +299,7 @@ def convert_coords_to_matix(lon, lat, elv=None, elv_db=None, return_AE=False): #
         else:
             return layer, row, col
 
-def calc_z_loc(row, col, elv, elv_db=None): #todo update for new model version
+def calc_z_loc(row, col, elv, elv_db=None):
     if elv_db is None:
         # below is a pickled np.array of bottoms (with layer 1 top on the top of the stack)
         elv_db = calc_elv_db()

@@ -397,11 +397,20 @@ precip, sites = MetS_nc_to_df(nc1)
 new_precip = sel_interp_agg(precip, sites, poly, grid_res, data_col, time_col, x_col, y_col, buffer_dis, agg_ts_fun='sum', period='2H', agg_xy=False, output_format='geotiff', output_path=output_path)
 
 
+##############################################
+#### Combine many files
 
+from xarray import open_mfdataset
+from os.path import join
 
+base_dir = r'C:\ecan\ftp\metservice\test1'
+nc1 = 'nz8kmN-NCEP_2_2017070612_000.00.nc'
+nc2 = 'nz8kmN-NCEP_2_2017070612_001.00.nc'
 
+d1 = open_mfdataset(join(base_dir, '*.nc'), concat_dim='times')
 
-
+d2 = open_mfdataset(join(base_dir, 'nz8kmN-NCEP_2_2017051612.00.nc'))
+d3 = open_mfdataset(join(base_dir, nc2))
 
 
 

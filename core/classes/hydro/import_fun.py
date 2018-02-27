@@ -3,46 +3,70 @@
 Functions for the hydro class for importing data.
 """
 
-from pandas import DataFrame, Series, DatetimeIndex, to_datetime, MultiIndex, concat, to_numeric, infer_freq, read_sql, Timestamp
-from numpy import array, ndarray, in1d, unique, append, nan, argmax, where, dtype
+from pandas import DataFrame, Series, DatetimeIndex, to_datetime, MultiIndex, concat, to_numeric, read_csv
+from numpy import in1d, where
 from geopandas import GeoDataFrame, GeoSeries, read_file
 from collections import defaultdict
-from pymssql import connect
-from core.ecan_io import rd_sql
+from core.classes.hydro.base import all_mtypes
+from xarray import open_dataset
+from shapely.wkt import loads
+from shapely.geometry import Point
+from core.ecan_io.mssql import rd_sql_ts, rd_sql
+from core.spatial.vector import sel_sites_poly
+
 
 ########################################################
 #### Time series data
 
 ### Primary import functions
-
+#h1.add_data(df, time='time', sites='site', mtypes='mtype', values='data', dformat='long')
 
 def add_data(self, data, time=None, sites=None, mtypes=None, values=None, dformat=None, add=True):
     """
-    The general function to add time series data to the hydro class object.\n
-    Input data can be either in 'wide' or 'long' dformat.\n
-    The 'wide' dformat is where the columns are the sites or the mtypes (or both as a MultiIndex column). 'time' should be the index as a DateTimeIndex. 'sites' should be an integer or a string if the columns are mtypes, and similarly for 'mtypes' if the columns are sites.\n
+    The general function to add time series data to the hydro class object.
+
+    Input data can be either in 'wide' or 'long' dformat.
+
+    The 'wide' dformat is where the columns are the sites or both mtypes and sites as a MultiIndex column. 'time' should either be None if data.index is a DateTimeIndex or a DateTimeIndex. 'sites' should be None. If data has a MultiIndex column of mtypes and sites, they must be arranged in that order (top: mtypes, bottom: sites).
+
     The 'long' dformat should be a DataFrame with four columns: One column with a DatetimeIndex for 'time', one column with the site values as 'sites', one column with the mtypes values as 'mtypes', and one column with the data values as 'values'.
 
-    Arguments:\n
-    data -- A Pandas DataFrame in either long or wide format.\n
-    add -- Should new data be appended to the existing object? If False, returns a new object.
+    Parameters
+    ----------
+    data : DataFrame or type that can be coerced to a DataFrame
+        A Pandas DataFrame in either long or wide format or an object type that can be coerced to a DataFrame via DataFrame(data) (see Pandas).
+    time : DateTimeIndex, str, or None
+        The time index reference. Depends on dformat.
+    sites : str, int, or None
+        The sites reference. Depends on dformat.
+    mtypes : str, int, or None
+        The mtypes reference. Depends on dformat.
+    values : str or None
+        Only needed for dformat = 'long'. The column name for the data values.
+    dformat : 'wide' or 'long'
+        The format of the data table to import.
+    add : bool
+        Should new data be appended to the existing object? If False, returns a new object.
+
+    Returns
+    -------
+    HydroPandas
     """
-    from core.classes.hydro.base import all_mtypes
 
     ### Convert input data to long format for consumption
 
     if dformat is None:
         raise ValueError("dformat must be specified and must be either 'long' or 'wide'.")
-    if not isinstance(data, (DataFrame, Series)):
-        raise ValueError("data must be either a Pandas Series or DataFrame.")
+    if not isinstance(data, DataFrame):
+        data = DataFrame(data)
+    if data.empty:
+        raise ValueError('DataFrame is empty, no data was passed')
     if dformat is 'wide':
         if isinstance(data.columns, MultiIndex):
             if not isinstance(data.index, DatetimeIndex):
                 raise ValueError("A MultiIndex column DataFrame must have a DateTimeIndex as the row index.")
-            if (sites is None) | (mtypes is None):
-                raise ValueError("Must specify MultiIndex names for sites and mtypes if DataFrame has MultiIndex columns.")
             d1 = data.copy()
-            d1.columns.rename(['mtype', 'site'], level=[mtypes, sites], inplace=True)
+            d1.columns.names = ['mtype', 'site']
             d1.columns.set_levels(to_numeric(d1.columns.levels[1], errors='ignore', downcast='integer'), level='site', inplace=True)
             d1.index.name = 'time'
             d2 = d1.stack(level=['mtype', 'site'])
@@ -63,11 +87,6 @@ def add_data(self, data, time=None, sites=None, mtypes=None, values=None, dforma
                 d1.columns = to_numeric(d1.columns, errors='ignore', downcast='integer')
                 d1['mtype'] = mtypes
                 d2 = d1.set_index('mtype', append=True)
-                input1 = d2.stack().reorder_levels(['mtype', 'site', 'time'])
-            elif isinstance(sites, (str, int)):
-                d1.columns.name = 'mtype'
-                d1['site'] = to_numeric(sites, errors='ignore', downcast='integer')
-                d2 = d1.set_index('site', append=True)
                 input1 = d2.stack().reorder_levels(['mtype', 'site', 'time'])
     elif dformat is 'long':
         if not isinstance(mtypes, (str, int)) or not isinstance(sites, (str, int)) or not isinstance(time, (str, int)) or not isinstance(values, (str, int)):
@@ -99,7 +118,7 @@ def add_data(self, data, time=None, sites=None, mtypes=None, values=None, dforma
 
     ## Check mtypes
     new_mtypes = input1.index.levels[0]
-    mtypes_bool = in1d(new_mtypes, all_mtypes.keys())
+    mtypes_bool = in1d(new_mtypes, all_mtypes)
     if any(~mtypes_bool):
         sel_mtypes = new_mtypes[mtypes_bool]
         input1 = input1.loc(axis=0)[sel_mtypes, :, :]
@@ -305,13 +324,17 @@ def add_site_attr(self, df):
 #### File reading functions (csv and netcdf)
 
 
-def rd_csv(self, csv_path, time=None, sites=None, mtypes=None, values=None, dformat=None, header='infer', skiprows=0):
+def rd_csv(self, csv_path, time=None, sites=None, mtypes=None, values=None, dformat=None, multiindex=False, skiprows=0):
     """
     Simple function to read in time series data and make it regular if needed.
     """
-    from pandas import read_csv
 
-    ts = read_csv(csv_path, parse_dates=[time], infer_datetime_format=True, dayfirst=True, skiprows=skiprows, header=header)
+    if multiindex:
+        ts = read_csv(csv_path, parse_dates=True, infer_datetime_format=True, dayfirst=True, skiprows=skiprows, header=[0, 1], index_col=0)
+        ts.columns.names = ['mtype', 'site']
+        ts.index.name = 'time'
+    else:
+        ts = read_csv(csv_path, parse_dates=[time], infer_datetime_format=True, dayfirst=True, skiprows=skiprows, header='infer', index_col=0)
     self.add_data(ts, time=time, sites=sites, mtypes=mtypes, values=values, dformat=dformat)
     return(self)
 
@@ -320,57 +343,54 @@ def rd_netcdf(self, nc_path):
     """
     Function to read a netcdf file (.nc) that was an export from a hydro class.
     """
-    from xarray import open_dataset
-    from numpy import in1d
-    from shapely.wkt import loads
-    from shapely.geometry import Point
-    from geopandas import GeoDataFrame
 
-    ds1 = open_dataset(nc_path)
+    with open_dataset(nc_path) as ds1:
 
-    ### Load in the geometry data
-    if any(in1d(ds1.data_vars.keys(), 'geo_catch_wkt')):
-#        geo_catch_cols = [i for i in ds1.keys() if 'geo_catch' in i]
-        df_catch = ds1['geo_catch_wkt'].to_dataframe()
-        df_catch.columns = df_catch.columns.str.replace('geo_catch_', '')
-        geo1 = [loads(x) for x in df_catch.wkt]
-        gdf_catch = GeoDataFrame(df_catch.drop('wkt', axis=1), geometry=geo1, crs=ds1.attrs['crs'])
-        gdf_catch.index.name = 'site'
-        ds1 = ds1.drop('geo_catch_wkt')
+        ### Load in the geometry data
+        if any(in1d(ds1.data_vars.keys(), 'geo_catch_wkt')):
+    #        geo_catch_cols = [i for i in ds1.keys() if 'geo_catch' in i]
+            df_catch = ds1['geo_catch_wkt'].to_dataframe()
+            df_catch.columns = df_catch.columns.str.replace('geo_catch_', '')
+            geo1 = [loads(x) for x in df_catch.wkt]
+            gdf_catch = GeoDataFrame(df_catch.drop('wkt', axis=1), geometry=geo1, crs=dict(ds1.attrs['crs']))
+            gdf_catch.index.name = 'site'
+            ds1 = ds1.drop('geo_catch_wkt')
 
-    if any(in1d(ds1.data_vars.keys(), 'geo_loc_x')):
-        geo_loc_cols = [i for i in ds1.keys() if 'geo_loc' in i]
-        df_loc = ds1[geo_loc_cols].to_dataframe()
-        df_loc.columns = df_loc.columns.str.replace('geo_loc_', '')
-        geo2 = [Point(xy) for xy in zip(df_loc.x, df_loc.y)]
-        gdf_loc = GeoDataFrame(df_loc.drop(['x', 'y'], axis=1), geometry=geo2, crs=ds1.attrs['crs'])
-        gdf_loc.index.name = 'site'
-        ds1 = ds1.drop(geo_loc_cols)
+        if any(in1d(ds1.data_vars.keys(), 'geo_loc_x')):
+            geo_loc_cols = [i for i in ds1.keys() if 'geo_loc' in i]
+            df_loc = ds1[geo_loc_cols].to_dataframe()
+            df_loc.columns = df_loc.columns.str.replace('geo_loc_', '')
+            geo2 = [Point(xy) for xy in zip(df_loc.x, df_loc.y)]
+            crs1 = dict(ds1['geo_loc_x'].attrs.copy())
+            crs1.update({i: bool(crs1[i]) for i in crs1 if crs1[i] in ['True', 'False']})
+            gdf_loc = GeoDataFrame(df_loc.drop(['x', 'y'], axis=1), geometry=geo2, crs=crs1)
+            gdf_loc.index.name = 'site'
+            ds1 = ds1.drop(geo_loc_cols)
 
-    ### Load in the site attribute data
-    if any(in1d(ds1.data_vars.keys(), 'site_attr')):
-        site_attr_cols = [i for i in ds1.keys() if 'site_attr' in i]
-        site_attr1 = ds1[site_attr_cols].to_dataframe()
-        site_attr1.columns = site_attr1.columns.str.replace('site_attr_', '')
-        site_attr1.index.name = 'site'
-        ds1 = ds1.drop(site_attr_cols)
+        ### Load in the site attribute data
+        if any(in1d(ds1.data_vars.keys(), 'site_attr')):
+            site_attr_cols = [i for i in ds1.keys() if 'site_attr' in i]
+            site_attr1 = ds1[site_attr_cols].to_dataframe()
+            site_attr1.columns = site_attr1.columns.str.replace('site_attr_', '')
+            site_attr1.index.name = 'site'
+            ds1 = ds1.drop(site_attr_cols)
 
-    ### Load in the ts data
-    df1 = ds1[['site', 'time', 'data']].to_dataframe().reset_index()
+        ### Load in the ts data
+        df1 = ds1[['site', 'time', 'data']].to_dataframe().reset_index()
 
-    self.add_data(df1, 'time', 'site', 'mtype', 'data', 'long')
+        self.add_data(df1, 'time', 'site', 'mtype', 'data', 'long')
 
-    ### Add in the earlier attributes
-    if 'site_attr1' in locals():
-        self.add_site_attr(site_attr1)
-    if 'gdf_loc' in locals():
-        self.add_geo_loc(gdf_loc, check=False)
-    if 'gdf_catch' in locals():
-        self.add_geo_catch(gdf_catch, check=False)
+        ### Add in the earlier attributes
+        if 'site_attr1' in locals():
+            self.add_site_attr(site_attr1)
+        if 'gdf_loc' in locals():
+            self.add_geo_loc(gdf_loc, check=False)
+        if 'gdf_catch' in locals():
+            self.add_geo_catch(gdf_catch, check=False)
 
-    ### close
-    ds1.close()
-    return(self)
+        ### return
+    #    ds1.close()
+        return(self)
 
 
 ##############################################
@@ -379,76 +399,73 @@ def rd_netcdf(self, nc_path):
 ### mssql
 
 
-def _rd_hydro_mssql(self, server, database, table, mtype, time_col, site_col, data_col, qual_col, sites=None, from_date=None, to_date=None, qual_codes=None):
+def _rd_hydro_mssql(self, server, database, table, mtype, date_col, site_col, data_col, qual_col=None, sites=None, from_date=None, to_date=None, qual_codes=None, add_where=None, min_count=None, resample_code=None, period=1, fun='mean', val_round=3):
     """
-    Function to import data from a MSSQL database. Specific columns can be selected and specific queries within columns can be selected. Requires the pymssql package, which must be separately installed.
+    Function to import data from a MSSQL database. Specific columns can be selected and specific queries within columns can be selected. Requires the pymssql package.
 
-    Arguments:\n
-    server -- The server name (str). e.g.: 'SQL2012PROD03'\n
-    database -- The specific database within the server (str). e.g.: 'LowFlows'\n
-    table -- The specific table within the database (str). e.g.: 'LowFlowSiteRestrictionDaily'\n
-    mtype -- The measurement type according to the Hydro mtypes (string).\n
-    time_col -- The DateTime column name (str).\n
-    site_col -- The site name column (str).\n
-    data_col -- The data column (str).\n
-    qual_col -- The quality code column (str).\n
-    sites -- List of sites.\n
-    from_date -- From date for data in the format '2000-01-01'.\n
-    to_date -- To date for the data in the above format.\n
-    qual_codes -- List of quality codes.
+    Parameters
+    ----------
+    server : str
+        The server name. e.g.: 'SQL2012PROD03'
+    database : str
+        The specific database within the server. e.g.: 'LowFlows'
+    table : str
+        The specific table within the database. e.g.: 'LowFlowSiteRestrictionDaily'
+    mtype : str
+        The measurement type according to the Hydro mtypes.
+    date_col : str
+        The DateTime column name.
+    site_col : str
+        The site name column.
+    data_col : str
+        The data column.
+    qual_col : str
+        The quality code column.
+    sites : list
+        List of sites.
+    from_date : str
+        From date for data in the format '2000-01-01'.
+    to_date : str
+        To date for the data in the above format.
+    qual_codes : list of int
+        List of quality codes.
+    add_where : str
+        An additional SQL query to be added.
+    min_count : int
+        The minimum number of data values per site for data extraction.
+    resample_code : str or None
+        The Pandas time series resampling code. e.g. 'D' for day, 'W' for week, 'M' for month, etc.
+    period : int
+        The number of resampling periods. e.g. period = 2 and resample = 'D' would be to resample the values over a 2 day period.
+    fun : str
+        The resampling function. i.e. mean, sum, count, min, or max. No median yet...
+    val_round : int
+        The number of decimals to round the values.
+
+    Return
+    ------
+    Hydro
     """
 
-    ### Make the where statement
-    cols = [site_col, time_col, data_col]
-    cols_str = ', '.join(cols)
+    ## Prepare sql_dict for sites and qual_cdes
+    site_qual_dict = {}
 
     if isinstance(qual_codes, list):
-        where_qual = qual_col + " IN (" + str(qual_codes)[1:-1] + ")"
-    else:
-        where_qual = ''
-
+        site_qual_dict.update({qual_col: qual_codes})
 
     if isinstance(sites, list):
         sites = [str(i) for i in sites]
-        where_sites = site_col + " IN (" + str(sites)[1:-1] + ")"
-    else:
-        where_sites = ''
+        site_qual_dict.update({site_col: sites})
 
-    if isinstance(from_date, str):
-        from_date1 = to_datetime(from_date, errors='coerce')
-        if isinstance(from_date1, Timestamp):
-            from_date2 = from_date1.strftime('%Y-%m-%d')
-            where_from_date = time_col + " >= " + from_date2.join(['\'', '\''])
-    else:
-        where_from_date = ''
+    sql_dict = {'server': server, 'database': database, 'table': table, 'groupby_cols': site_col, 'date_col': date_col, 'values_cols': data_col, 'resample_code': resample_code, 'period': period, 'fun': fun, 'val_round': val_round, 'where_col': site_qual_dict, 'from_date': from_date, 'to_date': to_date, 'min_count': min_count}
 
-    if isinstance(to_date, str):
-        to_date1 = to_datetime(to_date, errors='coerce')
-        if isinstance(to_date1, Timestamp):
-            to_date2 = to_date1.strftime('%Y-%m-%d')
-            where_to_date = time_col + " <= " + to_date2.join(['\'', '\''])
-    else:
-        where_to_date = ''
-
-    ## join where stmts
-    where_list = [where_qual, where_sites, where_from_date,  where_to_date]
-    where_list2 = [i for i in where_list if len(i) > 0]
-
-    if len(where_list2) > 0:
-        stmt1 = "SELECT " + cols_str + " FROM " + table + " where " + " and ".join(where_list2)
-    else:
-        stmt1 = "SELECT " + cols_str + " FROM " + table
-
-    ## Pull out the data from SQL
-    conn = connect(server, database=database)
-    df = read_sql(stmt1, conn)
-    conn.close()
+    df = rd_sql_ts(**sql_dict).reset_index()
 
     ## Rename columns
     df.columns = ['site', 'time', 'data']
 
     ## Remove spaces in site names and duplicate data
-    df.loc[:, 'site'] = df.loc[:, 'site'].str.replace(' ', '')
+    df.loc[:, 'site'] = df.loc[:, 'site'].astype(str).str.replace(' ', '').str.upper()
     df = df.drop_duplicates(['site', 'time'])
 
     df['mtype'] = mtype
@@ -467,13 +484,10 @@ def _rd_hydro_geo_mssql(self, server, database, table, geo_dict):
     return(sites2)
 
 
-
-def _proc_hydro_sql(self, sites_sql_fun, db_dict, mtype, sites=None, from_date=None, to_date=None, qual_codes=None, buffer_dis=0):
+def _proc_hydro_sql(self, sites_sql_fun, mtype_dict, mtype, sites=None, from_date=None, to_date=None, qual_codes=None, min_count=None, buffer_dis=0, resample_code=None, period=1, fun='mean'):
     """
     Convenience function for reading in mssql data from standardized hydro tables.
     """
-    from core.spatial import sel_sites_poly
-    from geopandas import GeoDataFrame
 
     if isinstance(sites, GeoDataFrame):
         loc1 = sites_sql_fun()
@@ -481,38 +495,32 @@ def _proc_hydro_sql(self, sites_sql_fun, db_dict, mtype, sites=None, from_date=N
     else:
         sites1 = Series(sites).astype(str)
 
-    mtype_dict = db_dict[mtype]
-
     h1 = self.copy()
     if isinstance(mtype_dict, (list, tuple)):
         for i in range(len(mtype_dict)):
-            server1 = mtype_dict[i]['server']
-            db1 = mtype_dict[i]['db']
-            tab1 = mtype_dict[i]['table']
-            time1 = mtype_dict[i]['time_col']
             site1 = mtype_dict[i]['site_col']
-            data1 = mtype_dict[i]['data_col']
-            qual1 = mtype_dict[i]['qual_col']
 
-            sites_stmt = 'select distinct ' + site1 + ' from ' + tab1
-            sites2 = rd_sql(server1, db1, stmt=sites_stmt).astype(str)[site1]
+            sites_stmt = 'select distinct ' + site1 + ' from ' + mtype_dict[i]['table']
+            sites2 = rd_sql(mtype_dict[i]['server'], mtype_dict[i]['database'], stmt=sites_stmt).astype(str)[site1]
             sites3 = sites2[sites2.isin(sites1)].astype(str).tolist()
-            h1 = h1._rd_hydro_mssql(server=server1, database=db1, table=tab1, sites=sites3, from_date=from_date, to_date=to_date, mtype=mtype, time_col=time1, site_col=site1, data_col=data1, qual_col=qual1, qual_codes=qual_codes)
+            if not sites3:
+                raise ValueError('No sites in database')
+            if mtype_dict[i]['qual_col'] is None:
+                qual_codes = None
+            h1 = h1._rd_hydro_mssql(sites=sites3, mtype=mtype, from_date=from_date, to_date=to_date, qual_codes=qual_codes, min_count=min_count, resample_code=resample_code, period=period, fun=fun, **mtype_dict[i])
     elif isinstance(mtype_dict, dict):
-        server1 = mtype_dict['server']
-        db1 = mtype_dict['db']
-        tab1 = mtype_dict['table']
-        time1 = mtype_dict['time_col']
         site1 = mtype_dict['site_col']
-        data1 = mtype_dict['data_col']
-        qual1 = mtype_dict['qual_col']
 
-        sites_stmt = 'select distinct ' + site1 + ' from ' + tab1
-        sites2 = rd_sql(server1, db1, stmt=sites_stmt).astype(str)[site1]
+        sites_stmt = 'select distinct ' + site1 + ' from ' + mtype_dict['table']
+        sites2 = rd_sql(mtype_dict['server'], mtype_dict['database'], stmt=sites_stmt).astype(str)[site1]
         sites3 = sites2[sites2.isin(sites1)].astype(str).tolist()
-        h1 = h1._rd_hydro_mssql(server=server1, database=db1, table=tab1, sites=sites3, from_date=from_date, to_date=to_date, mtype=mtype, time_col=time1, site_col=site1, data_col=data1, qual_col=qual1, qual_codes=qual_codes)
+        if not sites3:
+                raise ValueError('No sites in database')
+        if mtype_dict['qual_col'] is None:
+            qual_codes = None
+        h1 = h1._rd_hydro_mssql(sites=sites3, mtype=mtype, from_date=from_date, to_date=to_date, qual_codes=qual_codes, min_count=min_count, resample_code=resample_code, period=period, fun=fun, **mtype_dict)
     elif callable(mtype_dict):
-        h1 = mtype_dict(h1, sites=sites1, from_date=from_date, to_date=to_date)
+        h1 = mtype_dict(h1, sites=sites1, mtype=mtype, from_date=from_date, to_date=to_date, min_count=min_count)
 
     return(h1)
 

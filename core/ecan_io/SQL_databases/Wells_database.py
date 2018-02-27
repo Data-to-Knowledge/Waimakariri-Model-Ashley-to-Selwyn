@@ -17,3 +17,4 @@ class wells_db(object):
     WMCR_Zones = {'server': 'SQL2012PROD05', 'database': 'Wells', 'table': 'WMCR_Zones'}
     aquifer_tests = {'server': 'SQL2012PROD05', 'database': 'Wells', 'table': 'AQUIFER_TESTS'}
     screen_details = {'server': 'SQL2012PROD05', 'database': 'Wells', 'table': 'SCREEN_DETAILS'}
+    allo_zones = {'server': 'SQL2012PROD05', 'database': 'Wells', 'table': 'AllocationZones'}
