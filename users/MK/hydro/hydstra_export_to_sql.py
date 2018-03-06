@@ -27,22 +27,25 @@ today1 = date(2017, 12, 22)
 #database1 = 'HydstraArchive'
 #dtype_dict = {'wtemp': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'flow': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'precip': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'swl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'gwl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'lakel': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}}
 
-#sql_table_dict = {130: 'F_HY_Lakel_data', 100: 'F_HY_SWL_data', 140: 'F_HY_Flow_Data', 143: 'F_HY_Flow_Data'}
-hydstra_code_dict = {130: 'lakel_hourly', 100: 'swl_hourly', 140: 'flow_hourly', 450: 'wtemp_hourly', 10: 'precip_hourly', 110: 'gwl_hourly'}
-
+interval = 'hour'
+export = {'server': 'SQL2012DEV01', 'database': 'Hydro', 'table': 'HydstraTSDataHourly'}
+#export = {'server': 'SQL2012DEV01', 'database': 'Hydro', 'table': 'HydstraTSDataDaily'}
+hydstra_code_list = [10]
 
 #############################################
 ### Iterate through hydstra codes and save as hdf files
+
 start1 = time()
-for i in hydstra_code_dict:
-    print(i)
-    s1 = rd_hydstra(i, interval='hour', export=join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'), concat_data=False)
+for i in hydstra_code_list:
+    print('Hydstra code: ' + str(i))
+#    s1 = rd_hydstra(i, interval=interval, export=join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'), concat_data=False)
+    s1 = rd_hydstra(i, interval=interval, export=export, concat_data=False)
 #    save_df(s1, join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'))
 
 end1 = time()
 end1 - start1
 
 
-t7 = read_hdf(join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'))
+#t7 = read_hdf(join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'))
 
 
