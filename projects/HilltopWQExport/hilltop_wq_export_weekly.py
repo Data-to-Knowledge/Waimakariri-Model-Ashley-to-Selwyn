@@ -156,7 +156,8 @@ try:
 
     wq_data_site1 = new_set.loc[(new_set[['FromDate', 'ToDate']] != old_set[['FromDate', 'ToDate']]).any(1)].reset_index().copy()
     if not wq_data_site1.empty:
-        del_mssql_table_rows(server, database, sites_table, pk_df=wq_data_site1[['SiteID', 'MeasurementType']])
+        if not sites_bool1:
+            del_mssql_table_rows(server, database, sites_table, pk_df=wq_data_site1[['SiteID', 'MeasurementType']])
         to_mssql(wq_data_site1, server, database, sites_table)
         print(str(len(wq_data_site1)) + ' sites updated')
         print(wq_data_site1)
@@ -220,7 +221,8 @@ try:
             wq_data_sample1 = sample_combo[sample_combo.Value != sample_combo.old].drop('old', axis=1).copy()
 
             if not wq_data_sample1.empty:
-                del_mssql_table_rows(server, database, samples_table, pk_df=wq_data_sample1[['SiteID', 'Param', 'CollectionTime']])
+                if not samples_bool1:
+                    del_mssql_table_rows(server, database, samples_table, pk_df=wq_data_sample1[['SiteID', 'Param', 'CollectionTime']])
                 to_mssql(wq_data_sample1, server, database, samples_table, dtype={'Value': String})
                 print(str(len(wq_data_sample1)) + ' samples updated')
 
@@ -236,7 +238,8 @@ try:
             wq_data_mtype1 = mtype_combo[mtype_combo.Value != mtype_combo.old].drop('old', axis=1).copy()
 
             if not wq_data_mtype1.empty:
-                del_mssql_table_rows(server, database, mtypes_table, pk_df=wq_data_mtype1[['SiteID', 'MeasurementType', 'Param', 'CollectionTime']])
+                if not mtypes_bool1:
+                    del_mssql_table_rows(server, database, mtypes_table, pk_df=wq_data_mtype1[['SiteID', 'MeasurementType', 'Param', 'CollectionTime']])
                 to_mssql(wq_data_mtype1, server, database, mtypes_table)
                 print(str(len(wq_data_mtype1)) + ' measurements updated')
 
