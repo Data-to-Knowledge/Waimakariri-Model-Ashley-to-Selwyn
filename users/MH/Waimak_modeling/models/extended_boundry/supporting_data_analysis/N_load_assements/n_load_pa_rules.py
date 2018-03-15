@@ -11,6 +11,7 @@ import pandas as pd
 import geopandas as gpd
 from core.spatial.vector import spatial_overlays
 import os
+from shapely.errors import TopologicalError
 
 # look at dissolve in geopandas as a possible aggregation.
 # farm id could be a good aggregation device
@@ -52,82 +53,84 @@ def create_farm_scale_data(catchments, outdir):
     outdata = pd.DataFrame(index=catchments.keys())
     for name, catchment in catchments.items():
         print(name)
-        # gmp, cmp, and land_use
-        temp_load = spatial_overlays(final_load, catchment)
-        temp_load.loc[:, 'area_in_catch'] = temp_load.area/10000
-        temp_load.loc[:, 'cmp_nload_total'] = temp_load.nload_cmp * temp_load.area_in_catch
-        outdata.loc[name, 'cmp_nload_kg'] = temp_load.cmp_nload_total.sum()
-        temp_load.loc[:, 'gmp_nload_total'] = temp_load.nload_gmp * temp_load.area_in_catch
-        outdata.loc[name, 'gmp_nload_kg'] = temp_load.gmp_nload_total.sum()
-        landuse_types = {u'',
-                         u'Arable',
-                         u'DairyFarm',
-                         u'DairySupport',
-                         u'Forest-Tussock',
-                         u'Horticulture',
-                         u'Lifestyle',
-                         u'NotFarm',
-                         u'Other-inclGolf',
-                         u'Pigs',
-                         u'Sheep-Beef-Deer',
-                         u'SheepBeef-Hill',
-                         u'Unknown'}
-        grouped = temp_load.groupby('luscen_cat').aggregate({'area_in_catch': np.sum})
-        for lt in landuse_types:
-            try:
-                outdata.loc[name, lt] = grouped.loc[lt, 'area_in_catch']
-            except KeyError:
-                pass
-        temp_data = spatial_overlays(orange_red, catchment)
-        temp_data.loc[:, 'area_in_catch'] = temp_data.area/10000
+        try:
+            # gmp, cmp, and land_use
+            temp_load = spatial_overlays(final_load, catchment)
+            temp_load.loc[:, 'area_in_catch'] = temp_load.area/10000
+            temp_load.loc[:, 'cmp_nload_total'] = temp_load.nload_cmp * temp_load.area_in_catch
+            outdata.loc[name, 'cmp_nload_kg'] = temp_load.cmp_nload_total.sum()
+            temp_load.loc[:, 'gmp_nload_total'] = temp_load.nload_gmp * temp_load.area_in_catch
+            outdata.loc[name, 'gmp_nload_kg'] = temp_load.gmp_nload_total.sum()
+            landuse_types = {u'',
+                             u'Arable',
+                             u'DairyFarm',
+                             u'DairySupport',
+                             u'Forest-Tussock',
+                             u'Horticulture',
+                             u'Lifestyle',
+                             u'NotFarm',
+                             u'Other-inclGolf',
+                             u'Pigs',
+                             u'Sheep-Beef-Deer',
+                             u'SheepBeef-Hill',
+                             u'Unknown'}
+            grouped = temp_load.groupby('luscen_cat').aggregate({'area_in_catch': np.sum})
+            for lt in landuse_types:
+                try:
+                    outdata.loc[name, lt] = grouped.loc[lt, 'area_in_catch']
+                except KeyError:
+                    pass
+            temp_data = spatial_overlays(orange_red, catchment)
+            temp_data.loc[:, 'area_in_catch'] = temp_data.area/10000
 
-        # convert to a dataframe
-        temp_data = pd.DataFrame(temp_data.drop('geometry', axis=1))
-        assert not temp_data.index.duplicated().any(), 'should not have duplicate entries from {}'.format(name)
+            # convert to a dataframe
+            temp_data = pd.DataFrame(temp_data.drop('geometry', axis=1))
+            assert not temp_data.index.duplicated().any(), 'should not have duplicate entries from {}'.format(name)
 
-        # create irrigated area
-        temp_data.loc[:, 'irrigated_area_ha'] = temp_data.loc[:, 'Irrig_Ha']
+            # create irrigated area
+            temp_data.loc[:, 'irrigated_area_ha'] = temp_data.loc[:, 'Irrig_Ha']
 
-        # create non-irrigated area
-        temp_data.loc[:, 'non_irrigated_area_ha'] = temp_data.Farm_size_Ha - temp_data.irrigated_area_ha
+            # create non-irrigated area
+            temp_data.loc[:, 'non_irrigated_area_ha'] = temp_data.Farm_size_Ha - temp_data.irrigated_area_ha
 
-        # create pa irrigation (sum of current pa irrigation and the potential)
-        temp_data.loc[:, 'pa_irrigation_ha'] = temp_data.loc[:, 'ExtraIrr_Ha']
+            # create pa irrigation (sum of current pa irrigation and the potential)
+            temp_data.loc[:, 'pa_irrigation_ha'] = temp_data.loc[:, 'ExtraIrr_Ha']
 
-        # create new PA irrigation N load
-        temp_data.loc[:, 'new_PA_irrigation_load'] = (temp_data.loc[:, 'New_NLoss_PC5'] - temp_data.loc[:,
-                                                                                             'BAU_PC5_diff_woIrrig']) * temp_data.Farm_size_Ha
+            # create new PA irrigation N load
+            temp_data.loc[:, 'new_PA_irrigation_load'] = (temp_data.loc[:, 'New_NLoss_PC5'] - temp_data.loc[:,
+                                                                                                 'BAU_PC5_diff_woIrrig']) * temp_data.Farm_size_Ha
 
-        # create pa winter forrage (sum of current forrage and the potential)
-        temp_data.loc[:, 'pa_wforage_ha'] = temp_data.loc[:, 'ExtraWF_Ha']
+            # create pa winter forrage (sum of current forrage and the potential)
+            temp_data.loc[:, 'pa_wforage_ha'] = temp_data.loc[:, 'ExtraWF_Ha']
 
-        # create PA forrage N load
-        temp_data.loc[:, 'new_PA_forage_load'] = (temp_data.loc[:, 'BAU_PC5_diff_woIrrig'] - temp_data.loc[:,
-                                                                                                'mean_nloss']) * temp_data.Farm_size_Ha
+            # create PA forrage N load
+            temp_data.loc[:, 'new_PA_forage_load'] = (temp_data.loc[:, 'BAU_PC5_diff_woIrrig'] - temp_data.loc[:,
+                                                                                                    'mean_nloss']) * temp_data.Farm_size_Ha
 
-        # create total PA N load
-        temp_data.loc[:, 'new_PA_total_load'] = temp_data.loc[:, 'new_PA_forage_load'] + temp_data.loc[:,
-                                                                                                 'new_PA_irrigation_load']
+            # create total PA N load
+            temp_data.loc[:, 'new_PA_total_load'] = temp_data.loc[:, 'new_PA_forage_load'] + temp_data.loc[:,
+                                                                                                     'new_PA_irrigation_load']
 
-        # create pro-rataed data for above
-        for key in pro_rata_keys:
-            temp_data.loc[:, '{}_prorata'.format(key)] = temp_data.loc[:, key] * (temp_data.loc[:, 'area_in_catch'] /
-                                                                                  temp_data.loc[:, 'Farm_size_Ha'])
-        size_key = 'Farm_size_Ha'
-        temp_data.loc[:, 'property_size_class'] = 'none'
-        temp_data.loc[(temp_data.loc[:,size_key] > 0) & (temp_data.loc[:,size_key] <= 10), 'property_size_class'] = '0-10 ha'
-        temp_data.loc[(temp_data.loc[:,size_key] > 10) & (temp_data.loc[:,size_key] <= 20), 'property_size_class'] = '10-20 ha'
-        temp_data.loc[(temp_data.loc[:,size_key] > 20) & (temp_data.loc[:,size_key] <= 50), 'property_size_class'] = '20-50 ha'
-        temp_data.loc[(temp_data.loc[:,size_key] > 50), 'property_size_class'] = '>50 ha'
+            # create pro-rataed data for above
+            for key in pro_rata_keys:
+                temp_data.loc[:, '{}_prorata'.format(key)] = temp_data.loc[:, key] * (temp_data.loc[:, 'area_in_catch'] /
+                                                                                      temp_data.loc[:, 'Farm_size_Ha'])
+            size_key = 'Farm_size_Ha'
+            temp_data.loc[:, 'property_size_class'] = 'none'
+            temp_data.loc[(temp_data.loc[:,size_key] > 0) & (temp_data.loc[:,size_key] <= 10), 'property_size_class'] = '0-10 ha'
+            temp_data.loc[(temp_data.loc[:,size_key] > 10) & (temp_data.loc[:,size_key] <= 20), 'property_size_class'] = '10-20 ha'
+            temp_data.loc[(temp_data.loc[:,size_key] > 20) & (temp_data.loc[:,size_key] <= 50), 'property_size_class'] = '20-50 ha'
+            temp_data.loc[(temp_data.loc[:,size_key] > 50), 'property_size_class'] = '>50 ha'
 
-        # save raw data
-        temp_data.to_csv(os.path.join(raw_out_dir, name + '.csv'))
+            # save raw data
+            temp_data.to_csv(os.path.join(raw_out_dir, name + '.csv'))
 
-        # do some groupbys and add summary data (by property size – e.g, 0-10, 10-20, 20-50, >50 ha properties) and save data
-        grouped = temp_data.groupby('property_size_class').aggregate(np.sum)
-        grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
-        grouped.to_csv(os.path.join(outdir, name + '.csv'))
-
+            # do some groupbys and add summary data (by property size – e.g, 0-10, 10-20, 20-50, >50 ha properties) and save data
+            grouped = temp_data.groupby('property_size_class').aggregate(np.sum)
+            grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
+            grouped.to_csv(os.path.join(outdir, name + '.csv'))
+        except TopologicalError as val:
+            print(val)
     outdata.to_csv(os.path.join(outdir, 'load_overviews.csv'))
 
 
@@ -140,8 +143,10 @@ if __name__ == '__main__':
     cments['taranaki_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\taranaki_end_s.shp")
     cments['loburn_fan'] = gpd.GeoDataFrame.from_file(r'\\gisdata\ProjectArchive\SCI\2015_2016\EMG\2015_2016\Waimakariri\Groundwater\BAU scenario assessment\N load analysis.gdb', layer='LoburnFanCatchment')
     #TODO SOMETHING WRONG WITH SWAZES tried vclean didn't work
-    swazes = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\Proposed_SWAZ_Catchments_cleaned.shp")
-    swazes = swazes.dissolve(by='RiverName', aggfunc='first').reset_index()
+    swazes = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\Proposed_SWAZ_Catchments.shp")
+    #swazes = swazes.dissolve(by='RiverName', aggfunc='first').reset_index()
     for nm in swazes.loc[:,'RiverName']:
         cments[nm] = swazes.loc[swazes.RiverName==nm].reset_index()
+    cments['Cust River copy'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\copy_cust.shp")
+    cments['Courtenay Stream copy'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\copy_courteny.shp")
     create_farm_scale_data(catchments = cments, outdir=r"C:\Users\MattH\Downloads\test_nload_stuffs")
