@@ -16,8 +16,10 @@ from shapely.errors import TopologicalError
 # look at dissolve in geopandas as a possible aggregation.
 # farm id could be a good aggregation device
 
-def simplify_orange_red():
+def simplify_orange_red(final_load):
     # simplify the data
+    final_load = final_load.copy().dissolve(by='FARM_ID_DO', aggfunc='first')  # assumes only one landuse per farm (which is true for most (~7000 out of ~8000 shapes)
+    mapper = final_load.loc[:, 'luscen_cat'].to_dict()
     keep_vars = ['geometry', 'FARM_ID_DOC', 'Farm_size_Ha',
                  'Irrig_Ha', 'Steep_Ha', 'Pstr_Ha', 'Crop_Ha', 'WF_Ha',
                  'ExtraWF_Ha', 'ExtraIrr_Ha', 'Overlap_area', 'New_NLoss_PC5', 'mean_nloss',
@@ -26,9 +28,16 @@ def simplify_orange_red():
         r"P:\Groundwater\Waimakariri\Landuse\Shp\Results_New_WF_rule_May17.gdb\Results_New_WF_rule_May17.gdb",
         layer='BAU_PC5_diff_woIrrig_180315')
     orange_red = orange_red.dissolve(by='FARM_ID_DOC', aggfunc=np.max)
+    orange_red = orange_red.drop([' ', 'DOC', 'MASKED'])
+    orange_red = orange_red.reset_index()
+    orange_red.loc[:,'landuse'] = orange_red.loc[:, 'FARM_ID_DOC']
+    orange_red = orange_red.replace({'landuse': mapper})
+    orange_red.loc[~np.in1d(orange_red.landuse, list(set(mapper.values()))), 'landuse'] = 'Lifestyle'
 
     return orange_red
 
+def _count_unique(x):
+    return len(set(x))
 
 def create_farm_scale_data(catchments, outdir):
     """
@@ -39,7 +48,6 @@ def create_farm_scale_data(catchments, outdir):
     :param outdir:
     :return:
     """
-    orange_red = simplify_orange_red()
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     raw_out_dir = os.path.join(outdir, 'raw_data')
@@ -47,6 +55,7 @@ def create_farm_scale_data(catchments, outdir):
         os.makedirs(raw_out_dir)
     final_load = gpd.GeoDataFrame.from_file(r"P:\Groundwater\Waimakariri\Landuse\N results Current Pathways.gdb",
                                             layer='Final_loadsCMPGMP140218')
+    orange_red = simplify_orange_red(final_load)
     pro_rata_keys = ['pa_wforage_ha', 'pa_irrigation_ha', 'irrigated_area_ha',
                      'non_irrigated_area_ha', 'new_PA_irrigation_load', 'new_PA_forage_load',
                      'new_PA_total_load']
@@ -74,10 +83,14 @@ def create_farm_scale_data(catchments, outdir):
                              u'Sheep-Beef-Deer',
                              u'SheepBeef-Hill',
                              u'Unknown'}
-            grouped = temp_load.groupby('luscen_cat').aggregate({'area_in_catch': np.sum})
+            grouped = temp_load.groupby('luscen_cat').aggregate({'area_in_catch': np.sum,
+                                                                 'gmp_nload_total': np.sum,
+                                                                 'cmp_nload_total': np.sum})
             for lt in landuse_types:
                 try:
-                    outdata.loc[name, lt] = grouped.loc[lt, 'area_in_catch']
+                    outdata.loc[name, '{}_area_ha'.format(lt)] = grouped.loc[lt, 'area_in_catch']
+                    outdata.loc[name, '{}_gmp_load_kg'.format(lt)] = grouped.loc[lt, 'gmp_nload_total']
+                    outdata.loc[name, '{}_cmp_load_kg'.format(lt)] = grouped.loc[lt, 'cmp_nload_total']
                 except KeyError:
                     pass
             temp_data = spatial_overlays(orange_red, catchment)
@@ -126,9 +139,12 @@ def create_farm_scale_data(catchments, outdir):
             temp_data.to_csv(os.path.join(raw_out_dir, name + '.csv'))
 
             # do some groupbys and add summary data (by property size – e.g, 0-10, 10-20, 20-50, >50 ha properties) and save data
+            grouped = temp_data.groupby('landuse').aggregate(np.sum)
+            grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
+            grouped.to_csv(os.path.join(outdir, name + '_grouped_landuse.csv'))
             grouped = temp_data.groupby('property_size_class').aggregate(np.sum)
             grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
-            grouped.to_csv(os.path.join(outdir, name + '.csv'))
+            grouped.to_csv(os.path.join(outdir, name + '_grouped_size.csv'))
         except TopologicalError as val:
             print(val)
     outdata.to_csv(os.path.join(outdir, 'load_overviews.csv'))
@@ -138,6 +154,7 @@ if __name__ == '__main__':
     cments = {}
     cments['whole_estuary'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\cam_bramleys_s.shp")
     cments['ashely_gorge'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\ashley_sh1.shp")
+    cments['ashely_sh1'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\ash_est_all.shp")
     cments['saltwater_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\saltwater_end_s.shp")
     cments['waikuku_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\waikuku_end_s.shp")
     cments['taranaki_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\taranaki_end_s.shp")
@@ -147,6 +164,4 @@ if __name__ == '__main__':
     #swazes = swazes.dissolve(by='RiverName', aggfunc='first').reset_index()
     for nm in swazes.loc[:,'RiverName']:
         cments[nm] = swazes.loc[swazes.RiverName==nm].reset_index()
-    cments['Cust River copy'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\copy_cust.shp")
-    cments['Courtenay Stream copy'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\copy_courteny.shp")
     create_farm_scale_data(catchments = cments, outdir=r"C:\Users\MattH\Downloads\test_nload_stuffs")
