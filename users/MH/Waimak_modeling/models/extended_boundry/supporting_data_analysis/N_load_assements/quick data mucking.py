@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 pass
     outdata_sites.to_csv(os.path.join(base_dir, 'ashleytribs_overview_sizes_size.csv'))
 
-    #todo  winter vs irrigation
+    # winter vs irrigation
     landuse_types = [u'',
                      u'Arable',
                      u'DairyFarm',
