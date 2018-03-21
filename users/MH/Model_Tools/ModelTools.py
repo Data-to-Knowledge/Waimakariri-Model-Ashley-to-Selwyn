@@ -210,7 +210,7 @@ class ModelTools(object):
             return lon, lat, elv
 
     def convert_coords_to_matix(self, lon, lat, elv=None, elv_db=None,
-                                return_AE=False):  # todo can this be made quicker
+                                return_AE=False):  # todo can this be made quicker vectorize this shit...
         """
         convert from real world coordinates to model indexes by comparing value to center point of array.  Where the value
         is on an edge defaults to top left corner (e.g. row 1, col 1, layer 1)
