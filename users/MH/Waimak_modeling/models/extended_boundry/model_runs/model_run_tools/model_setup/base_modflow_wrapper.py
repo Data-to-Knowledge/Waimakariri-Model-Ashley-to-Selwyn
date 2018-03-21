@@ -420,8 +420,6 @@ if __name__ == '__main__':
     if testtype ==5:
         m = import_gns_model('NsmcBase', 'modpath_tester', r"C:\Users\MattH\Desktop\modpath_tester2", False)
         m.write_name_file()
-        m.upw.iphdry = 0 # hdry is -888.0
-
         m.write_input()
         m.run_model()
     if testtype == 4:

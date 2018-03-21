@@ -9,7 +9,7 @@ from core import env
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.base_modflow_wrapper import \
     mod_gns_model
-from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages import get_wel_spd
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_base_well
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import \
     get_drn_no_ncarpet_spd
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.min_flows_reliability.extract_data_for_forward_runs import \
@@ -24,7 +24,7 @@ import numpy as np
 
 def setup_run_new_abstraction(name, new_wells, base_path):
     drn_data = get_drn_no_ncarpet_spd('NsmcBase')
-    well_data = get_wel_spd(3)
+    well_data = get_base_well('NsmcBase', True)
     if new_wells is not None:
         well_data = pd.concat((well_data, new_wells))
     m = mod_gns_model('NsmcBase', name, os.path.join(base_path, name),
@@ -57,7 +57,7 @@ def get_new_wells():
     cols = np.nan * ys
     # put in layer 5
     layer = ys * 0 + 5
-    flux = ys * 0 + 10 * 86.4  # 10 l/s converted to m to day
+    flux = ys * 0 - 20 * 86.4  # 10 l/s converted to m to day
     for i in range(len(xs)):
         r, c = smt.convert_coords_to_matix(xs[i], ys[i])
         rows[i] = r
@@ -68,7 +68,7 @@ def get_new_wells():
 
 def main():
     all_new_well = get_new_wells()
-    base_dir = r"C:\Users\MattH\Downloads\sw_solutions_ashley"
+    base_dir = r"C:\Users\MattH\Downloads\sw_solutions_ashley_20ls"
     outpath = os.path.join(base_dir,'solutions.csv')
     readme_txt = """the following runs are done to examine the potential of moving some surface water abstraction 
     into deep wells.  10l deep wells have been added to the following swaps saltwater(2 well) taranaki(9 wells) 
