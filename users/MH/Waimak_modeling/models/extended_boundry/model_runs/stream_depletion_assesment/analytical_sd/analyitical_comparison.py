@@ -20,6 +20,34 @@ import itertools
 
 #todo resort out how to handle indexes (maybe vectorize later...)
 
+def calc_analytical_sd(well_nums, nsmc_num): #todo or name file
+    # get well numbers/location
+    # check whether i need to actually check dry reaches or that is inherent in the swazes.
+    # get discharge
+
+    # get times
+    times = [7, 150]
+    s = None #todo assumed pumped s
+    sy = None #todo assumed aquitard sy
+
+    # get transmissivity, kaqt
+    pumping_thickness = 25 # assume 25 m pumped aquifer
+    # make a function
+
+
+    # get baqt assume from midscreen elevation to top of saturated zone #todo handle dry wells?
+
+    # get separation distance and stream conductance for each reach
+    # make a function
+
+
+
+
+
+
+
+    raise NotImplementedError
+
 def _mean_of_items(idxs, array):
     np.nanmean(array[idxs])
 
