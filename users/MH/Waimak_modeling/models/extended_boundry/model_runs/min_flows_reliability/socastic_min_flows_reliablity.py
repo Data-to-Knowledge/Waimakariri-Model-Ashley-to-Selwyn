@@ -15,6 +15,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.new_model_run import minium_new_model_run
 from glob import glob
 from traceback import format_exc
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_stocastic_set
 
 
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     # done on rdsprod03
     #### inputs to define for each run####
     safemode = False
-    model_ids = ['NsmcReal{:06d}'.format(491)]
+    model_ids = get_stocastic_set()
     run_modelses = [True for e in model_ids]
     date = '2018-03-23'
     base_dir = r"D:\mh_waimak_models\stocastic_forward"
@@ -40,6 +41,11 @@ if __name__ == '__main__':
     errors = []
     #### run the models ####
     for i, (model_id, run_models) in enumerate(zip(model_ids, run_modelses)):
+        print ("""
+        ##########################################################
+        starting forward runs for {}, the models will be re-run: {} model {} of {}
+        ##########################################################
+        """.format(model_id,run_models,i+1,len(model_ids)))
         try:
             minium_new_model_run(model_id)
             model_dir_path = r"{}\{}_non_cc_forward_runs_{}".format(base_dir, model_id, date)
@@ -93,5 +99,5 @@ if __name__ == '__main__':
                 os.remove(path)
         except Exception as val:
             errors.append('{}: {}'.format(model_id, format_exc().replace('\n', '')))
-    with open(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\forward_run_log\stocastic_forward_run_status_{}.txt".format(date)) as f:
+    with open(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\forward_run_log\stocastic_forward_run_status_{}.txt".format(date),'w') as f:
         f.writelines(['{} \n'.format(e) for e in errors])
