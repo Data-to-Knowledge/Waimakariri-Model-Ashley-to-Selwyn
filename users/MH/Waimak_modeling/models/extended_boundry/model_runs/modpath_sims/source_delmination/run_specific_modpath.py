@@ -6,18 +6,20 @@ Date Created: 23/03/2018 2:27 PM
 
 from __future__ import division
 from core import env
-from multiple_source_delineation import create_amalgimated_source_protection_zones, split_netcdfs
+from single_zone_delination import create_single_zone_indexs,create_zones, split_netcdfs
 import os
 
 
 if __name__ == '__main__':
-    model_id = 'NsmcReal{:06d}'.format()
-    recalc=True
+    model_id = 'NsmcReal{:06d}'.format(491)
+    recalc=False
     recalc_backward_tracking=False
-    base_outdir = r"D:\mh_waimak_models\private_domestic_supply"
-    print('running for AshOpt')
+    indexes = create_single_zone_indexs()
+    base_outdir = r"D:\mh_waimak_models\single_source_zones"
+    print('running for {}'.format(model_id))
     outdir = os.path.join(base_outdir, model_id)
-    create_amalgimated_source_protection_zones(model_ids=['AshOpt'], run_name='AshOpt_private_wells',
-                                               outdir=outdir, num_it=1,
-                                               recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
+    create_zones(model_ids=[model_id], run_name='{}_single_sources'.format(model_id),
+                 outdir=outdir, root_num_part=3,
+                 indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_netcdfs(outdir)
+
