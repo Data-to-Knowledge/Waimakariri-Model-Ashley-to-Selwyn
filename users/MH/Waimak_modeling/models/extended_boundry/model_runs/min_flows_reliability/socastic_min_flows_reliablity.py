@@ -12,12 +12,12 @@ from forward_runs import setup_run_args, run_forward_runs
 from extract_data_for_forward_runs import gen_all_outdata_forward_runs, extract_and_save_all_cc_mult_missing_w
 from visualise_data_from_fruns import plot_and_save_forward_vis
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.transfer_readme import trans_readme
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.new_model_run import minium_new_model_run
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.new_model_run import \
+    minium_new_model_run
 from glob import glob
 from traceback import format_exc
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_stocastic_set
-
-
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+    get_stocastic_set
 
 if __name__ == '__main__':
 
@@ -38,14 +38,18 @@ if __name__ == '__main__':
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
 
-    errors = []
+    with open(
+            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\forward_run_log\stocastic_forward_run_status_{}.txt".format(
+                date), 'w') as f:
+        pass
+
     #### run the models ####
     for i, (model_id, run_models) in enumerate(zip(model_ids, run_modelses)):
         print ("""
         ##########################################################
         starting forward runs for {}, the models will be re-run: {} model {} of {}
         ##########################################################
-        """.format(model_id,run_models,i+1,len(model_ids)))
+        """.format(model_id, run_models, i + 1, len(model_ids)))
         try:
             minium_new_model_run(model_id)
             model_dir_path = r"{}\{}_non_cc_forward_runs_{}".format(base_dir, model_id, date)
@@ -66,7 +70,8 @@ if __name__ == '__main__':
                             'run all forward runs, this could overwrite item in :\n {} \n continue y/n\n'.format(
                                 model_dir_path)).lower()
                         if cont != 'y':
-                            raise ValueError('script aborted so as not to potentially overwrite {}'.format(model_dir_path))
+                            raise ValueError(
+                                'script aborted so as not to potentially overwrite {}'.format(model_dir_path))
 
                 if not os.path.exists(model_dir_path):
                     os.makedirs(model_dir_path)
@@ -94,10 +99,14 @@ if __name__ == '__main__':
             )
 
             # remove pickles from p drive
-            delete_paths = glob(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\pickled_files\temp_pickle_dir\model_{}_*.p".format(model_id))
+            delete_paths = glob(
+                r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\pickled_files\temp_pickle_dir\model_{}_*.p".format(
+                    model_id))
             for path in delete_paths:
                 os.remove(path)
         except Exception as val:
-            errors.append('{}: {}'.format(model_id, format_exc().replace('\n', '')))
-    with open(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\forward_run_log\stocastic_forward_run_status_{}.txt".format(date),'w') as f:
-        f.writelines(['{} \n'.format(e) for e in errors])
+            err = ('{}: {}\n'.format(model_id, format_exc().replace('\n', '')))
+            with open(
+                    r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\forward_run_log\stocastic_forward_run_status_{}.txt".format(
+                            date), 'a') as f:
+                f.write(err)

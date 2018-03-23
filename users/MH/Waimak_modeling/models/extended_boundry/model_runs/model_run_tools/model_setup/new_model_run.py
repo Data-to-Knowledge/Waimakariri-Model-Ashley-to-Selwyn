@@ -22,15 +22,15 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletio
     get_drn_no_ncarpet_spd
 
 def minium_new_model_run(model_id):
+    get_base_well(model_id, org_pumping_wells=True, recalc=True)
+    get_base_well(model_id, org_pumping_wells=False, recalc=True)
     get_full_consent(model_id, org_pumping_wells=True, recalc=True)
     get_full_consent(model_id, org_pumping_wells=False, recalc=True)
     get_max_rate(model_id, org_pumping_wells=True, recalc=True)
     get_max_rate(model_id, org_pumping_wells=False, recalc=True)
-    get_base_well(model_id, org_pumping_wells=True, recalc=True)
-    get_base_well(model_id, org_pumping_wells=False, recalc=True)
+    get_drn_no_ncarpet_spd(model_id, recalc=True)
 
     print('can start running models')
-    get_drn_no_ncarpet_spd(model_id, recalc=True)
 
 
 
