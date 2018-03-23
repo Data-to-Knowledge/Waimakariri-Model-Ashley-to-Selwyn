@@ -341,8 +341,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
                                 )
     results = pool.map_async(setup_run_forward_run_mp, runs)
     while not results.ready():
-        print('{} runs left of {}'.format(results._number_left, len(runs)))
-        time.sleep(60 * 5)  # sleep 5 min between printing
+        time.sleep(20)  # sleep 5 min between printing
     pool_outputs = results.get()
     pool.close()  # no more tasks
     pool.join()
