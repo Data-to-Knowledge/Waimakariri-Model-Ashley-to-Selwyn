@@ -358,6 +358,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
         shutil.copytree(converter_dir, dir_path)
+        m.change_model_ws(dir_path)
     shutil.rmtree(converter_dir)
     return m
 
@@ -428,6 +429,6 @@ def get_stocastic_set(return_model_ids=True):
         return nsmc_nums
 if __name__ == '__main__':
     # tests
-    m=get_model_name_path('NsmcReal{:06d}'.format(491))
+    m=get_model_name_path('NsmcReal{:06d}'.format(2818))
     print(m)
     print('done')

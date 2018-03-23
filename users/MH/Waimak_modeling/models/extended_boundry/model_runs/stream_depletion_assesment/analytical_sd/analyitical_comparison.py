@@ -163,18 +163,30 @@ def calc_analytical_sd(well_nums, name_file_path, outpath, radius=5000):
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     data.index.name = 'well'
+
+    data.loc[:,'nearest_swaz'] = np.vectorize(_get_closest_stream,
+                                              excluded=['streams'])(streams=np.array(swaz_names),
+                                                                    distances=[_oblist(e) for e in data.loc[:,['sep_dist_{}'.format(name) for name in swaz_names]].values])
+    # todo add data for the nearest swaz for the stream depletion
     data.to_csv(outpath)
     return data
 
+def _get_closest_stream(streams, distances):
+    idx = np.argmin(distances.data),
+    return streams[idx]
 
-def join_sds(numerical_sd_7, numerical_sd_150, analytical_data):
+class _oblist(object):
+    def __init__(self,l):
+        self.data = l
+
+def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
     # make the data into long mode
-    an_keys = analytical_data.keys()
+    an_keys = analytical_data_hunt.keys()
     an_keys = an_keys[an_keys.str.contains('sd_7')]
-    sd7_an = pd.melt(analytical_data.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
-                     value_name='analytical')
+    sd7_an = pd.melt(analytical_data_hunt.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
+                     value_name='analytical_hunt')
     sd7_an.loc[:, 'stream'] = sd7_an.loc[:, 'stream'].str.replace('_sd_7', '')
-    sd7_an.loc[:, 'analytical'] *=100
+    sd7_an.loc[:, 'analytical_hunt'] *=100
 
     num_keys = ['custmaindrain_swaz',
                 'cust_swaz',
@@ -202,25 +214,24 @@ def join_sds(numerical_sd_7, numerical_sd_150, analytical_data):
     sd7 = pd.merge(sd7_an, sd7_num, left_on=['well', 'stream'], right_on=['well', 'stream'])
 
     # sd150
-    an_keys = analytical_data.keys()
+    an_keys = analytical_data_hunt.keys()
     an_keys = an_keys[an_keys.str.contains('sd_150')]
-    sd150_an = pd.melt(analytical_data.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
-                       value_name='analytical')
+    sd150_an = pd.melt(analytical_data_hunt.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
+                       value_name='analytical_hunt')
     sd150_an.loc[:, 'stream'] = sd150_an.loc[:, 'stream'].str.replace('_sd_150','')
 
     sd150_num = pd.melt(numerical_sd_150.loc[:, num_keys].reset_index(), id_vars='well', var_name='stream',
                         value_name='numerical')
-    sd150_an.loc[:, 'analytical'] *=100
+    sd150_an.loc[:, 'analytical_hunt'] *=100
 
     sd150 = pd.merge(sd150_an, sd150_num, left_on=['well', 'stream'], right_on=['well', 'stream'])
     return sd7, sd150
 
 
-
+# todo would be good to add a comparison to the theis data (and possibly compute more for more 'streams')
 
 
 if __name__ == '__main__':
-    # todo debug
     well_nums = get_sd_well_list('NsmcBase')
     analytical_data = calc_analytical_sd(well_nums,
                        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\from_gns\NsmcBase\AW20171024_2_i2_optver\i2\mf_aw_ex.nam",
