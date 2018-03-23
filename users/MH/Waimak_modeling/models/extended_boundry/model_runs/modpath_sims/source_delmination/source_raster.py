@@ -278,11 +278,11 @@ def get_base_results_dir(mode, comp):
     :return:
     """
     if mode == 'forward' and comp == 'GWATER02':
-        out = r"C:\mh_waimak_models\modpath_forward_base"
+        out = r"D:\mh_waimak_models_from_c\modpath_forward_base"
     elif mode == 'backward' and comp == 'GWATER02':
-        out = r"C:\mh_waimak_models\modpath_reverse_base"
+        out = r"D:\mh_waimak_models_from_c\modpath_reverse_base"
     elif mode == 'cust' and comp == 'GWATER02':
-        out = r'C:\mh_waimak_models\cust_data'
+        out = r'D:\mh_waimak_models_from_c\cust_data'
     elif mode == 'forward' and comp == 'RDSProd03':
         out = r"D:\mh_waimak_models\modpath_forward_base"
     elif mode == 'backward' and comp == 'RDSProd03':
