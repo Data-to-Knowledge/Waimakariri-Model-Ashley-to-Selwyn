@@ -18,26 +18,12 @@ import time
 from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
 
 if __name__ == '__main__':
-    print('starting intersection')
-    n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
-    n_zone_shp = gpd.read_file(n_load_path)
-    source_area_shp_path = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\probable\Fernside.shp"
-    zone = gpd.read_file(source_area_shp_path)
-    geometry = zone['geometry'].iloc[0]
-
-    t = time.time()
-
-    sindex = n_zone_shp.sindex
-    possible_matches_index = list(sindex.intersection(geometry.bounds))
-    possible_matches = n_zone_shp.iloc[possible_matches_index]
-    print('took {} s to find possible matches'.format(time.time() - t))
-    t = time.time()
-    interest_area = gpd.overlay(possible_matches, zone,
-                                how='intersection')
-    # this was really slow... do a r-tree spatial: http://geoffboeing.com/2016/10/r-tree-spatial-index-python/
-    print('took {} s to find specific matches'.format(time.time() - t))
-
-    t = time.time()
-    test = spatial_overlays(n_zone_shp,zone)
-    print('took {} s for mikes'.format(time.time() - t))
-    print ('done')
+    all_wells = get_all_well_row_col()
+    well_nums = pd.read_excel(r"\\gisdata\Projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\stream_depletion\NCS_NumericalvsAnalyticalModelComparison.xlsx", sheetname='Theis Matt Smith 180118')
+    depths = []
+    for well in well_nums.WAP.loc[pd.notnull(well_nums.WAP)]:
+        try:
+            depths.append(all_wells.loc[well,'depth'])
+        except KeyError:
+            pass
+    print('done')

@@ -62,6 +62,53 @@ def Stehcoef(i, n):
     Stehcoef = Stehcoef * (-1)**(i + M)
     return Stehcoef
 
+
+
+def Erfc1(x):
+    """
+    To compute the complimentary error function for 0<=Abs(x)<infinity.
+    :param x:
+    :return:
+    """
+    u = np.abs(x)
+    p = 0.3275911
+    a1 = 0.254829592
+    a2 = -0.284496736
+    A3 = 1.421413741
+    A4 = -1.453152027
+    A5 = 1.061405429
+    t = 1 / (1 + p * u)
+    a = t * (a1 + t * (a2 + t * (A3 + t * (A4 + t * A5)))) * math.e**(-u * u)
+    if x >= 0:
+        erfc1 = a
+    else:
+        erfc1 = 2 - a
+    return erfc1
+
+def theis_jenkins(discharge, time, trans, s, l, return_rate=True):
+    """
+
+    :param discharge: pumping rate (l/s)
+    :param time: days
+    :param trans: transmissivity of the pumped aquifer m2/day
+    :param s: storage coefficient of the pumped aquifer unitless
+    :param l: separation distance m
+    :param return_rate: boolean if True return the rates false return the fraction
+    :return:
+    """
+    discharge = np.atleast_1d(discharge)
+    time = np.atleast_1d(time)
+    trans = np.atleast_1d(trans)
+    s = np.atleast_1d(s)
+    l = np.atleast_1d(l)
+    sdf = l**2 * s/trans
+    per = np.vectorize(Erfc1)(np.sqrt(sdf/(4*time)))
+    if return_rate:
+        return discharge * per
+    else:
+        return per
+
+
 def hunt2003(discharge, time, trans, s, kaqt, baqt, sy, lam, l, return_rate=True):
     """
     compute the hunt 2003 stream depletion analysis note this does not account for application efficiency.
@@ -106,20 +153,4 @@ def hunt2003(discharge, time, trans, s, kaqt, baqt, sy, lam, l, return_rate=True
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    distances = [10**e for e in np.arange(0,5,0.02)]
-    fig, ax = plt.subplots()
-    for t in [7, 150, 365]:
-        data = hunt2003(discharge=100,
-                 time=t,
-                 trans=1000,
-                 s=0.1,
-                 kaqt=1,
-                 baqt=1,
-                 sy= 0.1,
-                 lam=1000,
-                 l=distances,
-                return_rate=False)
-        ax.scatter(distances, data, label=t)
-        ax.legend()
-    plt.show()
+    print(theis_jenkins(100,[7,30,150],2283,0.01,2024))

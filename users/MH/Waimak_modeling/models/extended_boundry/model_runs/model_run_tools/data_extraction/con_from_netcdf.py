@@ -15,9 +15,10 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     _get_sw_samp_pts_dict, get_samp_points_df, _get_flux_flow_arrays
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from data_at_wells import get_well_positions
+from warnings import warn
 
 def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites,
-                                  outpath=None):
+                                  outpath=None, missing_str_obs='raise'):
     """
     create a dictionary (keys = runtype) of dataframes(index=nsmc realisation, columns = sites) for each runtype in
     :param nsmc_nums: the nsmc number to use or 'all'
@@ -26,6 +27,7 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
     :param cbc_nc_path: path to the cell budget file netcdf (needed for any potential drain sites and joint sfr drn)
     :param sites: list of sites (stream sites)
     :param outpath: optional, if None endmember mixing is not saved, else the directory to save 1 csv of the data
+    :param missing_str_obs: action upon missing str_obs, raise Keyerror, warn, or pass
     :return:
     """
     # some checks on sites
@@ -60,10 +62,21 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
         if sfr_idx is not None:
             assert sfr_idx.sum() == 1, 'only single boolean true sfr_idxs used, site:{}'.format(site)
             r, c = smt.model_where(sfr_idx)[0]
-            sfr_fraction = np.array(
-                ucn_nc_file.variables['sobs_{}'.format(ucn_var_name)][ucn_num_idx, r, c])
-            sfr_flux = np.array(cbc_nc_file.variables['streamflow out'][nsmc_filter_idx, r, c])
-
+            try:
+                sfr_fraction = np.array(
+                    ucn_nc_file.variables['sobs_{}'.format(ucn_var_name)][ucn_num_idx, r, c])
+                sfr_flux = np.array(cbc_nc_file.variables['streamflow out'][nsmc_filter_idx, r, c])
+            except KeyError as val:
+                if missing_str_obs=='raise':
+                    raise KeyError(val)
+                elif missing_str_obs =='warn':
+                    sfr_fraction = np.nan
+                    sfr_flux = np.nan
+                    warn(val)
+                elif missing_str_obs =='pass':
+                    sfr_fraction = np.nan
+                    sfr_flux = np.nan
+                    pass
         if drn_idx is not None:
             # get drain concentration and flow
             drn_con = np.concatenate([np.array(ucn_nc_file.variables[ucn_var_name][ucn_num_idx, 0, r, c])[:, np.newaxis]

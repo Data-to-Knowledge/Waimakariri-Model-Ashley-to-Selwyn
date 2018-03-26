@@ -6,7 +6,7 @@ Date Created: 19/03/2018 3:15 PM
 
 from __future__ import division
 from core import env
-from hydraulics_cleaned import hunt2003
+from hydraulics_cleaned import hunt2003, theis_jenkins
 import pandas as pd
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
@@ -159,7 +159,16 @@ def calc_analytical_sd(well_nums, name_file_path, outpath, radius=5000):
                           lam=stream_conducts[name],
                           l=data.loc[:, 'sep_dist_{}'.format(name)],
                           return_rate=False)
-            data.loc[:, '{}_sd_{}'.format(name, time)] = sd
+            data.loc[:, 'hunt_{}_sd_{}'.format(name, time)] = sd
+
+            tsd = theis_jenkins(discharge=100,
+                                time = time,
+                                trans=data.loc[:,'trans'],
+                                s=sy,
+                                l=data.loc[:, 'sep_dist_{}'.format(name)],
+                                return_rate=False)
+            data.loc[:, 'theis_{}_sd_{}'.format(name, time)] = tsd
+
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     data.index.name = 'well'
@@ -167,7 +176,12 @@ def calc_analytical_sd(well_nums, name_file_path, outpath, radius=5000):
     data.loc[:,'nearest_swaz'] = np.vectorize(_get_closest_stream,
                                               excluded=['streams'])(streams=np.array(swaz_names),
                                                                     distances=[_oblist(e) for e in data.loc[:,['sep_dist_{}'.format(name) for name in swaz_names]].values])
-    # todo add data for the nearest swaz for the stream depletion
+    for time in times:
+        for method in ['hunt', 'theis']:
+            for well in data.index:
+                stream = data.loc[well, 'nearest_swaz']
+                data.loc[well,'{}_nearest_sd_{}'.format(method,time)] = data.loc[well, '{}_{}_sd_{}'.format(method, stream, time)]
+
     data.to_csv(outpath)
     return data
 
@@ -182,7 +196,7 @@ class _oblist(object):
 def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
     # make the data into long mode
     an_keys = analytical_data_hunt.keys()
-    an_keys = an_keys[an_keys.str.contains('sd_7')]
+    an_keys = an_keys[an_keys.str.contains('sd_7')] #todo update for theis addition
     sd7_an = pd.melt(analytical_data_hunt.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
                      value_name='analytical_hunt')
     sd7_an.loc[:, 'stream'] = sd7_an.loc[:, 'stream'].str.replace('_sd_7', '')
@@ -229,6 +243,7 @@ def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
 
 
 # todo would be good to add a comparison to the theis data (and possibly compute more for more 'streams')
+# todo add a comparison for my hks and matt's khs
 
 
 if __name__ == '__main__':

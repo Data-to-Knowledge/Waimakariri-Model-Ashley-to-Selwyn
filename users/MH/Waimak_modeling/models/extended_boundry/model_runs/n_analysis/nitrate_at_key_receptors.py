@@ -120,7 +120,8 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
 
 def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
                        ucn_nc_path=r"C:\mh_waimak_model_data\mednload_ucn.nc",
-                       cbc_nc_path="C:\mh_waimak_model_data\post_filter1_budget.nc"):
+                       cbc_nc_path="C:\mh_waimak_model_data\post_filter1_budget.nc",
+                       missing_str_obs='raise'):
     """
     pulls out the concentration data from a netcdf file for the given nsmc_nums save both grouped and raw data
     :param outdir: directory to save the data in
@@ -128,6 +129,7 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
     :param ucn_var_name: the variable name for nitrate
     :param ucn_nc_path: the path to the ucn netcdf file, must have sobs
     :param cbc_nc_path: the path to the cbc netcdf file
+    :param missing_str_obs: action upon missing str_obs, raise Keyerror, warn, or pass
     :return:
     """
     # run on gw02
@@ -135,7 +137,8 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
     wells = get_well_ids()
 
     str_data = calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, str_sites,
-                                             outpath=os.path.join(outdir,'raw_stocastic_set_str_data.csv')).describe(
+                                             outpath=os.path.join(outdir,'raw_stocastic_set_str_data.csv'),
+                                             missing_str_obs=missing_str_obs).describe(
         percentiles=[0.05, 0.25, 0.5, 0.75, 0.95]).transpose()
     str_data.to_csv(os.path.join(outdir, 'stocastic_set_strs.csv'))
 
