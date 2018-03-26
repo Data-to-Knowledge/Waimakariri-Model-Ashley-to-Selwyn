@@ -353,8 +353,8 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         m.write_input()
         success, buff = m.run_model()
         con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
-        shutil.copytree(converter_dir, dir_path)
-        m.change_model_ws(dir_path) #todo add an update that changes teh namefile when the directory changes
+        shutil.copytree(converter_dir, dir_path) #todo consider moving this down
+        m.change_model_ws(dir_path) #todo flopy update add an update that changes teh namefile when the directory changes
         m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
             os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))

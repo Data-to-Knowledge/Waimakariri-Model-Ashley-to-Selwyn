@@ -18,6 +18,7 @@ from glob import glob
 from traceback import format_exc
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
     get_stocastic_set
+import socket
 
 if __name__ == '__main__':
 
@@ -30,8 +31,11 @@ if __name__ == '__main__':
     #### inputs to define for each run####
     safemode = False
     model_ids = get_stocastic_set()
+    if socket.gethostname() == 'GWATER02':
+        model_ids = get_stocastic_set()
+        model_ids.reverse()
     run_modelses = [True for e in model_ids]
-    date = '2018-03-23'
+    date = '2018-03-24'
     base_dir = r"D:\mh_waimak_models\stocastic_forward"
     remove_carpet = True
 
