@@ -44,9 +44,10 @@ def consolidate_forward_runs(base_dir, outdir):
         for site in streams:
             outdatas[site].loc[nsmc_num, scens_converged] = rel_data.loc[site, scens_converged]
 
+    pers = [0.01,0.05,0.1,0.25,0.50,0.75,0.9,0.95,0.99]
     for site in streams:
-        outdatas[site].to_csv(os.path.join(outdir,'{}_raw_data.csv'.format(site)))
-
+        outdatas[site].to_csv(os.path.join(outdir,'raw_data', '{}_raw_data.csv'.format(site)))
+        outdatas[site].describe(percentiles=pers).transpose().to_csv(os.path.join(outdir, '{}_summary.csv'.format(site)))
 
 
 if __name__ == '__main__':
