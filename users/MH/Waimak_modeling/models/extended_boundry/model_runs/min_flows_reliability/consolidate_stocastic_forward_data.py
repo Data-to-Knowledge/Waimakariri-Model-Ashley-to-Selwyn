@@ -17,7 +17,6 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 # NsmcReal002160_non_cc_forward_runs_2018-03-24_results\NsmcReal002160_relative_data.csv"
 
 def consolidate_forward_runs(base_dir, outdir):
-
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -34,20 +33,74 @@ def consolidate_forward_runs(base_dir, outdir):
     # initalise outdatas
     outdatas = {}
     for site in streams:
-        outdatas[site] = pd.DataFrame(index=nsmc_nums, columns=scenarios)
+        outdatas[site] = pd.DataFrame(index=list(set(nsmc_nums)), columns=scenarios)
 
     # add only the data from those that converged
     for nsmc_num, rel_path, meta_path in zip(nsmc_nums, rel_data_paths, meta_data_paths):
         meta_data = pd.read_csv(meta_path, index_col=0)
         rel_data = pd.read_csv(rel_path, skiprows=1, index_col=0)
-        scens_converged = list(set(meta_data.index[meta_data.converged])-{'current'})
+        scens_converged = list(set(meta_data.index[meta_data.converged]) - {'current'})
         for site in streams:
             outdatas[site].loc[nsmc_num, scens_converged] = rel_data.loc[site, scens_converged]
 
-    pers = [0.01,0.05,0.1,0.25,0.50,0.75,0.9,0.95,0.99]
+    pers = [0.01, 0.05, 0.1, 0.25, 0.50, 0.75, 0.9, 0.95, 0.99]
+    if not os.path.exists(os.path.join(outdir, 'raw_data')):
+        os.makedirs(os.path.join(outdir, 'raw_data'))
+
     for site in streams:
-        outdatas[site].to_csv(os.path.join(outdir,'raw_data', '{}_raw_data.csv'.format(site)))
-        outdatas[site].describe(percentiles=pers).transpose().to_csv(os.path.join(outdir, '{}_summary.csv'.format(site)))
+        outdatas[site] = outdatas[site].astype(float)
+        outdatas[site][outdatas[site]<-10] = np.nan
+        outdatas[site].to_csv(os.path.join(outdir, 'raw_data', '{}_raw_data.csv'.format(site)))
+        outdatas[site].astype(float).describe(percentiles=pers).transpose().to_csv(
+            os.path.join(outdir, '{}_summary.csv'.format(site)))
+    consolidate_by_scenario(outdir)
+
+
+def consolidate_by_scenario(base_dir):
+    scenarios = ['current_w_ncar',
+                 'full_abs',
+                 'full_abs_allo',
+                 'full_allo_cur_use',
+                 'mod_period',
+                 'mod_period_w_ncar',
+                 'naturalised',
+                 'pc5_80',
+                 'pc5_80_full_allo_cur_usage',
+                 'pc5_80_wil_eff',
+                 'pc5_no_pump_reduc',
+                 'pc5_no_pump_reduc_wil_eff',
+                 'super_gmp',
+                 'wil_eff']
+
+    metrics = ['count',
+               'mean',
+               'std',
+               'min',
+               '1%',
+               '5%',
+               '10%',
+               '25%',
+               '50%',
+               '75%',
+               '90%',
+               '95%',
+               '99%',
+               'max']
+    streams = get_samp_points_df()
+    streams = streams.loc[streams.m_type == 'min_flow'].index
+    outdatas = {}
+    for scen in scenarios:
+        outdatas[scen] = pd.DataFrame(index=streams, columns=metrics)
+
+    for site in streams:
+        data = pd.read_csv(os.path.join(base_dir, '{}_summary.csv'.format(site)), index_col=0)
+        for scen in scenarios:
+            outdatas[scen].loc[site,metrics] = data.loc[scen,metrics]
+
+    for scen in scenarios:
+        outdatas[scen].to_csv(os.path.join(base_dir, '{}_summary.csv'.format(scen)))
+
+
 
 
 if __name__ == '__main__':
