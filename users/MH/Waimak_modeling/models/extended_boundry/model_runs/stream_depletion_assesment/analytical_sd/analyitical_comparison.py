@@ -241,8 +241,6 @@ def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
     sd150 = pd.merge(sd150_an, sd150_num, left_on=['well', 'stream'], right_on=['well', 'stream'])
     return sd7, sd150
 
-
-# todo would be good to add a comparison to the theis data (and possibly compute more for more 'streams')
 # todo add a comparison for my hks and matt's khs
 
 

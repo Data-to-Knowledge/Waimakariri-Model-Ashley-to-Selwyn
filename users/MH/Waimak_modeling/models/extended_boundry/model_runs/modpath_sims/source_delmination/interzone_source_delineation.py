@@ -104,7 +104,7 @@ def create_interzone_indexes():
                     'all_layers': range(smt.layers)
                     }
 
-    sites = {}  # todo fill out from layer groups and base sites
+    sites = {}
     for bs, lg in itertools.product(base_sites.keys(), layer_groups.keys()):
         layers = layer_groups[lg]
         zones = base_sites[bs]

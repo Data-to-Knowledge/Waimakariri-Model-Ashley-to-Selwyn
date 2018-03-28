@@ -33,7 +33,7 @@ def Q_4(t, K, epsilon, l):
         n = 8
         Q_4 = 0
         for i in range(1, n + 1):
-            Q_4 = Q_4 + Stehcoef(i, n) * g_4(i * math.log(2) / t, K, epsilon, l)  # todo check what log acutally is
+            Q_4 = Q_4 + Stehcoef(i, n) * g_4(i * math.log(2) / t, K, epsilon, l)
         Q_4 = Q_4 * math.log(2) / t
     return Q_4
 

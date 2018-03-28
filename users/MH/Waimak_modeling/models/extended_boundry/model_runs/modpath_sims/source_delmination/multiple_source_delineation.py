@@ -530,4 +530,4 @@ def split_netcdfs(indir):
 
 
 if __name__ == '__main__':
-    run_multiple_source_zones(3, recalc=False, recalc_backward_tracking=False) #todo keep running as it seems like the server crashed
+    run_multiple_source_zones(3, recalc=False, recalc_backward_tracking=False)

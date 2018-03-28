@@ -82,7 +82,7 @@ def get_str_ids():
     return str_sites
 
 
-# todo make wells the groups of wells rather than the individual? possibly export both sets of data
+
 def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc_path, sfo_path):
     """
     saves streams and well data for a transport run from a single model

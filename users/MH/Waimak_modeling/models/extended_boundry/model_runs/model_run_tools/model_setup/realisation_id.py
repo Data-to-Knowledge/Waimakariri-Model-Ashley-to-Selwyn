@@ -71,7 +71,6 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
     base_dir = os.path.dirname(get_model_name_path(model_id))
     mult_path = '{}/wel_adj.txt'.format(base_dir)  # figure out what the pest control file will populate
     multipliers = pd.read_table(mult_path, index_col=0, delim_whitespace=True, names=['value'])
-    #todo add the nsmc option
 
     mult_groups = ['pump_c', 'pump_s', 'pump_w', 'sriv', 'n_race', 's_race', 'nbndf']
     for group in mult_groups:
@@ -353,15 +352,14 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         m.write_input()
         success, buff = m.run_model()
         con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
-        shutil.copytree(converter_dir, dir_path) #todo consider moving this down
         m.change_model_ws(dir_path) #todo flopy update add an update that changes teh namefile when the directory changes
         m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
             os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))
-
             shutil.rmtree(converter_dir)
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
+        shutil.copytree(converter_dir, dir_path)
     shutil.rmtree(converter_dir)
     return m
 

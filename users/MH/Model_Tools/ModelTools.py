@@ -703,7 +703,7 @@ class ModelTools(object):
         else:
             return no_flow[layer]
 
-    def get_base_model(self, recalc=False):  # todo raise eception if model path not passed
+    def get_base_model(self, recalc=False):  # todo raise eception if model path not passed perhaps delete
         """
         This has not been used much perhaps depreciate
         :param recalc:
@@ -714,7 +714,7 @@ class ModelTools(object):
                                        forgive=False)
         return m
 
-    def get_package_spd(self, package, recalc=False):
+    def get_package_spd(self, package, recalc=False):  # todo delete
         """
         this had not been used much perhaps depreciate
         :param package:

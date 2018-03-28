@@ -140,10 +140,10 @@ def create_farm_scale_data(catchments, outdir):
 
             # do some groupbys and add summary data (by property size – e.g, 0-10, 10-20, 20-50, >50 ha properties) and save data
             grouped = temp_data.groupby('landuse').aggregate(np.sum)
-            grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
+            grouped.loc['sum', :] = grouped.sum(axis=0)
             grouped.to_csv(os.path.join(outdir, name + '_grouped_landuse.csv'))
             grouped = temp_data.groupby('property_size_class').aggregate(np.sum)
-            grouped.loc['sum', :] = grouped.sum(axis=0)  # todo check
+            grouped.loc['sum', :] = grouped.sum(axis=0)
             grouped.to_csv(os.path.join(outdir, name + '_grouped_size.csv'))
         except TopologicalError as val:
             print(val)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     cments['waikuku_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\waikuku_end_s.shp")
     cments['taranaki_end'] = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely\taranaki_end_s.shp")
     cments['loburn_fan'] = gpd.GeoDataFrame.from_file(r'\\gisdata\ProjectArchive\SCI\2015_2016\EMG\2015_2016\Waimakariri\Groundwater\BAU scenario assessment\N load analysis.gdb', layer='LoburnFanCatchment')
-    #TODO SOMETHING WRONG WITH SWAZES tried vclean didn't work
+    # SOMETHING WRONG WITH SWAZES (or the load file) and I think i fixed it...
     swazes = gpd.read_file(r"P:\Groundwater\Waimakariri\Surface water\Shp\Proposed SWAZ boundaries 120218\Proposed_SWAZ_Catchments.shp")
     #swazes = swazes.dissolve(by='RiverName', aggfunc='first').reset_index()
     for nm in swazes.loc[:,'RiverName']:

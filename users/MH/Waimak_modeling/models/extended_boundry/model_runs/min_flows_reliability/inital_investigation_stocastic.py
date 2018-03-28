@@ -58,7 +58,7 @@ if __name__ == '__main__':
                    'lawngreen',
                    'cyan',
                    'purple',
-                   'deepskyblue', ] #todo get more useful colors (need 15)
+                   'deepskyblue', ]
         for i, d in enumerate(set(data.keys()) - {'wai_per'}):
             ax.scatter(data.loc[:, 'wai_per'], data.loc[:, d], label=d, c=colours[i])
             ax.set_xlabel('wai_per')
