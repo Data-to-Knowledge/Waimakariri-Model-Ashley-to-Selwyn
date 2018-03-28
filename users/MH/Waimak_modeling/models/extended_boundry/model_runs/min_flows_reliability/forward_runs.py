@@ -80,6 +80,20 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     super_gmp = {
         # 40-60% reduction in irrigated area LSR (as previously been preposed as GMP regardless of our modeling)
         # pumping is not reduced in this model;  this is effectivly the worst case scenario for GMP/
+        # super gmp vs gmp recharges:
+        # waimak
+        # super_gmp: 8.58651316838, m3 / s
+        # waimak
+        # gmp: 8.96331985699, m3 / s
+        # inland_waimak
+        # super_gmp: 6.84744877856, m3 / s
+        # inland_waimak
+        # gmp: 7.40284522769, m3 / s
+        # coastal_waimak
+        # super_gmp: 1.73906438982, m3 / s
+        # coastal_waimak
+        # gmp: 1.5604746293, m3 / s
+
         'model_id': model_id,
         'name': 'super_gmp',
         'base_dir': None,
