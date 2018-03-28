@@ -430,5 +430,5 @@ def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
 
 
 if __name__ == '__main__':
-    run_interzone_source_zones(recalc=True,recalc_backward_tracking=False)
+    run_interzone_source_zones(recalc=True,recalc_backward_tracking=True)
     print('done')
