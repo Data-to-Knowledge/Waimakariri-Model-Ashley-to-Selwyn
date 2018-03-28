@@ -27,6 +27,7 @@ ini1 = ConfigParser()
 ini1.read([os.path.join(py_dir, os.path.splitext(__file__)[0] + '.ini')])
 
 link_table = str(ini1.get('Input', 'link_table'))
+hydstra_server = str(ini1.get('Input', 'hydstra_server'))
 hydstra_database = str(ini1.get('Input', 'hydstra_database'))
 ini_path = str(ini1.get('Input', 'ini_path'))
 dll_path = str(ini1.get('Input', 'dll_path'))
@@ -39,7 +40,6 @@ hourly_table = str(ini1.get('Output', 'hourly_table'))
 hydstra_code_sql = {'server': server, 'database': database, 'table': link_table}
 
 today1 = str(date.today())
-today2 = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
 qual_code_convert = [[10, 11, 18, 20, 21, 30, 31, 40, 50, 60], [600, 600, 520, 500, 500, 400, 400, 300, 200, 100]]
 qual_code_dict = dict(zip(qual_code_convert[0], qual_code_convert[1]))
@@ -96,16 +96,20 @@ hyd1 = hyd(ini_path, dll_path)
 
 for j in grp_dict:
     print('Interval: ' + j)
+    runstart = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
     try:
         for i in hydstra_codes:
             print('HydstraCode ' + str(i))
-            s1 = hyd1.get_ts_data_bulk(server, hydstra_database, int(i), from_mod_date=last_date1, to_mod_date=today1, code_convert=hydstra_codes, qual_code_convert=qual_code_dict, **grp_dict[j])
-        log1 = pd.DataFrame([[today2, grp_dict[j]['export']['table'], 'pass', 'all good', last_date1]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime'])
+            s1 = hyd1.get_ts_data_bulk(hydstra_server, hydstra_database, int(i), from_mod_date=last_date1, to_mod_date=today1, code_convert=hydstra_codes, qual_code_convert=qual_code_dict, **grp_dict[j])
+
+        runtime = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        log1 = pd.DataFrame([[runstart, grp_dict[j]['export']['table'], 'pass', 'all good', last_date1, runtime]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime', 'RunTimeEnd'])
         to_mssql(log1, log_server, log_database, log_table)
+
     except Exception as err:
         err1 = err
         print(err1)
-        log2 = pd.DataFrame([[today2, grp_dict[j]['export']['table'], 'fail', str(err1), last_date1]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime'])
+        log2 = pd.DataFrame([[runstart, grp_dict[j]['export']['table'], 'fail', str(err1), last_date1]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime'])
         to_mssql(log2, log_server, log_database, log_table)
 
 
