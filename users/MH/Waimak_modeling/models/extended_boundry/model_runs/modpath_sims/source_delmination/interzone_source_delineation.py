@@ -144,7 +144,7 @@ def split_interzone_netcdfs(indir, sites):  # todo
     for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
         data[name] = nc.Dataset(os.path.join(indir, name + '.nc'))
 
-    for site, components in sites.values():
+    for site, components in sites.items():
         outfile = nc.Dataset(os.path.join(outdir, site + '.nc'), 'w')
         x, y = smt.get_model_x_y(False)
         # create dimensions
@@ -194,7 +194,7 @@ def split_interzone_netcdfs(indir, sites):  # todo
                 t[:] = False
                 for comp in components:
                     t = t | (data[name].variables['{}{}'.format(comp, suffix)][:]).filled(0).astype(bool)
-                t = t.sum(axis=0)
+                t = t.sum(axis=0).astype(float)
                 t[np.isclose(t, 0)] = np.nan
                 temp_var[:] = t
 
@@ -247,15 +247,15 @@ def setup_output_ncs(outdir, sites, model_ids, root_num_part):
                        'standard_name': 'projection_x_coordinate'})
         lon[:] = x
 
-        mid = outfile.createVariable('model_id', str, ('model_id',), fill_value='')
+        mid = outfile.createVariable('model_id', str, ('model_id',))
         mid.setncatts({'units': '',
                        'long_name': 'unique_model_identifier',
-                       'missing_value': ''})
+                       })
         mid[:] = model_ids
 
         # location initalize the data
         for site in sites:
-            temp_var = outfile.createVariable(site, bool,
+            temp_var = outfile.createVariable(site, 'u1',
                                               ('model_id', 'latitude', 'longitude'),
                                               fill_value=0)
             temp_var.setncatts({'units': 'bool',
@@ -263,7 +263,7 @@ def setup_output_ncs(outdir, sites, model_ids, root_num_part):
                                 'missing_value': 0,
                                 'comments': 'cell in source zone'})
 
-            temp_var = outfile.createVariable('{}_cust'.format(site), bool,
+            temp_var = outfile.createVariable('{}_cust'.format(site), 'u1',
                                               ('model_id', 'latitude', 'longitude'),
                                               fill_value=0)
             temp_var.setncatts({'units': 'bool',
@@ -281,7 +281,7 @@ def setup_output_ncs(outdir, sites, model_ids, root_num_part):
 
 
 def add_data_to_nc(out_nc, mid, data, cust_data, run_name):
-    mid_idx = np.where(out_nc.variables['model_id'] == mid)  # todo check
+    mid_idx = np.where(np.array(out_nc.variables['model_id']) == mid)
 
     # add the non_cust data
     for site in data.keys():
@@ -295,6 +295,7 @@ def add_data_to_nc(out_nc, mid, data, cust_data, run_name):
         temp_sfr_id_array[losing[mid] < 0] = -1
 
         if not (temp_sfr_id_array[data[site] > 0] >= 0).any():
+            out_nc.variables['{}_cust'.format(site)][mid_idx] = data[site].astype(bool)
             continue
 
         temp_ids = np.array(list(set(temp_sfr_id_array[data[site] > 0]) - {-1})).astype(int)
@@ -302,9 +303,7 @@ def add_data_to_nc(out_nc, mid, data, cust_data, run_name):
         temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
         temp = temp[:temp_ids.max() + 1].sum(axis=0)
         temp = temp.astype(bool) | data[site].astype(bool)
-        out_nc.variables['{}_cust'.format(site)][mid_idx] = data[site].astype(bool)
-
-    raise NotImplementedError
+        out_nc.variables['{}_cust'.format(site)][mid_idx] = temp
 
 
 def _get_data_for_zones(outdata, run_name, model_ids, indexes, root_num_part, recalc_backward_tracking):
@@ -366,7 +365,7 @@ def _get_data_for_zones(outdata, run_name, model_ids, indexes, root_num_part, re
     for i, (mid, path) in enumerate(f_em_paths.items()):
         print('{}, {} of {}'.format(os.path.basename(path[0]), i + 1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
-        add_data_to_nc(outdata['forward_weak'], mid, temp, cust_data, 'forward_weak')
+        add_data_to_nc(outdata['forward_strong'], mid, temp, cust_data, 'forward_strong')
 
 
 def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
@@ -431,6 +430,5 @@ def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
 
 
 if __name__ == '__main__':
-    #todo debug the whole thing...
-    indexes, sites = create_interzone_indexes()
+    run_interzone_source_zones(recalc=True,recalc_backward_tracking=False)
     print('done')
