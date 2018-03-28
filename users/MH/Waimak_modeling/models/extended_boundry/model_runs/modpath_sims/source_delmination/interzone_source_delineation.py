@@ -9,34 +9,216 @@ import os
 import numpy as np
 import netCDF4 as nc
 import socket
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_stocastic_set
-from single_zone_delination import get_modeflow_dir_for_source, get_base_results_dir, get_cust_mapping, define_source_from_backward, get_cbc, get_forward_emulator_paths, define_source_from_forward
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+    get_stocastic_set
+from single_zone_delination import get_modeflow_dir_for_source, get_base_results_dir, get_cust_mapping, \
+    define_source_from_backward, get_cbc, get_forward_emulator_paths, define_source_from_forward
+from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
+from datetime import datetime
+import sys
+from copy import deepcopy
 
 
 def create_interzone_indexes():
     # make a series of loose zones which can be summed togeather to give a full picture of teh zone
-    #todo shit these can't be summed togeather due to overlaps
     # could save nsmc_num for each one..., which could also minimize the memory in use...
+    # return amalgimated sites as well as the indexes to feed into split interzone netcdfs
+    sites = {} #todo fill out
+
+    indexes = {}
+    base_receptors_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\shp\interzone_receptors.shp")
+    base_recpts = smt.shape_file_to_model_array(base_receptors_path, 'zone', True)
+    no_flow = smt.get_no_flow().astype(bool)
+
+    for zone in set(base_recpts.flatten()):
+        for layer in range(smt.layers):
+            t = np.isclose(base_recpts, zone)
+            t[~no_flow] = False
+            indexes['zone_{}_layer_{}'.format(zone, layer)] = t
 
     raise NotImplementedError
+    return indexes, sites
 
-def split_interzone_netcdfs(outdir):
+
+def split_interzone_netcdfs(indir, sites):  # todo
+    """
+
+    :param indir: directory with the key netcdfs (e.g. from _get_data from zones)
+    :param sites: dictionay {sitename: [component names]}
+    :return:
+    """
     # aim for somethign similar to split single zone delineation netcdfs, but amalgamate the
-    #different views on the zones
-    raise NotImplementedError
+    # different views on the zones
 
-def setup_output_ncs(outdir,model_ids,root_num_part):
-    versions = ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']
+    print('splitting netcdf')
+    outdir = os.path.join(indir, 'individual_netcdfs')
+    if not os.path.exists(os.path.join(indir, 'individual_netcdfs')):
+        os.makedirs(outdir)
 
-    #todo setup the 4 netcdfs, which will hold the model_id number (or similar or boolean)
-    raise NotImplementedError
+    data = {}
+    for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+        data[name] = nc.Dataset(os.path.join(indir, name + '.nc'))
+
+    for site, components in sites.values():
+        outfile = nc.Dataset(os.path.join(outdir, site + '.nc'), 'w')
+        x, y = smt.get_model_x_y(False)
+        # create dimensions
+        outfile.createDimension('latitude', len(y))
+        outfile.createDimension('longitude', len(x))
+
+        # create variables
+
+        proj = outfile.createVariable('crs', 'i1')  # this works really well...
+        proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                        'scale_factor_at_central_meridian': 0.9996,
+                        'longitude_of_central_meridian': 173.0,
+                        'latitude_of_projection_origin': 0.0,
+                        'false_easting': 1600000,
+                        'false_northing': 10000000,
+                        })
+
+        lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+        lat.setncatts({'units': 'NZTM',
+                       'long_name': 'latitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_y_coordinate'})
+        lat[:] = y
+
+        lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+        lon.setncatts({'units': 'NZTM',
+                       'long_name': 'longitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_x_coordinate'})
+        lon[:] = x
+
+        # location add the data
+        for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+            for suffix in ['', '_cust']:
+                temp_var = outfile.createVariable('{}_{}_number{}'.format(name[0:4], name.split('_')[-1][0:2], suffix), float,
+                                                  ('latitude', 'longitude'),
+                                                  fill_value=np.nan)
+                temp_var.setncatts({'units': 'number of realisations',
+                                    'long_name': '{}_{}{}'.format(name, site, suffix),
+                                    'missing_value': np.nan,
+                                    'comments': 'number of realisations with particles from given cell'})
+
+                # set up an output array of the correct size (from first component)
+                t = data[name].variables['{}{}'.format(components[0], suffix)][:]
+                t = t.filled(0).astype(bool)
+                t[:] = False
+                for comp in components:
+                    t = t | (data[name].variables['{}{}'.format(comp, suffix)][:]).filled(0).astype(bool)
+                t = t.sum(axis=0)
+                t[np.isclose(t, 0)] = np.nan
+                temp_var[:] = t
+
+        outfile.description = ('source zones for single sources')
+        outfile.history = 'created {}'.format(datetime.now().isoformat())
+        outfile.source = 'script: {}'.format(sys.argv[0])
+        outfile.close()
+
+def setup_output_ncs(outdir, sites, model_ids, root_num_part):
+    """
+    sets up the bulk output netcdfs
+    :param outdir: directory to save it all
+    :param sites: the site names (e.g. the indexes keys)
+    :param model_ids: the model ids this is run for
+    :param root_num_part: the cubed
+    :return:
+    """
+    outdata = {}
+    for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
+        outfile = nc.Dataset(os.path.join(outdir, name + '.nc'), 'w')
+        x, y = smt.get_model_x_y(False)
+        # create dimensions
+        outfile.createDimension('latitude', len(y))
+        outfile.createDimension('longitude', len(x))
+        outfile.createDimension('model_id', len(model_ids))
+
+        # create variables
+
+        proj = outfile.createVariable('crs', 'i1')  # this works really well...
+        proj.setncatts({'grid_mapping_name': "transverse_mercator",
+                        'scale_factor_at_central_meridian': 0.9996,
+                        'longitude_of_central_meridian': 173.0,
+                        'latitude_of_projection_origin': 0.0,
+                        'false_easting': 1600000,
+                        'false_northing': 10000000,
+                        })
+
+        lat = outfile.createVariable('latitude', 'f8', ('latitude',), fill_value=np.nan)
+        lat.setncatts({'units': 'NZTM',
+                       'long_name': 'latitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_y_coordinate'})
+        lat[:] = y
+
+        lon = outfile.createVariable('longitude', 'f8', ('longitude',), fill_value=np.nan)
+        lon.setncatts({'units': 'NZTM',
+                       'long_name': 'longitude',
+                       'missing_value': np.nan,
+                       'standard_name': 'projection_x_coordinate'})
+        lon[:] = x
+
+        mid = outfile.createVariable('model_id', str, ('model_id',), fill_value='')
+        mid.setncatts({'units': '',
+                       'long_name': 'unique_model_identifier',
+                       'missing_value': ''})
+        mid[:] = model_ids
+
+        # location initalize the data
+        for site in sites:
+            temp_var = outfile.createVariable(site, bool,
+                                              ('model_id', 'latitude', 'longitude'),
+                                              fill_value=0)
+            temp_var.setncatts({'units': 'bool',
+                                'long_name': site,
+                                'missing_value': 0,
+                                'comments': 'cell in source zone'})
+
+            temp_var = outfile.createVariable('{}_cust'.format(site), bool,
+                                              ('model_id', 'latitude', 'longitude'),
+                                              fill_value=0)
+            temp_var.setncatts({'units': 'bool',
+                                'long_name': site,
+                                'missing_value': 0,
+                                'comments': 'cell in source zone'})
+
+        outfile.description = ('source zones for single sources')
+        outfile.history = 'created {}'.format(datetime.now().isoformat())
+        outfile.source = 'script: {}'.format(sys.argv[0])
+        outfile.backward_num_parts = root_num_part ** 3
+        outdata[name] = outfile
+
     return outdata
 
-def add_data_to_nc(out_nc, mid, data, cust_data):
-    #todo add the data to the netcdf includign the cust data
-    # todo how to implement cust!!!
-    #todo I may have to rehash so that out_nc goes to outdata (e.g. dict of ncs)
+
+def add_data_to_nc(out_nc, mid, data, cust_data, run_name):
+    mid_idx = np.where(out_nc.variables['model_id'] == mid)  # todo check
+
+    # add the non_cust data
+    for site in data.keys():
+        out_nc.variables[site][mid_idx] = data[site].astype(bool)
+
+    sfr_data, sfr_id_array, unpacked_size, unpacked_shape, losing = cust_data
+
+    # add upstream cust influance
+    for site in data.keys():
+        temp_sfr_id_array = deepcopy(sfr_id_array)
+        temp_sfr_id_array[losing[mid] < 0] = -1
+
+        if not (temp_sfr_id_array[data[site] > 0] >= 0).any():
+            continue
+
+        temp_ids = np.array(list(set(temp_sfr_id_array[data[site] > 0]) - {-1})).astype(int)
+        # get and unpack the array
+        temp = np.unpackbits(sfr_data[run_name][mid])[:unpacked_size].reshape(unpacked_shape).astype(bool)
+        temp = temp[:temp_ids.max() + 1].sum(axis=0)
+        temp = temp.astype(bool) | data[site].astype(bool)
+        out_nc.variables['{}_cust'.format(site)][mid_idx] = data[site].astype(bool)
+
     raise NotImplementedError
+
 
 def _get_data_for_zones(outdata, run_name, model_ids, indexes, root_num_part, recalc_backward_tracking):
     """
@@ -51,7 +233,7 @@ def _get_data_for_zones(outdata, run_name, model_ids, indexes, root_num_part, re
     :return: amalg_weak_forward, amalg_strong_forward, amalg_strong_back, amalg_weak_back, forward_strongs_num_parts
     """
     assert {'forward_weak', 'forward_strong', 'backward_strong', 'backward_weak'} == set(outdata.keys())
-    assert all([isinstance(e,nc.Dataset) for e in outdata.values()])
+    assert all([isinstance(e, nc.Dataset) for e in outdata.values()])
     modflow_dir = get_modeflow_dir_for_source()
     backward_dir = os.path.join(get_base_results_dir('backward', socket.gethostname()), run_name)
 
@@ -60,44 +242,44 @@ def _get_data_for_zones(outdata, run_name, model_ids, indexes, root_num_part, re
     # backward weak
     print('calculating backward weak\n\n')
     for i, mid in enumerate(model_ids):
-        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+        print('model: {}, {} of {}'.format(mid, i + 1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'weak', mid),
                                            mp_name='{}_weak'.format(mid),
                                            cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
                                            root3_num_part=root_num_part, capt_weak_s=True,
                                            recalc=recalc_backward_tracking)
-        add_data_to_nc(outdata['backward_weak'], mid, temp, cust_data)
+        add_data_to_nc(outdata['backward_weak'], mid, temp, cust_data, 'backward_weak')
 
     # backward strong
     print('calculating backward strong\n\n')
     for i, mid in enumerate(model_ids):
-        print('model: {}, {} of {}'.format(mid, i+1, len(model_ids)))
+        print('model: {}, {} of {}'.format(mid, i + 1, len(model_ids)))
         temp = define_source_from_backward(indexes,
                                            mp_ws=os.path.join(backward_dir, 'strong', mid),
                                            mp_name='{}_strong'.format(mid),
                                            cbc_file=get_cbc(model_id=mid, base_dir=modflow_dir),
                                            root3_num_part=root_num_part, capt_weak_s=False,
                                            recalc=recalc_backward_tracking)
-        add_data_to_nc(outdata['backward_strong'], mid, temp, cust_data)
+        add_data_to_nc(outdata['backward_strong'], mid, temp, cust_data, 'backward_strong')
 
     # forward weak
     print('calculating forward weak\n\n')
     f_em_paths = get_forward_emulator_paths(model_ids, True)
 
     for i, (mid, path) in enumerate(f_em_paths.items()):
-        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i + 1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
-        add_data_to_nc(outdata['forward_weak'], mid, temp, cust_data)
+        add_data_to_nc(outdata['forward_weak'], mid, temp, cust_data, 'forward_weak')
 
     # forward strong
     print('calculating forward strong\n\n')
     f_em_paths = get_forward_emulator_paths(model_ids, weak_sink=False)
 
     for i, (mid, path) in enumerate(f_em_paths.items()):
-        print('{}, {} of {}'.format(os.path.basename(path[0]), i+1, len(f_em_paths)))
+        print('{}, {} of {}'.format(os.path.basename(path[0]), i + 1, len(f_em_paths)))
         temp = define_source_from_forward(emulator_path=path[0], bd_type_path=path[1], indexes=indexes)
-        add_data_to_nc(outdata['forward_weak'], mid, temp, cust_data)
+        add_data_to_nc(outdata['forward_weak'], mid, temp, cust_data, 'forward_weak')
 
 
 def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=False, recalc_backward_tracking=False):
@@ -126,13 +308,14 @@ def create_zones(model_ids, run_name, outdir, root_num_part, indexes, recalc=Fal
 
     # save the data
     outdata = setup_output_ncs(outdir=outdir,
-                             model_ids=model_ids,
-                             root_num_part=root_num_part)
+                               model_ids=model_ids,
+                               root_num_part=root_num_part, sites=indexes.keys())
 
     _get_data_for_zones(outdata, run_name, model_ids, indexes,
                         root_num_part, recalc_backward_tracking)
 
     return outdata
+
 
 def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
     """
@@ -141,14 +324,14 @@ def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
     :param recalc_backward_tracking: bool if True recalculate the modpath particle tracking simulations
     :return:
     """
-    indexes = create_interzone_indexes()
+    indexes, sites = create_interzone_indexes()
     base_outdir = r"C:\mh_waimak_models\interzone_source_zones"
     print('running for AshOpt')
     outdir = os.path.join(base_outdir, 'AshOpt')
     create_zones(model_ids=['AshOpt'], run_name='AshOpt_interzone_sources',
                  outdir=outdir, root_num_part=1,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
-    split_interzone_netcdfs(outdir)
+    split_interzone_netcdfs(outdir, sites)
 
     print('running for 165 models')
     outdir = os.path.join(base_outdir, 'stocastic set')
@@ -157,4 +340,4 @@ def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
                  run_name='stocastic_set_interzone_sources',
                  outdir=outdir, root_num_part=1,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
-    split_interzone_netcdfs(outdir)
+    split_interzone_netcdfs(outdir, sites)
