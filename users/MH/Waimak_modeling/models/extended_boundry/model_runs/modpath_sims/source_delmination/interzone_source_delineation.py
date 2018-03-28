@@ -17,26 +17,111 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 from datetime import datetime
 import sys
 from copy import deepcopy
+import geopandas as gpd
+import itertools
+
+
+base_receptors_path = env.sci(
+    r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\shp\interzone_receptors.shp")
+
+def make_shapefiles(outdir):
+    # make shapefiles for viewing
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    base_sites = get_base_sites()
+    base_pieces = gpd.read_file(base_receptors_path)
+    for site, zones in base_sites.items():
+        temp = base_pieces.loc[np.in1d(base_pieces.zone, zones)]
+        temp.loc[:,'grouper'] = 1
+        temp = temp.dissolve(by='grouper')
+        temp.to_file(os.path.join(outdir,site+'.shp'))
+
+def get_base_sites(): #todo confirm this with MW
+    base_sites = {
+        # terretorial land authority zone:
+        # central is the middle of east and west
+        # mid is teh middle of north and south
+        'full_tla': range(16),
+
+        'north_tla': [2, 8, 11, 4, 15, 14],
+        'north_west_tla': [2, 8],
+        'north_central_tla': [4, 11],
+        'north_east_tla': [14, 15],
+
+        'mid_tla': [1, 7, 10, 13],
+        'mid_west_tla': [1, 7],
+        # 'mid_central_tla': [10], # duplicate of urban
+        # 'mid_east_tla': [13], # duplicate of urban
+
+        'south_tla': [0, 6, 9, 3, 12, 5],
+        'south_west_tla': [0, 6],
+        # 'south_central_tla': [9, 3], # duplicate of urban
+        # 'south_east_tla': [12, 5], # duplicate of urban
+
+        'west_tla': [2, 8, 1, 7, 6, 0],
+        'central_tla': [4, 11, 10, 9, 3],
+        'east_tla': [15, 14, 13, 12, 5],
+
+        # urban area:
+        'full_urb': [14, 11, 8, 7, 6, 9, 12, 13, 10],
+
+        'west_urb': [8, 7, 6],
+        'central_urb': [11, 10, 9],
+        'east_urb': [14, 13, 12],
+
+        'north_urb': [8, 11, 14],
+        'north_west_urb': [8],
+        'north_central_urb': [11],
+        'north_east_urb': [14],
+
+        'mid_urb': [7, 10, 13],
+        'mid_west_urb': [7],
+        'mid_central_urb': [10],
+        'mid_east_urb': [13],
+
+        'south_urb': [6, 9, 12],
+        'south_west_urb': [6],
+        'south_central_urb': [9],
+        'south_east_urb': [12]
+    }
+    return base_sites
 
 
 def create_interzone_indexes():
     # make a series of loose zones which can be summed togeather to give a full picture of teh zone
     # could save nsmc_num for each one..., which could also minimize the memory in use...
     # return amalgimated sites as well as the indexes to feed into split interzone netcdfs
-    sites = {} #todo fill out
+    base_sites = get_base_sites()
+    layer_groups = {'surface': [0],
+                    'riccaton': [1],
+                    'linwood': [3],
+                    'burwood': [5],
+                    'wainoni': [7],
+                    'shallow': range(4),  # top to bottom of linwood
+                    'mid': range(4, 8),  # top of heathcote to bottom of wainoni
+                    'deep': range(8, smt.layers),
+                    'all_layers': range(smt.layers)
+                    }
+
+    sites = {}  # todo fill out from layer groups and base sites
+    for bs, lg in itertools.product(base_sites.keys(), layer_groups.keys()):
+        layers = layer_groups[lg]
+        zones = base_sites[bs]
+        pieces = ['zone_{}_layer_{}'.format(zone, layer) for zone, layer in itertools.product(zones,layers)]
+        sites['{}_{}'.format(lg,bs)] = pieces
 
     indexes = {}
-    base_receptors_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\shp\interzone_receptors.shp")
     base_recpts = smt.shape_file_to_model_array(base_receptors_path, 'zone', True)
     no_flow = smt.get_no_flow().astype(bool)
 
-    for zone in set(base_recpts.flatten()):
+    for zone in set(base_recpts[np.isfinite(base_recpts)].astype(int)):
         for layer in range(smt.layers):
-            t = np.isclose(base_recpts, zone)
+            t = smt.get_empty_model_grid(True).astype(bool)
+            t[layer, np.isclose(base_recpts, zone)] = True
             t[~no_flow] = False
             indexes['zone_{}_layer_{}'.format(zone, layer)] = t
 
-    raise NotImplementedError
     return indexes, sites
 
 
@@ -94,7 +179,8 @@ def split_interzone_netcdfs(indir, sites):  # todo
         # location add the data
         for name in ['forward_weak', 'forward_strong', 'backward_strong', 'backward_weak']:
             for suffix in ['', '_cust']:
-                temp_var = outfile.createVariable('{}_{}_number{}'.format(name[0:4], name.split('_')[-1][0:2], suffix), float,
+                temp_var = outfile.createVariable('{}_{}_number{}'.format(name[0:4], name.split('_')[-1][0:2], suffix),
+                                                  float,
                                                   ('latitude', 'longitude'),
                                                   fill_value=np.nan)
                 temp_var.setncatts({'units': 'number of realisations',
@@ -116,6 +202,7 @@ def split_interzone_netcdfs(indir, sites):  # todo
         outfile.history = 'created {}'.format(datetime.now().isoformat())
         outfile.source = 'script: {}'.format(sys.argv[0])
         outfile.close()
+
 
 def setup_output_ncs(outdir, sites, model_ids, root_num_part):
     """
@@ -341,3 +428,9 @@ def run_interzone_source_zones(recalc=False, recalc_backward_tracking=False):
                  outdir=outdir, root_num_part=1,
                  indexes=indexes, recalc=recalc, recalc_backward_tracking=recalc_backward_tracking)
     split_interzone_netcdfs(outdir, sites)
+
+
+if __name__ == '__main__':
+    #todo debug the whole thing...
+    indexes, sites = create_interzone_indexes()
+    print('done')
