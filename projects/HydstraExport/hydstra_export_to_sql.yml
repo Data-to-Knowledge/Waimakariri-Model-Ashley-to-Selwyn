@@ -1,0 +1,9 @@
+name: HydstraExport
+channels:
+- defaults
+- conda-forge
+- mullenkamp
+dependencies:
+- python=3.6
+- pyhydllp=1.0.0
+- pdsql=1.0.2

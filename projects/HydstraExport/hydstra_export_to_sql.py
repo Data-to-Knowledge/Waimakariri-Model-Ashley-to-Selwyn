@@ -8,132 +8,108 @@ Script to extract time series data from Hydstra and save them to sql tables.
 
 Must be run in a 32bit python!
 """
+import os
+import pandas as pd
+from configparser import ConfigParser
+from datetime import date, datetime
+from pdsql.mssql import rd_sql, to_mssql, create_mssql_table
+from pyhydllp import hyd
 
-#### Hydstra export improvement
+#############################################
+### Parameters
+print('load parameters')
 
-from core.ecan_io import rd_sql, rd_hydstra_by_var, write_sql
-from pandas import concat
-from os.path import join
-from datetime import date, timedelta
+py_dir = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-### SQL Parameters
-server = 'SQL2012PROD03'
-db = 'Hydstra'
-period_tab = 'PERIOD'
-var_tab = 'VARIABLE'
-site_tab = 'SITE'
-qual_tab = 'QUALITY'
+#py_dir = r'E:\ecan\git\HydroPandas\users\MK\tsdata_exports'
 
-period_cols = ['STATION', 'DATASOURCE', 'VARFROM', 'VARIABLE', 'PERSTART', 'PEREND']
-period_names = ['site', 'datasource', 'varfrom', 'varto', 'start', 'end']
-var_cols = ['VARNUM', 'VARNAM', 'VARUNIT', 'SHORTNAME']
-var_names = ['var_num', 'var_name', 'var_unit', 'var_short_name']
-site_cols = ['STATION', 'STNAME', 'SHORTNAME']
-site_names = ['site', 'site_name', 'site_short_name']
-qual_cols = ['QUALITY', 'TEXT']
-qual_names = ['qual_code', 'qual_name']
+ini1 = ConfigParser()
+ini1.read([os.path.join(py_dir, os.path.splitext(__file__)[0] + '.ini')])
 
-mtype_dict = {'swl': [100, 'mean', r'swl\swl_data.csv'], 'precip': [10, 'tot', r'precip\precip_data.csv'], 'gwl': [110, 'mean', r'gwl\gwl_data.csv'], 'lakel': [130, 'mean', r'lakel\lakel_data.csv'], 'wtemp': [450, 'mean', r'wtemp\wtemp_data.csv'], 'flow': [[140, 143], 'mean', r'flow\flow_data.csv']}
+link_table = str(ini1.get('Input', 'link_table'))
+hydstra_database = str(ini1.get('Input', 'hydstra_database'))
+ini_path = str(ini1.get('Input', 'ini_path'))
+dll_path = str(ini1.get('Input', 'dll_path'))
 
-### Export parameters
-subdays = timedelta(days=2)
-end = (date.today() - subdays).strftime('%Y-%m-%d')
-#start = '2010-01-01'
+server = str(ini1.get('Output', 'server'))
+database = str(ini1.get('Output', 'database'))
+daily_table = str(ini1.get('Output', 'daily_table'))
+hourly_table = str(ini1.get('Output', 'hourly_table'))
 
+hydstra_code_sql = {'server': server, 'database': database, 'table': link_table}
+
+today1 = str(date.today())
+today2 = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
+qual_code_convert = [[10, 11, 18, 20, 21, 30, 31, 40, 50, 60], [600, 600, 520, 500, 500, 400, 400, 300, 200, 100]]
+qual_code_dict = dict(zip(qual_code_convert[0], qual_code_convert[1]))
+#today1 = date(2017, 12, 22)
 #server1 = 'SQL2012DEV01'
 #database1 = 'HydstraArchive'
-dtype_dict = {'wtemp': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'flow': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'precip': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'swl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'gwl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'lakel': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}}
+#dtype_dict = {'wtemp': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'flow': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'precip': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 1)', 'qual_code': 'INT'}, 'swl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'gwl': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}, 'lakel': {'site': 'VARCHAR(19)', 'time': 'DATE', 'data': 'NUMERIC(10, 3)', 'qual_code': 'INT'}}
+
+daily_dtype = {'Site': 'VARCHAR(29)', 'FeatureMtypeSourceID': 'int', 'Time': 'date', 'Value': 'float', 'QualityCode': 'int'}
+daily_pkeys = ['Site', 'FeatureMtypeSourceID', 'Time']
+
+hourly_dtype = {'Site': 'VARCHAR(29)', 'FeatureMtypeSourceID': 'int', 'Time': 'datetime', 'Value': 'float', 'QualityCode': 'int'}
+hourly_pkeys = ['Site', 'FeatureMtypeSourceID', 'Time']
+
+sql_daily = {'server': server, 'database': database, 'table': daily_table}
+sql_hourly = {'server': server, 'database': database, 'table': hourly_table}
+
+grp_dict = {'daily': {'interval': 'day', 'export': sql_daily}, 'hourly': {'interval': 'hour', 'export': sql_hourly}}
+
+log_server = str(ini1.get('Output', 'log_server'))
+log_database = str(ini1.get('Output', 'log_database'))
+log_table = str(ini1.get('Output', 'log_table'))
+
+max_date_stmt = "select max(Time) from " + log_table + " where HydroTable='" + daily_table + "' and RunResult='pass'"
+
+#############################################
+### Get the SQL-hydstra codes and last date
+
+hydstra_codes = rd_sql(**hydstra_code_sql).set_index('HydstraCode')['FeatureMtypeSourceID'].to_dict()
+
+last_date1 = str(rd_sql(stmt=max_date_stmt, **sql_daily).loc[0][0].date())
+#last_date1 = '2017-12-28'
+#today2 = '2017-12-28 00:00:00'
+
+print('Last sucessful date is ' + last_date1)
+
+###############################################
+### Create tables if they don't exist
+
+daily_bool1 = rd_sql(server, database, stmt="select OBJECT_ID('" + daily_table + "', 'U')").loc[0][0] is None
+
+if daily_bool1:
+        create_mssql_table(server, database, daily_table, dtype_dict=daily_dtype, primary_keys=daily_pkeys)
+
+hourly_bool1 = rd_sql(server, database, stmt="select OBJECT_ID('" + hourly_table + "', 'U')").loc[0][0] is None
+
+if hourly_bool1:
+        create_mssql_table(server, database, hourly_table, dtype_dict=hourly_dtype, primary_keys=hourly_pkeys)
+
+#############################################
+### Iterate through hydstra codes and save to SQL
+
+hyd1 = hyd(ini_path, dll_path)
+
+for j in grp_dict:
+    print('Interval: ' + j)
+    try:
+        for i in hydstra_codes:
+            print('HydstraCode ' + str(i))
+            s1 = hyd1.get_ts_data_bulk(server, hydstra_database, int(i), from_mod_date=last_date1, to_mod_date=today1, code_convert=hydstra_codes, qual_code_convert=qual_code_dict, **grp_dict[j])
+        log1 = pd.DataFrame([[today2, grp_dict[j]['export']['table'], 'pass', 'all good', last_date1]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime'])
+        to_mssql(log1, log_server, log_database, log_table)
+    except Exception as err:
+        err1 = err
+        print(err1)
+        log2 = pd.DataFrame([[today2, grp_dict[j]['export']['table'], 'fail', str(err1), last_date1]], columns=['Time', 'HydroTable', 'RunResult', 'Comment', 'FromTime'])
+        to_mssql(log2, log_server, log_database, log_table)
 
 
-### Import
-period1 = rd_sql(server, db, period_tab, period_cols, where_col='DATASOURCE', where_val=['A'])
-period1.columns = period_names
-period1.loc[:, 'site'] = period1.site.str.strip()
 
-var1 = rd_sql(server, db, var_tab, var_cols)
-var1.columns = var_names
-
-site1 = rd_sql(server, db, site_tab, site_cols)
-site1.columns = site_names
-
-qual1 = rd_sql(server, db, qual_tab, qual_cols)
-qual1.columns = qual_names
-
-### Determine the variables to extract
-period2 = period1[period1.varto.isin(period1.varto.round())].sort_values('site')
-period2 = period2[period2.varto != 101]
-data_vars1 = period2.varto.sort_values().unique()
-var2 = var1[var1.var_num.isin(data_vars1)]
-
-### Extract and save data
-
-## Precip data
-i = 'precip'
-precip = rd_hydstra_by_var(mtype_dict[i][0], end_time=end, data_type=mtype_dict[i][1], export=True, sites_chunk=30)
-
-# Fix quality code
-precip.loc[precip.qual_code == 18, 'qual_code'] = 50
-
-# Output to sql table
-write_sql(server1, database1, i + '_data', precip.reset_index(), dtype_dict[i], drop_table=True)
-
-## swl data
-i = 'swl'
-swl = rd_hydstra_by_var(mtype_dict[i][0], end_time=end, data_type=mtype_dict[i][1], export=True)
-
-# Fix quality code
-swl.loc[swl.qual_code == 18, 'qual_code'] = 50
-
-# Output to sql table
-write_sql(server1, database1, i + '_data', swl.reset_index(), dtype_dict[i], drop_table=True)
-
-## gwl data
-i = 'gwl'
-gwl = rd_hydstra_by_var(mtype_dict[i][0], end_time=end, data_type=mtype_dict[i][1], export=True)
-
-gwl2 = gwl.reset_index()
-gwl2.loc[:, 'site'] = gwl2.loc[:, 'site'].str.replace('_', '/')
-#gwl3 = gwl2.set_index(['site', 'time'])
-
-# Fix quality code
-gwl2.loc[gwl2.qual_code == 18, 'qual_code'] = 50
-
-# Output to sql table
-write_sql(server1, database1, i + '_data', gwl2, dtype_dict[i], drop_table=True)
-
-## lakel data
-i = 'lakel'
-lakel = rd_hydstra_by_var(mtype_dict[i][0], end_time=end, data_type=mtype_dict[i][1], export=True)
-
-# Fix quality code
-lakel.loc[lakel.qual_code == 18, 'qual_code'] = 50
-
-# Output to sql table
-write_sql(server1, database1, i + '_data', lakel.reset_index(), dtype_dict[i], drop_table=True)
-
-## wtemp data
-i = 'wtemp'
-wtemp = rd_hydstra_by_var(mtype_dict[i][0], end_time=end, data_type=mtype_dict[i][1], export=True)
-
-# Fix quality code
-wtemp.loc[wtemp.qual_code == 18, 'qual_code'] = 50
-
-# Output to sql table
-write_sql(server1, database1, i + '_data', wtemp.reset_index(), dtype_dict[i], drop_table=True)
-
-## Flow data
-i = 'flow'
-flow1 = rd_hydstra_by_var(140, end_time=end, data_type='mean', sites_chunk=10, print_sites=True)
-flow2 = rd_hydstra_by_var(143, end_time=end, data_type='mean')
-
-flow2.loc[:, 'data'] = flow2.loc[:, 'data'] * 0.001
-
-flow = concat([flow1, flow2])
-
-# Fix quality code
-flow.loc[flow.qual_code == 18, 'qual_code'] = 50
-
-write_sql(server1, database1, i + '_data', flow.reset_index(), dtype_dict[i], drop_table=True)
-
+#t7 = read_hdf(join(base_dir, hydstra_code_dict[i] + '_' + str(today1) + '.h5'))
 
 
