@@ -18,13 +18,14 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-
-assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 
-repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
-if not repository_path in sys.path:
-    sys.path.append(repository_path)
+if __name__ == '__main__':
+    assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+    repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
+    if not repository_path in sys.path:
+        sys.path.append(repository_path)
+
 from core import env
 import numpy as np
 import pandas as pd
@@ -88,7 +89,6 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     zone = gpd.read_file(source_area_shp_path)
-    assert len(zone) == 1, 'must have only one zone per shapefile'
     org_n_load_name = 'nload_cmp'
 
     # do intersection
@@ -299,7 +299,7 @@ def run_all_nload_stuffs():
         for e in f.readlines():
             if e.strip() != '':
                 n_names.append(e.strip())
-    for sim_end in ['without_trans', 'with_trans']:
+    for sim_end in ['without_trans', 'with_trans']: # with and without transition to CMP
         for sz_dir in szdirs:
             for n_name in n_names:
                 print('starting N analysis for {} load, {} sims, and {} polygons'.format(n_name, sim_end,
