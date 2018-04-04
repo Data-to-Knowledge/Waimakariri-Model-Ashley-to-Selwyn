@@ -77,7 +77,7 @@ def _make_dummy_shape_file():
     org_shape.to_file(r"C:\Users\MattH\Downloads\dummy_nload_w_nclass.shp")
 
 
-def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath):
+def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath, org_n_load_name='nload_cmp'):
     """
     generate n modifiers for stocastic n
     :param n_zone_shp: a geopandas object for the N zones
@@ -89,7 +89,6 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     zone = gpd.read_file(source_area_shp_path)
-    org_n_load_name = 'nload_cmp'
 
     # do intersection
     print('starting intersection')
@@ -110,7 +109,7 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     return n_mods
 
 
-def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
+def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir, org_n_load_name='nload_cmp'):
     """
 
     :param sims_org: the simulation data (from Kate) (pd.DataFrame
@@ -158,7 +157,7 @@ def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
     for path, name in zip(source_paths, names):
         print('calculating N modifiers for {}'.format(name))
         temp_n = calc_n_for_zone(n_load_layer, path, sims, n_load_name,
-                                 os.path.join(outdir, 'raw_data', '{}.txt'.format(name)))
+                                 os.path.join(outdir, 'raw_data', '{}.txt'.format(name)), org_n_load_name=org_n_load_name)
         # add the data to a summary sheet with u, sd, and some percentiles to make a quick overview of the PDF
         outdata.loc[name] = pd.Series(temp_n).describe(percentiles=percentiles)
     outdata.to_csv(os.path.join(outdir, 'n_modifier_summary_data.csv'))

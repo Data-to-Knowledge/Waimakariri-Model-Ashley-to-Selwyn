@@ -305,8 +305,12 @@ if __name__ == '__main__':
                     amag_type=None, cc_to_waimak_only=False, super_gmp=True)
         gmp = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=True, rcm=None, rcp=None, period=None,
                     amag_type=None, cc_to_waimak_only=False, super_gmp=False)
+        cmp_rch = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=False, rcm=None, rcp=None, period=None,
+                    amag_type=None, cc_to_waimak_only=False, super_gmp=False)
+
         for name in ['waimak', 'inland_waimak', 'coastal_waimak']:
             idx = eval(name)
+            print('{} cmp: {} m3/s'.format(name, np.nansum(cmp_rch[idx]*200*200)/86400))
             print('{} super_gmp: {}, m3/s'.format(name, np.nansum(super_gmp[idx]*200*200)/86400))
             print('{} gmp: {}, m3/s'.format(name, np.nansum(gmp[idx]*200*200)/86400))
         print('done')
