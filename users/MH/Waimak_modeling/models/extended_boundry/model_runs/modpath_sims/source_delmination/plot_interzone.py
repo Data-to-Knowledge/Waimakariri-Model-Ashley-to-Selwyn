@@ -30,6 +30,7 @@ def plot_interzone_nc(path):
         c = ax.contourf(model_xs, model_ys, cur_map, alpha=0.5, levels=levels, cmap='RdYlBu',
                         norm=norm)
         ax.set_title(name)
+    fig.suptitle
     fig.colorbar(c, ticks=levels)
     return fig
 
@@ -43,3 +44,4 @@ if __name__ == '__main__':
         for path in paths:
             fig = plot_interzone_nc(path)
             fig.savefig(os.path.join(base_outdir,os.path.basename(path).replace('.nc', '.png')))
+            plt.close(fig)
