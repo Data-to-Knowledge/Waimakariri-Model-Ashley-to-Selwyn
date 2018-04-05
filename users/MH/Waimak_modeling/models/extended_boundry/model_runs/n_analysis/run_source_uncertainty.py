@@ -35,6 +35,7 @@ import time
 import os
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_well_ids, get_str_ids
+from warnings import warn
 
 
 def _make_dummy_file(outpath):
@@ -140,8 +141,9 @@ def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir, org_n_load_name=
     expected_names = np.array(
         list((set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)) - {np.nan}))
     exists = np.in1d(names, expected_names)
-    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(
-        np.array(names)[~exists], expected_names) #todo maybe make this passable
+    if not exists.all():
+        warn('unexpected shapefile names: {} only the following allowed: {}'.format(
+        np.array(names)[~exists], expected_names))
     n_load_layer = gpd.read_file(n_load_path)
     assert 'n_class' in n_load_layer.keys(), 'n_class needed in the n load layer'
 

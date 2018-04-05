@@ -10,10 +10,41 @@ import geopandas as gpd
 import os
 from n_load_pa_rules import create_farm_scale_data
 from glob import glob
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.modified_nload_uncertainty import \
+    run_all_nload_stuffs
+from sumarize_pa_rules import sumaraize
+
+
+def run_nload_pa_stuffs(shp_dir, outdir, name):
+    run_all_nload_stuffs(base_outdir=os.path.join(outdir, 'stocastic_n_{}'.format(name)), szdirs=[shp_dir])
+
+    # pa stuff
+    cments = {}
+    shp_paths = glob(os.path.join(shp_dir, "*.shp"))
+    for pth in shp_paths:
+        cments[os.path.basename(pth).replace('.shp', '')] = gpd.read_file(pth)
+    create_farm_scale_data(catchments=cments, outdir=os.path.join(outdir, 'pa_rules_{}'.format(name)))
+    sumaraize(os.path.join(outdir, 'pa_rules_{}'.format(name)))
+
 
 if __name__ == '__main__':
-    cments = {}
-    shp_paths = glob(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\second_tranche\*.shp")
-    for pth in shp_paths:
-        cments[os.path.basename(pth).replace('.shp','')] = gpd.read_file(pth)
-    create_farm_scale_data(catchments=cments, outdir=r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\pa_rules_second_trance")
+    base_outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results"
+    base_shp_dir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons"
+    if False:  # quick thing to record, but not re-run
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'second_tranche'),
+                            outdir=os.path.join(base_outdir, 'pa_rules_second_trance'),
+                            name='second_tranche')
+
+    if True:
+        # private wells
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'private_wells'),
+                            outdir=os.path.join(base_outdir, 'private_wells'),
+                            name='private_wells')
+        # wdc wells
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'wdc_wells'),
+                            outdir=os.path.join(base_outdir, 'wdc_wells'),
+                            name='wdc_wells')
+        # waimakariri
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'waimakariri_river'),
+                            outdir=os.path.join(base_outdir, 'waimakariri_river'),
+                            name='waimakariri_river')

@@ -30,12 +30,23 @@ well_zones_to_modify = {
     # ###### poyntzs rd
     # ###### waikuku
 
-    # cust #todo what to do with wdc nameing conventions add 'wdc_to the front
-    # kaiapoi
-    # kairaki
-    # ohoka
-    # rangiora
-    # west eyreton as west eyreton wells
+    # cust emmma calculation s median of 18% alpine
+    'wdc_Cust': 6.5,
+
+    # kaiapoi # from emma medain of 32% alpine
+    'wdc_Kaiapoi': 6.03,
+
+    # kairaki  #from emma medain from kaiakpoi of 32% alpine
+    'wdc_Kairaki': 4.9,
+
+    # ohoka # from EMMA median of 20%
+    'wdc_Ohoka': 7.2,
+
+    # rangiora #from emma medain from kaiakpoi of 32% alpine
+    'wdc_Rangiora': 6.72,
+
+    # west eyreton as west eyreton wells  # from emma 19% alpine
+    'wdc_West Eyreton': 6.0,
 
     # private wells
     # ## leave as is:
@@ -52,42 +63,42 @@ well_zones_to_modify = {
     # 'West Eyreton_shallow',
 
 
-    # Clarkville , scale similar to kaiapoi at island road waimakariri component
-    'Clarkville',
+    # Clarkville , scale similar to kaiapoi at island road waimakariri component 20% alpine river water
+    'Clarkville': 7.6,
 
-    # Cust, similar to cust WDC well
-    'Cust',
+    # Cust, similar to cust WDC well emmma calculation s median of 18% alpine
+    'Cust': 6.68,
 
-    #'Eyreton_deep', use our EMMA data
-    'Eyreton_deep',
+    # 'Eyreton_deep', use our EMMA data 32% alpine river water
+    'Eyreton_deep': 13.3,
 
-    #'Eyreton_shallow', as kaiapoi at island road
-    'Eyreton_shallow',
+    # 'Eyreton_shallow', as kaiapoi at island road component 20% alpine river water
+    'Eyreton_shallow': 11,
 
-    #'North East Eyrewell_deep', # look for EMMA lump with NW eyrewell
-    'North East Eyrewell_deep',
+    # 'North East Eyrewell_deep', # look for EMMA lump with NW eyrewell 28% alpine river water from emma
+    'North East Eyrewell_deep': 6.9,
 
-    #'North West Eyrewell_deep', # look for EMMA lump with NE eyrewell
-    'North West Eyrewell_deep',
+    # 'North West Eyrewell_deep', # look for EMMA lump with NE eyrewell 28% alpine river water from emma
+    'North West Eyrewell_deep': 8.9,
 
-    #'Ohoka_deep', # as ohoka WDC well
-    'Ohoka_deep',
+    # 'Ohoka_deep', # as ohoka WDC well  from EMMA median of 20%
+    'Ohoka_deep': 7.3,
 
-    #'Ohoka_shallow', # as ohoka stream
-    'Ohoka_shallow',
+    # 'Ohoka_shallow', # as ohoka stream # from emma we can expect a median of 12% waimak water
+    'Ohoka_shallow': 6,
 
-    #'Springbank', #as cust (and cust wdc)
-    'Springbank',
+    # 'Springbank', #as cust (and cust wdc) emmma calculation s median of 18% alpine
+    'Springbank': 6.5,
 
-    #'Summerhill', # look for emma
-    'Summerhill',
+    # 'Summerhill', # look for emma 26% alpine river water
+    'Summerhill': 9.5,
 
-    #'Swannanoa_deep', as WDC west eyreton
-    'Swannanoa_deep',
+    # 'Swannanoa_deep', as WDC west eyreton # from emma 19% alpine
+    'Swannanoa_deep': 8.9,
 
-    #'West Eyreton_deep', as swannanowa/WDC west eyreton
-    'West Eyreton_deep'
-}#todo fill out!
+    # 'West Eyreton_deep', as swannanowa/WDC west eyreton # from emma 19% alpine
+    'West Eyreton_deep': 6.55
+}
 
 stream_zones_to_modify = {
     # site name: modified n value
@@ -114,16 +125,17 @@ stream_zones_to_modify = {
 
 stream_flows_gmp = {
     # key: percent flow under gmp from stocastic forward runs
-     'cam_bramleys_s':.99,
-     'cam_marshes_s':.99,
-     'courtenay_kaiapoi_s':1,
-     'cust_skewbridge':0.86, #todo this might not make sense with the nconc...
-     'kaiapoi_harpers_s':1, # link to silverstream at neeves
-     'kaiapoi_island_s':1, # link to silverstream at neeves
-     'northbrook_marshes_s':1,
-     'ohoka_island_s':0.99,
-     'southbrook_marshes_s':0.99,
+    'cam_bramleys_s': .99,
+    'cam_marshes_s': .99,
+    'courtenay_kaiapoi_s': 1,
+    'cust_skewbridge': 0.86,
+    'kaiapoi_harpers_s': 1,  # link to silverstream at neeves
+    'kaiapoi_island_s': 1,  # link to silverstream at neeves
+    'northbrook_marshes_s': 1,
+    'ohoka_island_s': 0.99,
+    'southbrook_marshes_s': 0.99,
 }
+
 
 def apply_n_load_uncertainty(nvals, modifiers):
     nvals = np.atleast_1d(nvals)
@@ -141,8 +153,8 @@ def scale_gmp_for_flow_change(data, receptor_type):
     """
     data = data.copy()
     if receptor_type == 'well':
-        raise NotImplementedError #todo
-    elif receptor_type =='stream':
+        pass # decided instead to bracket with concentration and load... will run another mt3d run.
+    elif receptor_type == 'stream':
         for site in data.index:
             try:
                 modifier = stream_flows_gmp[site]
@@ -150,10 +162,11 @@ def scale_gmp_for_flow_change(data, receptor_type):
                 modifier = 1
                 warn('no key for {} in gmp flows!, setting modifier to 1'.format(site))
 
-            data.loc[site]*=1/modifier
+            data.loc[site] *= 1 / modifier
     else:
         raise ValueError('unexpected value {} for receptor type expected only "well" or "stream"'.format(receptor_type))
     return data
+
 
 def output_actual_n_vals(outdir, mod_dir, gmp):
     """
@@ -199,10 +212,10 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
                     with open(os.path.join(outdir, 'missing_sites.txt'), 'a') as f:
                         f.write('missing: {}, exception: {}\n'.format(zone, val))
                         continue
-                if key == 'Zone': # handle some weird wdc overlap with private well names
+                if key == 'Zone':  # handle some weird wdc overlap with private well names
                     use_zone = 'wdc_{}'.format(zone)
                 else:
-                    use_zone=zone
+                    use_zone = zone
 
                 if use_zone in well_zones_to_modify.keys():
                     nvals = well_zones_to_modify[use_zone]
@@ -219,7 +232,7 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
         # sfr_groups
         str_ids = get_str_ids()
         base_str_n = pd.read_csv(base_str_n_path, index_col=0)
-        if simset =='ashopt':
+        if simset == 'ashopt':
             base_str_n = base_str_n.transpose()
         outdata = {}
         for str_id in str_ids:
@@ -241,7 +254,7 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
             outdata.to_csv(os.path.join(outdir, 'full_{}_n_strs.csv'.format(simset)))
 
 
-def run_all_nload_stuffs(base_outdir, szdirs, ):
+def run_all_nload_stuffs(base_outdir, szdirs, output_act_n=True):
     """
     wrapper to run all the nloads stocastics
     :param base_outdir: where to put the data
@@ -272,29 +285,32 @@ def run_all_nload_stuffs(base_outdir, szdirs, ):
                 else:
                     raise NotImplementedError
                 # Calculate modifiers for the N load
-                calc_all_ns(sims_org=sims, n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir, org_n_load_name=org_n_load_name)
+                calc_all_ns(sims_org=sims, n_load_name=n_name, outdir=outdir, source_zone_dir=sz_dir,
+                            org_n_load_name=org_n_load_name)
 
-                output_actual_n_vals(outdir=outdir, mod_dir=outdir, gmp=gmp)
-    create_tabulated_results(base_outdir)
+                if output_act_n: # hack to allow the waimakariri to run
+                    output_actual_n_vals(outdir=outdir, mod_dir=outdir, gmp=gmp)
+    if output_act_n:
+        create_tabulated_results(base_outdir)
 
 
 def create_tabulated_results(base_outdir):
-    for trans, mset in itertools.product(['with_trans','without_trans'], ['ashopt', 'stocastic_set']):
-        gmp_path = glob(os.path.join(base_outdir,trans,'*load_gmp*','*{}*.csv'.format(mset)))[0]
-        cmp_path = glob(os.path.join(base_outdir,trans,'*load_cmp*','*{}*.csv'.format(mset)))[0]
-        gmp = pd.read_csv(gmp_path,index_col=0)
+    for trans, mset in itertools.product(['with_trans', 'without_trans'], ['ashopt', 'stocastic_set']):
+        gmp_path = glob(os.path.join(base_outdir, trans, '*load_gmp*', '*{}*.csv'.format(mset)))[0]
+        cmp_path = glob(os.path.join(base_outdir, trans, '*load_cmp*', '*{}*.csv'.format(mset)))[0]
+        gmp = pd.read_csv(gmp_path, index_col=0)
         cmp_n = pd.read_csv(cmp_path, index_col=0)
-        outdata_load = pd.merge(gmp, cmp_n, right_index=True, left_index=True, suffixes=('_gmp_load','_cmp_load'))
-        gmp_path = glob(os.path.join(base_outdir,trans,'*conc_gmp*','*{}*.csv'.format(mset)))[0]
-        cmp_path = glob(os.path.join(base_outdir,trans,'*conc_cmp*','*{}*.csv'.format(mset)))[0]
-        gmp = pd.read_csv(gmp_path,index_col=0)
+        outdata_load = pd.merge(gmp, cmp_n, right_index=True, left_index=True, suffixes=('_gmp_load', '_cmp_load'))
+        gmp_path = glob(os.path.join(base_outdir, trans, '*conc_gmp*', '*{}*.csv'.format(mset)))[0]
+        cmp_path = glob(os.path.join(base_outdir, trans, '*conc_cmp*', '*{}*.csv'.format(mset)))[0]
+        gmp = pd.read_csv(gmp_path, index_col=0)
         cmp_n = pd.read_csv(cmp_path, index_col=0)
         outdata_con = pd.merge(gmp, cmp_n, right_index=True, left_index=True, suffixes=('_gmp_con', '_cmp_con'))
         outdata = pd.merge(outdata_load, outdata_con, right_index=True, left_index=True)
-        outdata.to_csv(os.path.join(base_outdir, '{}_{}_overview.csv'.format(mset,trans)))
-
+        outdata.to_csv(os.path.join(base_outdir, '{}_{}_overview.csv'.format(mset, trans)))
 
 
 if __name__ == '__main__':
-    run_all_nload_stuffs(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\stocastic_n_load_results\second_tranche_gmp_mod",
-                         r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\second_tranche")
+    run_all_nload_stuffs(
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\stocastic_n_load_results\second_tranche_gmp_mod",
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\second_tranche")

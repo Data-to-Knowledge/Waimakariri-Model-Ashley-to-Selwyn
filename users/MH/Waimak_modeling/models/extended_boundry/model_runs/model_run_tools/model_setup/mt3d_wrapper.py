@@ -12,7 +12,6 @@ import shutil
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 # todo is from the old model tools need to refine it
-#todo set up to pass without a modflow model just an FTL
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                 ssm_crch=None, ssm_stress_period_data=None,
                 adv_sov=0, adv_percel=1,
@@ -89,28 +88,6 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              silent=0  # defualt
                              )
 
-    # ADV
-    if adv_sov >= 1:
-        raise ValueError('mt3d object not configured for specified advection solver {}'.format(adv_sov))
-
-    adv = flopy.mt3d.Mt3dAdv(mt3d, #todo done
-                             mixelm=adv_sov,
-                             percel=adv_percel,
-                             mxpart=5000,  # not using particles
-                             nadvfd=1,  # default to upstream weighting
-                             itrack=3,  # not using particles
-                             wd=0.5,  # not using particles
-                             dceps=1e-05,  # defualt
-                             nplane=2,  # not using particles
-                             npl=10,  # not using particles
-                             nph=40,  # not using particles
-                             npmin=5,  # not using particles
-                             npmax=80,  # not using particles
-                             nlsink=0,  # not using particles
-                             npsink=15,  # not using particles
-                             dchmoc=0.0001,  # not using MOC or MMOC or HMOC
-                             unitnumber=502
-                             )
 
     # BTN
     elv_db = smt.calc_elv_db()
@@ -172,6 +149,28 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              unitnumber=503
                              )
 
+    # ADV
+    if adv_sov >= 1:
+        raise ValueError('mt3d object not configured for specified advection solver {}'.format(adv_sov))
+
+    adv = flopy.mt3d.Mt3dAdv(mt3d, #todo done
+                             mixelm=adv_sov,
+                             percel=adv_percel,
+                             mxpart=5000,  # not using particles
+                             nadvfd=1,  # default to upstream weighting
+                             itrack=3,  # not using particles
+                             wd=0.5,  # not using particles
+                             dceps=1e-05,  # defualt
+                             nplane=2,  # not using particles
+                             npl=10,  # not using particles
+                             nph=40,  # not using particles
+                             npmin=5,  # not using particles
+                             npmax=80,  # not using particles
+                             nlsink=0,  # not using particles
+                             npsink=15,  # not using particles
+                             dchmoc=0.0001,  # not using MOC or MMOC or HMOC
+                             unitnumber=502
+                             )
     # DSP
     dsp = flopy.mt3d.Mt3dDsp(mt3d,
                              al=dsp_lon, #todo I think this is 10
@@ -241,11 +240,26 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
 
 
 default_mt3d_dict = {
-    'm': None, 'mt3d_name': None,
-    'ssm_crch': None, 'ssm_stress_period_data': None,
-    'adv_sov': 0, 'adv_percel': 1,
-    'btn_porsty': 0.05, 'btn_scon': 0, 'btn_nprs': 0, 'btn_timprs': None,
-    'dsp_lon': 0.1, 'dsp_trpt': 0.1, 'dsp_trpv': 0.01,
-    'nper': None, 'perlen': None, 'nstp': None, 'tsmult': None, 'ssflag': None,
-    'dt0': 0, 'mxstrn': 50000, 'ttsmult': 1.0, 'ttsmax': 0
+    'm': None,
+    'mt3d_name': None,
+    'ssm_crch': None,
+    'ssm_stress_period_data': None,
+    'adv_sov': 0,
+    'adv_percel': 1,
+    'btn_porsty': 1, # modified to match brioch
+    'btn_scon': 0.1, # modified to match brioch
+    'btn_nprs': 0,
+    'btn_timprs': None,
+    'dsp_lon': 0.1,
+    'dsp_trpt': 0.1,
+    'dsp_trpv': 0.01,
+    'nper': None,
+    'perlen': None,
+    'nstp': None,
+    'tsmult': None,
+    'ssflag': None,
+    'dt0': 0,
+    'mxstrn': 50000,
+    'ttsmult': 1.0,
+    'ttsmax': 0
 }
