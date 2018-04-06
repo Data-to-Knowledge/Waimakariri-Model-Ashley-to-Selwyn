@@ -195,8 +195,10 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
                          os.path.join(base_base_n_path, "AshOpt_grouped_well_data.csv")]
 
     for simset, base_well_n_path, base_str_n_path in zip(simsets, base_well_n_paths, base_str_n_paths):
+        print(simset)
         if simset == 'ashopt':
-            base_well_n = pd.read_csv(base_well_n_path, index_col=0, names=['n_con']).transpose()
+            continue
+            base_well_n = pd.read_csv(base_well_n_path, index_col=0, names=['n_con'])
         else:
             base_well_n = pd.read_csv(base_well_n_path, index_col=0).transpose()
         # well groups
@@ -220,7 +222,7 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
                 if use_zone in well_zones_to_modify.keys():
                     nvals = well_zones_to_modify[use_zone]
                 else:
-                    idxs = well_ids.loc[well_ids[key] == zone].index
+                    idxs = well_ids.loc[well_ids[key] == zone].index.values
                     nvals = base_well_n.loc[idxs].mean().values
                 outdata[use_zone] = apply_n_load_uncertainty(nvals, modifiers)
         outdata = pd.DataFrame(outdata).transpose()
@@ -295,7 +297,7 @@ def run_all_nload_stuffs(base_outdir, szdirs, output_act_n=True):
 
 
 def create_tabulated_results(base_outdir):
-    for trans, mset in itertools.product(['with_trans', 'without_trans'], ['ashopt', 'stocastic_set']):
+    for trans, mset in itertools.product(['with_trans', 'without_trans'], ['stocastic_set']): # pulled out 'ashopt' for time
         gmp_path = glob(os.path.join(base_outdir, trans, '*load_gmp*', '*{}*.csv'.format(mset)))[0]
         cmp_path = glob(os.path.join(base_outdir, trans, '*load_cmp*', '*{}*.csv'.format(mset)))[0]
         gmp = pd.read_csv(gmp_path, index_col=0)
