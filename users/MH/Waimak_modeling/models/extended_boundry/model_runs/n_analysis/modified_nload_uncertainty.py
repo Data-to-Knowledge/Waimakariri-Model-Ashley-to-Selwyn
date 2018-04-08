@@ -232,7 +232,7 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
             outdata.to_csv(os.path.join(outdir, 'full_{}_n_wells.csv'.format(simset)))
 
         # sfr_groups
-        str_ids = get_str_ids()
+        str_ids = get_str_ids() + ['waimakariri', 'conservative_interzone', 'highly_likely_interzone']
         base_str_n = pd.read_csv(base_str_n_path, index_col=0)
         if simset == 'ashopt':
             base_str_n = base_str_n.transpose()
@@ -246,6 +246,11 @@ def output_actual_n_vals(outdir, mod_dir, gmp):
                     continue
             if str_id in stream_zones_to_modify.keys():
                 nvals = stream_zones_to_modify[str_id]
+            elif str_id == 'waimakariri' or 'interzone' in str_id:
+                with open(os.path.join(outdir,'READ_ME.txt'), 'a') as f:
+                    f.write('there was no N data for {} set base value to 1 to look '
+                            'at percentage changes'.format(str_id))
+                nvals = np.array([1])
             else:
                 nvals = base_str_n.loc[:, str_id].values
             outdata[str_id] = apply_n_load_uncertainty(nvals, modifiers)

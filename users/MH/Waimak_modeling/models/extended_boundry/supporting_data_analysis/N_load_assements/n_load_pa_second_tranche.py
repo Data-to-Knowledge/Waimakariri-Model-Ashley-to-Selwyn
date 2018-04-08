@@ -17,7 +17,8 @@ from sumarize_pa_rules import sumaraize
 
 def run_nload_pa_stuffs(shp_dir, outdir, name, output_act_n=True):
     print('################# {} ################'.format(name))
-    run_all_nload_stuffs(base_outdir=os.path.join(outdir, 'stocastic_n_{}'.format(name)), szdirs=[shp_dir], output_act_n=output_act_n)
+    run_all_nload_stuffs(base_outdir=os.path.join(outdir, 'stocastic_n_{}'.format(name)), szdirs=[shp_dir],
+                         output_act_n=output_act_n)
 
     # pa stuff
     cments = {}
@@ -32,11 +33,6 @@ if __name__ == '__main__':
     base_outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results"
     base_shp_dir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons"
     if False:  # quick thing to record, but not re-run
-        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'second_tranche'),
-                            outdir=os.path.join(base_outdir, 'pa_rules_second_trance'),
-                            name='second_tranche')
-
-    if False: # quick thing to record, but not re-run
         # private wells
         run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'private_wells'),
                             outdir=os.path.join(base_outdir, 'private_wells'),
@@ -48,5 +44,14 @@ if __name__ == '__main__':
         # waimakariri
         run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'waimakariri_river'),
                             outdir=os.path.join(base_outdir, 'waimakariri_river'),
-                            name='waimakariri_river',
-                            output_act_n=False)
+                            name='waimakariri_river')
+        # interzone
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'interzone'),
+                            outdir=os.path.join(base_outdir, 'interzone'),
+                            name='interzone')
+
+    if True:
+        # springfed streams
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'second_tranche'),
+                            outdir=os.path.join(base_outdir, 'nwaimak_springfeds'),
+                            name='nwaimak_springfeds') #spring fed streams
