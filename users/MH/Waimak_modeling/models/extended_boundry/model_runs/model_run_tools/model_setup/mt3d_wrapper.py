@@ -9,7 +9,9 @@ from core import env
 import flopy
 import os
 import shutil
+import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
+
 
 # todo is from the old model tools need to refine it
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
@@ -18,9 +20,10 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                 btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                 dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
                 nper=1, perlen=1, nstp=1, tsmult=1,  # these can be either value of list of values
-                                                                             # and must match flow model if it is not SS
-                ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0, # these can be either value of list of values
-                gcg_isolve = 1, gcg_inner=50, gcg_outer=1):
+                # and must match flow model if it is not SS
+                ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,  # these can be either value of list of values
+                gcg_isolve=1, gcg_inner=50, gcg_outer=1,
+                sft_spd=None):
     """
 
     :param ftl_path: path to the FTL file to use with MT3D
@@ -62,6 +65,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     :param ssflag:  If SSFlag is set to SSTATE (case insensitive), the steady-state transport simulation is
                     automatically activated. (see mt3dms_V5_ supplemental for more info) must be an iterable otherwise
                     only the first letter will be written
+    :param sft_spd: sft stress period data
 
     :return: mt3d instance
     """
@@ -70,7 +74,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     # check that FTL is in the model_ws folder and if not move it there
     ftl_name = os.path.basename(ftl_path)
     if not os.path.dirname(ftl_path) == mt3d_ws:
-        shutil.copyfile(ftl_path,os.path.join(mt3d_ws,ftl_name))
+        shutil.copyfile(ftl_path, os.path.join(mt3d_ws, ftl_name))
 
     # packages I'll likely need
     mt3d = flopy.mt3d.Mt3dms(modelname=mt3d_name,
@@ -78,9 +82,10 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              ftlfilename=ftl_name,
                              ftlfree=True,  # formatted FTL to handle bug
                              version='mt3d-usgs',
-                             exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"# standard compilation did not converge
+                             exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
                                       "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)),
-                             structured=True,  # defualt probably fine, though a point of weakness I don't know what it is
+                             structured=True,
+                             # defualt probably fine, though a point of weakness I don't know what it is
                              listunit=500,
                              ftlunit=501,
                              model_ws=mt3d_ws,
@@ -88,16 +93,15 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              silent=0  # defualt
                              )
 
-
     # BTN
     elv_db = smt.calc_elv_db()
 
-    btn = flopy.mt3d.Mt3dBtn(mt3d,
+    btn = flopy.mt3d.Mt3dBtn(mt3d,  # todo btn should be good
                              MFStyleArr=False,  # defualt it's a reader, should hopefully not cause problems
                              DRYCell=True,  # pass through dry cells
-                             Legacy99Stor=False,  # defualt #todo
-                             FTLPrint=False,  # defualt #todo
-                             NoWetDryPrint=False,  # defualt shouldn't be a problem #todo
+                             Legacy99Stor=False,  # defualt
+                             FTLPrint=False,  # defualt
+                             NoWetDryPrint=False,  # defualt shouldn't be a problem
                              OmitDryBud=True,  # as passing through dry cells
                              AltWTSorb=False,  # defualt not using sorbing to my knowledge
                              ncomp=1,  # number of species
@@ -111,7 +115,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              cinact=-9999999,  # defualt
                              thkmin=0.01,  # defualt
 
-                             # printing flags 0 is not print #todo I could probably get away with not printing anything check briochs base package
+                             # printing flags 0 is not print
                              ifmtcn=0,
                              ifmtnp=0,
                              ifmtrf=0,
@@ -137,7 +141,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              delr=smt.grid_space,
                              delc=smt.grid_space,
                              htop=elv_db[0],
-                             dz=elv_db[0:-1]-elv_db[1:],
+                             dz=elv_db[0:-1] - elv_db[1:],
 
                              ssflag=ssflag,
                              dt0=dt0,
@@ -153,7 +157,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     if adv_sov >= 1:
         raise ValueError('mt3d object not configured for specified advection solver {}'.format(adv_sov))
 
-    adv = flopy.mt3d.Mt3dAdv(mt3d, #todo done
+    adv = flopy.mt3d.Mt3dAdv(mt3d,  # todo done
                              mixelm=adv_sov,
                              percel=adv_percel,
                              mxpart=5000,  # not using particles
@@ -172,37 +176,38 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              unitnumber=502
                              )
     # DSP
-    dsp = flopy.mt3d.Mt3dDsp(mt3d,
-                             al=dsp_lon, #todo I think this is 10
-                             trpt=dsp_trpt, #todo I think this is 0.1
-                             trpv=dsp_trpv, #todo I think this is 0.01
-                             dmcoef=1e-09,  # default don't think I need as only if multidiff True #todo I think this is 0
+    dsp = flopy.mt3d.Mt3dDsp(mt3d,  # todo done
+                             al=dsp_lon,
+                             trpt=dsp_trpt,
+                             trpv=dsp_trpv,
+                             dmcoef=0,
+                             # default don't think I need as only if multidiff True
                              extension='dsp',
-                             multiDiff=False,  # only one component #todo not sure
+                             multiDiff=False,  # only one component
                              unitnumber=504)
 
     # SSM
-    #warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
+    # warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
     #              'None.  Cannot calculate max number of sources ' +
     #              'and sinks.  Estimating from stress_period_data. ')
 
-    ssm = flopy.mt3d.Mt3dSsm(mt3d,
+    ssm = flopy.mt3d.Mt3dSsm(mt3d,  # todo done
                              crch=ssm_crch,
                              cevt=None,
-                             mxss=None,  # default max number of sources and sinks this is calculated from modflow model #todo define aprioi
+                             mxss=100000,
+                             # default max number of sources and sinks this is calculated from modflow model # define aprioi
                              stress_period_data=ssm_stress_period_data,
                              dtype=None,  # default I should not need to specify this, but we'll see
                              extension='ssm',
                              unitnumber=505,
                              )
 
-    #MTSFT
-    kwargs = {} #todo place holder     #todo add mtsft
-    mtsft = flopy.mt3d.Mt3dSft(mt3d,
-                               nsfinit=0,
-                               mxsfbc=0,
+    # MTSFT
+    mtsft = flopy.mt3d.Mt3dSft(mt3d, #todo should be done
+                               nsfinit=1228,
+                               mxsfbc=1228,
                                icbcsf=0,
-                               ioutobs=None,
+                               ioutobs=81,
                                ietsfr=0,
                                isfsolv=1,
                                wimp=0.50,
@@ -211,17 +216,15 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                                mxitersf=10,
                                crntsf=1.0,
                                iprtxmd=0,
-                               coldsf=0.0,
+                               coldsf=0.0,  # inital concentrations in the stream network... should be fine at 0
                                dispsf=0.0,
-                               nobssf=0,
-                               obs_sf=None,
-                               sf_stress_period_data=None,
+                               nobssf=1228,
+                               obs_sf=range(1, 1228 + 1),  # I think this is the reach set up
+                               sf_stress_period_data=sft_spd,
                                unitnumber=None,
                                filenames=None,
                                dtype=None,
-                               extension='sft',
-                               **kwargs)
-
+                               extension='sft')
 
     # GCG
     gcg = flopy.mt3d.Mt3dGcg(mt3d,
@@ -230,7 +233,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              isolve=gcg_isolve,  # 1, Jacobi = 2, SSOR = 3, Modified Incomplete Cholesky (MIC)
                              ncrs=0,  # lump despersion tensor to RHS
                              accl=1,  # defualt and likely not used
-                             cclose=1e-05,  # defualt
+                             cclose=1e-06,  # defualt
                              iprgcg=0,  # defualt print max changes at end of each iteration
                              extension='gcg',
                              unitnumber=506,
@@ -239,27 +242,90 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     return mt3d
 
 
+def get_ssm_stress_period_data(): #todo
+    # Wil Races and selwyn Races
+    # N boundary flux?  break up?
+    # constant head cells?... todo why did brioch specifiy these as 0?
+    #
+
+    raise NotImplementedError
+
+
+def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, cust_biwash=0.1, ash_tribs=0.35,
+                               glen_tui=None, garry=None, bullock=None, okuku=None, makerikeri=None):
+    ashtrib_input = ash_tribs is not None and all([e is None for e in [glen_tui, garry, bullock, okuku, makerikeri]])
+    individual_trib_input = ash_tribs is None and all(
+        [e is not None for e in [glen_tui, garry, bullock, okuku, makerikeri]])
+    assert ashtrib_input or individual_trib_input, 'ashley tribs must be either set by ash_tribs or individually, not done right'
+    if ash_tribs is not None:
+        glen_tui = ash_tribs
+        garry = ash_tribs
+        bullock = ash_tribs
+        okuku = ash_tribs
+        makerikeri = ash_tribs
+
+    sft_spd = np.recarray((10, 3), flopy.mt3d.Mt3dSft.get_default_dtype())
+    nodes = [
+        # main inflows
+        1,  # eyre inflow
+        77,  # waimakariri inflow
+        262,  # ashley inflow
+        347,  # cust inflow
+        # ashley tribs
+
+        373,  # glen tui
+        717,  # garry
+        822,  # cust biwash
+        867,  # bullock creek
+        896,  # okuku river
+        925,  # makerikeri river
+
+    ]
+    scon_dict = {
+        1: eyre,
+        77: waimak,
+        262: ash_gorge,
+        347: cust,
+        373: glen_tui,
+        717: garry,
+        822: cust_biwash,
+        867: bullock,
+        896: okuku,
+        925: makerikeri,
+    }
+    scons = [scon_dict[e] for e in nodes]
+    sft_spd['node'] = nodes  # reach ids
+    sft_spd['isfbctype'] = 0  # set all to headwaters sites
+    sft_spd['cbcsf0'] = scons
+
+    return sft_spd
+
+
+todos = {'m': None,
+         'mt3d_name': None,
+         'ssm_crch': None,
+         'ssm_stress_period_data': None}  # todo sort this out
+
 default_mt3d_dict = {
-    'm': None,
-    'mt3d_name': None,
-    'ssm_crch': None,
-    'ssm_stress_period_data': None,
-    'adv_sov': 0,
-    'adv_percel': 1,
-    'btn_porsty': 1, # modified to match brioch
-    'btn_scon': 0.1, # modified to match brioch
-    'btn_nprs': 0,
-    'btn_timprs': None,
-    'dsp_lon': 0.1,
-    'dsp_trpt': 0.1,
-    'dsp_trpv': 0.01,
-    'nper': None,
-    'perlen': None,
-    'nstp': None,
-    'tsmult': None,
-    'ssflag': None,
-    'dt0': 0,
-    'mxstrn': 50000,
-    'ttsmult': 1.0,
-    'ttsmax': 0
+    'adv_sov': 0,  # matches brioch
+    'adv_percel': 1,  # matcheds brioch
+    'btn_porsty': 1,  # modified to match brioch
+    'btn_scon': 0.1,  # modified to match brioch
+    'btn_nprs': 0,  # todo
+    'btn_timprs': None,  # todo
+    'dsp_lon': 10,  # modified to match brioch
+    'dsp_trpt': 0.1,  # modified to match brioch
+    'dsp_trpv': 0.01,  # modified to match brioch
+    'nper': None,  # todo
+    'perlen': 7.3050E5,  # modified to match brioch's
+    'nstp': 1,  # modified to match briochs
+    'tsmult': 1,  # modified to match briochs
+    'ssflag': None,  # DO NOT SET
+    'dt0': 1,  # modified to match briochs
+    'mxstrn': 1000000,  # modified to match briochs
+    'ttsmult': 1.1,  # modified to match briochs
+    'ttsmax': 50,  # modified to match briochs
+    'gcg_isolve': 3,  # modified to match briochs
+    'gcg_inner': 500,  # modified to match briochs
+    'gcg_outer': 100  # modified to match briochs
 }

@@ -430,6 +430,6 @@ def get_stocastic_set(return_model_ids=True):
         return nsmc_nums
 if __name__ == '__main__':
     # tests
-    m=get_model_name_path('NsmcReal{:06d}'.format(2818))
+    m=get_model('NsmcBase')
     print(m)
     print('done')
