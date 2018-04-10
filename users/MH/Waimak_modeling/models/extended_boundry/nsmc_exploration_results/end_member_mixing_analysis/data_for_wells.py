@@ -13,7 +13,6 @@ import geopandas as gpd
 
 if __name__ == '__main__':
 
-    # todo make a list of sites for all wells
     all_wells = get_all_well_row_col()
     groups = gpd.read_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\support_shp\cl_o18_data.shp")
     sites = list(groups.loc[groups.well_group != '','Field1'])

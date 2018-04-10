@@ -21,6 +21,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletio
     get_sd_well_list
 import matplotlib.pyplot as plt
 
+#this was a dead end... the two models are very difficulat to match
 
 # is it worth doing a bulk comparison for each stream (e.g. all reaches?)
 # I should consider dry reaches as well
@@ -53,7 +54,7 @@ def get_baqt(layer, row, col, mid_screen_elv, elv_db, heads):
     sat_thickness = np.nan
     if heads[layer, row, col] < cell_bot:  # cell is dry what then
         sat_thickness = abs((elv_db[0, row, col] - mid_screen_elv) / 2)
-        # abs in the unlikely chance that the well is slightly above ground level #todo talk over
+        # abs in the unlikely chance that the well is slightly above ground level # talk over
     else:
         idx = heads[:, row, col] > elv_db[1:, row, col]
         if not idx.any():
@@ -66,7 +67,7 @@ def get_baqt(layer, row, col, mid_screen_elv, elv_db, heads):
         pass
     elif sat_thickness <= 0:
         sat_thickness = abs((elv_db[0, row, col] - mid_screen_elv) / 2)
-        # abs in the unlikely chance that the well is slightly above ground level #todo talk over
+        # abs in the unlikely chance that the well is slightly above ground level #talk over
 
     return sat_thickness
 
@@ -92,8 +93,8 @@ def calc_analytical_sd(well_nums, name_file_path, outpath, radius=5000):
 
     # get times
     times = [7, 150]
-    s = 0.0001  # todo assumed pumped s
-    sy = 0.1  # todo assumed aquitard sy
+    s = 0.0001  #  assumed pumped s
+    sy = 0.1  #  assumed aquitard sy
 
     # get transmissivity, kaqt
     kvs = m.upw.vka.array.copy()
@@ -141,7 +142,7 @@ def calc_analytical_sd(well_nums, name_file_path, outpath, radius=5000):
         geo_xs = geo.geometry.x[np.newaxis, :]
         geo_ys = geo.geometry.y[np.newaxis, :]
         xs = data.loc[:, 'nztmx'].values[:, np.newaxis] - geo_xs
-        ys = data.loc[:, 'nztmy'].values[:, np.newaxis] - geo_ys  # todo check size
+        ys = data.loc[:, 'nztmy'].values[:, np.newaxis] - geo_ys  #  check size
         data.loc[:, 'sep_dist_{}'.format(name)] = ((xs ** 2 + ys ** 2) ** 0.5).min(axis=1)
         idx = np.isfinite(smt.shape_file_to_model_array(sp, 'k', True))
         stream_conducts[name] = np.nanmean(all_str_conducts[idx])
@@ -196,7 +197,7 @@ class _oblist(object):
 def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
     # make the data into long mode
     an_keys = analytical_data_hunt.keys()
-    an_keys = an_keys[an_keys.str.contains('sd_7')] #todo update for theis addition
+    an_keys = an_keys[an_keys.str.contains('sd_7')] # update for theis addition
     sd7_an = pd.melt(analytical_data_hunt.loc[:, an_keys].reset_index(), id_vars='well', var_name='stream',
                      value_name='analytical_hunt')
     sd7_an.loc[:, 'stream'] = sd7_an.loc[:, 'stream'].str.replace('_sd_7', '')
@@ -241,7 +242,7 @@ def join_sds(numerical_sd_7, numerical_sd_150, analytical_data_hunt):
     sd150 = pd.merge(sd150_an, sd150_num, left_on=['well', 'stream'], right_on=['well', 'stream'])
     return sd7, sd150
 
-# todo add a comparison for my hks and matt's khs
+#  add a comparison for my hks and matt's khs
 
 
 if __name__ == '__main__':

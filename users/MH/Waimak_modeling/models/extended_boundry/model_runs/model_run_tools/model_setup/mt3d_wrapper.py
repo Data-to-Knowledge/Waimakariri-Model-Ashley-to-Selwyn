@@ -14,10 +14,12 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import \
     get_race_data
 import pandas as pd
+from warnings import warn
 
 
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
-                ssm_crch=None, ssm_stress_period_data=None, sft_spd=None,
+                ssm_crch=None, ssm_stress_period_data=None,
+                sft_spd=None, obs_sf=range(1, 1228 + 1),
                 adv_sov=0, adv_percel=1,
                 btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                 dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
@@ -33,6 +35,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     :param ssm_crch: the recharge concentration for species 1
     :param ssm_stress_period_data: stress period data for other source/sinks
     :param sft_spd: sft stress period data
+    :param obs_sf: the stream network observation points.  default saves at every stream reach
 
     below here can generally be added by the default mt3d dictionary
     :param adv_sov: is an integer flag for the advection solution option. MIXELM = 0, the standard finite-difference
@@ -74,7 +77,11 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     """
     # create a general MT3d class instance to run most of our mt3d models
 
+    if obs_sf is not None:
+        warn('as currently implemented obs_sf records at every time period, which can make files massive, '
+             'recommend use reducer after model run')
     # check that FTL is in the model_ws folder and if not move it there
+
     if not os.path.exists(mt3d_ws):
         os.makedirs(mt3d_ws)
 
@@ -102,7 +109,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     # BTN
     elv_db = smt.calc_elv_db()
 
-    btn = flopy.mt3d.Mt3dBtn(mt3d,  # todo btn should be good
+    btn = flopy.mt3d.Mt3dBtn(mt3d,
                              MFStyleArr=False,  # defualt it's a reader, should hopefully not cause problems
                              DRYCell=True,  # pass through dry cells
                              Legacy99Stor=False,  # defualt
@@ -163,7 +170,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     if adv_sov >= 1:
         raise ValueError('mt3d object not configured for specified advection solver {}'.format(adv_sov))
 
-    adv = flopy.mt3d.Mt3dAdv(mt3d,  # todo done
+    adv = flopy.mt3d.Mt3dAdv(mt3d,
                              mixelm=adv_sov,
                              percel=adv_percel,
                              mxpart=5000,  # not using particles
@@ -182,7 +189,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              unitnumber=502
                              )
     # DSP
-    dsp = flopy.mt3d.Mt3dDsp(mt3d,  # todo done
+    dsp = flopy.mt3d.Mt3dDsp(mt3d,
                              al=dsp_lon,
                              trpt=dsp_trpt,
                              trpv=dsp_trpv,
@@ -197,7 +204,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     #              'None.  Cannot calculate max number of sources ' +
     #              'and sinks.  Estimating from stress_period_data. ')
 
-    ssm = flopy.mt3d.Mt3dSsm(mt3d,  # todo done
+    ssm = flopy.mt3d.Mt3dSsm(mt3d,
                              crch=ssm_crch,
                              cevt=None,
                              mxss=100000,
@@ -209,7 +216,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              )
 
     # MTSFT
-    mtsft = flopy.mt3d.Mt3dSft(mt3d,  # todo should be done
+    mtsft = flopy.mt3d.Mt3dSft(mt3d,
                                nsfinit=1228,
                                mxsfbc=1228,
                                icbcsf=0,
@@ -224,11 +231,12 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                                iprtxmd=0,
                                coldsf=0.0,  # inital concentrations in the stream network... should be fine at 0
                                dispsf=0.0,
-                               nobssf=1228,
-                               obs_sf=range(1, 1228 + 1),  # I think this is the reach set up
+                               nobssf=len(obs_sf),
+                               obs_sf=obs_sf,  # I think this is the reach set up
                                sf_stress_period_data=sft_spd,
                                unitnumber=None,
-                               filenames=None,
+                               # todo there's a bug here in sft flopy package this way I pass a outfile extension
+                               filenames=[None, mt3d_name + '.sobs'],
                                dtype=None,
                                extension='sft')
 
@@ -363,6 +371,12 @@ def get_default_mt3d_kwargs():
         'gcg_outer': 100  # modified to match briochs
     }
     return default_mt3d_dict
+
+def reduce_sobs(sobs_path):
+    data = pd.read_table(sobs_path, skiprows=1, delim_whitespace=True)
+    data = data.loc[np.isclose(data.TIME, data.TIME.max())]
+    data.to_csv(sobs_path, sep='\t')
+
 
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ def make_shapefiles(outdir):
         temp = temp.dissolve(by='grouper')
         temp.to_file(os.path.join(outdir,site+'.shp'))
 
-def get_base_sites(): #todo confirm this with MW
+def get_base_sites():
     base_sites = {
         # terretorial land authority zone:
         # central is the middle of east and west
@@ -125,7 +125,7 @@ def create_interzone_indexes():
     return indexes, sites
 
 
-def split_interzone_netcdfs(indir, sites):  # todo
+def split_interzone_netcdfs(indir, sites):
     """
 
     :param indir: directory with the key netcdfs (e.g. from _get_data from zones)

@@ -206,7 +206,7 @@ def gen_stream_targets(scenario):
     return outdata
 
 
-def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,  # todo add name
+def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,
                                interzone_target=None, include_interzone=False):
     """
     pull togeather the different current pathway results at 95th percentile and calculate reduction rasters (from 95th),
@@ -228,7 +228,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     # output as rasters
     # also a map of limiting factors
     # include waimak target of 0.1 as given.
-    # todo is waimak a 27% reduction from the 95th
+    # todo is waimak a 27% reduction from the 95th assuming here this is constant
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     current_paths = get_current_pathway_n(mode)
@@ -287,7 +287,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
                                                                              waimak_reduction]], axis=0)
     reduction = np.nanmax(temp, axis=0)
     reason = np.nanargmax(temp.astype(int), axis=0).astype(
-        float) + 1  # todo this seems to be adding one and generally screwd up...
+        float) + 1
     reason[idx & np.isfinite(reduction)] = 6
     reason[np.isnan(reduction)] = np.nan
     smt.array_to_raster(os.path.join(outdir, '{}_reason.tif'.format(name)), reason)
