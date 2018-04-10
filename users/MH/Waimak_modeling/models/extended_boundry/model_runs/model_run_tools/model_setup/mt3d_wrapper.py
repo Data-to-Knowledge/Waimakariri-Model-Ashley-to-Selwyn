@@ -17,7 +17,7 @@ import pandas as pd
 from warnings import warn
 
 
-def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
+def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 ssm_crch=None, ssm_stress_period_data=None,
                 sft_spd=None, obs_sf=range(1, 1228 + 1),
                 adv_sov=0, adv_percel=1,
@@ -27,11 +27,14 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                 # and must match flow model if it is not SS
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,  # these can be either value of list of values
                 gcg_isolve=1, gcg_inner=50, gcg_outer=1):
+
+
     """
 
     :param ftl_path: path to the FTL file to use with MT3D
     :param mt3d_name: the name for all mt3d files if none name will mirror that of the modflow model name
     :param mt3d_ws: working directory for the MT3D model
+    :param num_species: number of species to calculate
     :param ssm_crch: the recharge concentration for species 1
     :param ssm_stress_period_data: stress period data for other source/sinks
     :param sft_spd: sft stress period data
@@ -69,12 +72,25 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                      in the array corresponds to one model layer. Some recent field studies suggest that TRPT is
                      generally not greater than 0.01. Set TRPV equal to TRPT to use the standard isotropic dispersion
                      model (Equation 10 in Chapter 2). Otherwise, the modified isotropic dispersion model is used
+    :param nper: number to periods for the tranport simulation
+    :param perlen: the length of the transport simulation (must match flow model if the flow model is not steady state
+    :param nstp: number of time steps for the transient flow simulation
+    :param tsmult: multiplier for time steps in flow solution
     :param ssflag:  If SSFlag is set to SSTATE (case insensitive), the steady-state transport simulation is
                     automatically activated. (see mt3dms_V5_ supplemental for more info) must be an iterable otherwise
                     only the first letter will be written
+    :param dt0:
+    :param mxstrn:
+    :param ttsmult:
+    :param ttsmax:
+    :param gcg_isolve:
+    :param gcg_inner:
+    :param gcg_outer:
+
 
     :return: mt3d instance
     """
+    # todo add the parameters that are missing
     # create a general MT3d class instance to run most of our mt3d models
 
     if obs_sf is not None:
@@ -253,6 +269,14 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              unitnumber=506,
                              )
 
+    # todo add output for the standard output update flopy with this at some point in teh btn package
+    # i could also add the species name if supplied
+    mt3d.add_output('{}.CNF'.format(mt3d_name), 17)
+    for i in range(1, num_species + 1):
+        mt3d.add_output('{}{:03d}.UCN'.format(mt3d_name, i), 200 + i, True)
+        # mt3d.add_output('{}{:03d}.OBS'.format(mt3d_name,i),400+i,False) # not using, but should put in flopy
+        mt3d.add_output('{}{:03d}.MAS'.format(mt3d_name, i), 600 + i, False)
+
     return mt3d
 
 
@@ -292,7 +316,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
     ssm_spd = pd.DataFrame(ssm_spd)
 
     # remove all zero concentrations (should be fine)
-    ssm_spd = ssm_spd.loc[~np.isclose(ssm_spd.css, 0)] #todo confirm you do not need to specify the CHB cells
+    ssm_spd = ssm_spd.loc[~np.isclose(ssm_spd.css, 0)]  # todo confirm you do not need to specify the CHB cells
     return ssm_spd.to_records(index=False)
 
 
@@ -339,7 +363,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         925: makerikeri,
     }
     scons = [scon_dict[e] for e in nodes]
-    sft_spd['node'] = nodes  # reach ids
+    sft_spd['node'] = [e - 1 for e in nodes]  # reach ids # flopy.SFT assumes zero indexed sft
     sft_spd['isfbctyp'] = 0  # set all to headwaters sites
     sft_spd['cbcsf0'] = scons
 
@@ -357,7 +381,7 @@ def get_default_mt3d_kwargs():
         'dsp_lon': 10,  # modified to match brioch
         'dsp_trpt': 0.1,  # modified to match brioch
         'dsp_trpv': 0.01,  # modified to match brioch
-        'nper': 1,  # from modflow model
+        'nper': 0,  # modified to match brioch
         'perlen': 7.3050E5,  # modified to match brioch's
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
@@ -372,22 +396,99 @@ def get_default_mt3d_kwargs():
     }
     return default_mt3d_dict
 
+
 def reduce_sobs(sobs_path):
     data = pd.read_table(sobs_path, skiprows=1, delim_whitespace=True)
     data = data.loc[np.isclose(data.TIME, data.TIME.max())]
-    data.to_csv(sobs_path, sep='\t')
+    data.to_csv(sobs_path, sep='\t', index=False)
 
+
+def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
+                   ssm_crch=None, ssm_stress_period_data=None,
+                   sft_spd=None, obs_sf=range(1, 1228 + 1),
+                   adv_sov=0, adv_percel=1,
+                   btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
+                   dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
+                   nper=1, perlen=1, nstp=1, tsmult=1,  # these can be either value of list of values
+                   # and must match flow model if it is not SS
+                   ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,
+                   # these can be either value of list of values
+                   gcg_isolve=1, gcg_inner=50, gcg_outer=1,
+
+                   # novel kwargs
+                   safe_mode=True,
+                   reduce_str_obs=True,
+                   simplify=False):
+    """
+    wrapper to quickly setup/run mt3d model.  most args/kwargs are passed directly to create_mt3d,
+    only those that are novel are listed below
+    :param safe_mode: boolean if True will ask for user input if continuing if False, mt3d_ws is removed without warning
+    :param reduce_str_obs: boolean if True stream obs will be reduced to only the last time step
+    :param simplify: boolean if True only the list, sobs, mas, ucn files saved
+    :return:
+    """
+
+    if os.path.exists(mt3d_ws):
+        if safe_mode:
+            cont = input(
+                'create_base_modflow_files will delete the directory:\n {} \n continue y/n\n'.format(mt3d_ws)).lower()
+            if cont != 'y':
+                raise ValueError('script aborted so as not to overwrite {}'.format(mt3d_ws))
+
+        shutil.rmtree(mt3d_ws)
+        os.makedirs(mt3d_ws)
+    else:
+        os.makedirs(mt3d_ws)
+
+    mt3d = create_mt3d(ftl_path=ftl_path, mt3d_name=mt3d_name, mt3d_ws=mt3d_ws, num_species=num_species,
+                       ssm_crch=ssm_crch, ssm_stress_period_data=ssm_stress_period_data,
+                       sft_spd=sft_spd, obs_sf=obs_sf,
+                       adv_sov=adv_sov, adv_percel=adv_percel,
+                       btn_porsty=btn_porsty, btn_scon=btn_scon, btn_nprs=btn_nprs, btn_timprs=btn_timprs,
+                       dsp_lon=dsp_lon, dsp_trpt=dsp_trpt, dsp_trpv=dsp_trpv,
+                       nper=nper, perlen=perlen, nstp=nstp, tsmult=tsmult,  # these can be either value of list of values
+                       # and must match flow model if it is not SS
+                       ssflag=ssflag, dt0=dt0, mxstrn=mxstrn, ttsmult=ttsmult, ttsmax=ttsmax,
+                       # these can be either value of list of values
+                       gcg_isolve=gcg_isolve, gcg_inner=gcg_inner, gcg_outer=gcg_outer)
+    mt3d.write_input()
+    mt3d.run_model(silent=True)
+    if reduce_str_obs: # todo test carefully! and on a copy
+        reduce_sobs(os.path.join(mt3d_ws,'{}.sobs'.format(mt3d_name)))
+    if simplify:
+        files = pd.Series(os.listdir(mt3d_ws)).str.lower()
+        idx = files.str.contains('ucn') | files.str.contains('list') | files.str.contains('mas')| files.str.contains('sobs')
+        for file in files.loc[~idx]:
+            os.remove(os.path.join(mt3d_ws,file))
 
 
 if __name__ == '__main__':
-    from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_model
-    rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
-    mdt3d = create_mt3d(ftl_path= r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
-                        mt3d_name='test',
-                        mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d",
-                        ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
-                        ssm_stress_period_data={0:get_ssm_stress_period_data()},
-                        sft_spd={0:get_sft_stress_period_data()},
-                        **get_default_mt3d_kwargs())
-    mdt3d.write_input()
-    mdt3d.run_model()
+    from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+        get_model
+    testtype = 0
+    if testtype==0:
+        rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
+        mdt3d = create_mt3d(
+            ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
+            mt3d_name='test',
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version3",
+            ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
+            ssm_stress_period_data={0: get_ssm_stress_period_data()},
+            sft_spd={0: get_sft_stress_period_data()},
+            **get_default_mt3d_kwargs())
+        mdt3d.write_input()
+        mdt3d.run_model()
+
+    elif testtype == 1:
+        rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
+        setup_run_mt3d(
+            safe_mode=True,
+            reduce_str_obs=True,
+            simplify=True,
+            ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
+            mt3d_name='test',
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_setup_run",
+            ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
+            ssm_stress_period_data={0: get_ssm_stress_period_data()},
+            sft_spd={0: get_sft_stress_period_data()},
+            **get_default_mt3d_kwargs())
