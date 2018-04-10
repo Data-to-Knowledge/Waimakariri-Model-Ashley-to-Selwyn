@@ -19,8 +19,22 @@ from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
 
 if __name__ == '__main__':
 
-    data = pd.read_excel(r'T:\Temp\temp_gw_files\WaimakNfort annualMeds.xlsx')
-    data.loc[:,'time'] = pd.to_datetime(data.loc[:,'CollectionTime'])
-    data.loc[:,'year'] = [e.year for e in data.time]
-    outdata = data.loc[:,['year','Site','Value']].groupby(['Site', 'year']).describe()
-    outdata.to_csv(r'T:\Temp\temp_gw_files\WaimakNfort annualMeds_stats.csv')
+    missing_wells = [
+        'L34/0073',
+        'M34/0645',
+        'BW24/0370',
+        'M35/10410',
+        'M35/10410',
+        'M35/0335',
+        'M35/18871',
+        'M35/0335',
+        'L35/0893',
+        'M35/4238',
+        'M35/4238', # duplicate
+    ]
+    print(set(missing_wells))
+    print (('org', len(missing_wells)))
+    print (('set', len(set(missing_wells)))) # 3 are duplicates
+
+    all_wells = get_all_well_row_col()
+    all_wells.loc[set(missing_wells)].to_csv(r"C:\Users\MattH\Downloads\missing_sd_wells.csv")

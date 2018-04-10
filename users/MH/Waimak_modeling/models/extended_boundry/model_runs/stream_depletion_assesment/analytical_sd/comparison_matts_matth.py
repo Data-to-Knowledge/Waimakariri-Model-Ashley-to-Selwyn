@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     fig,ax = plt.subplots()
     x = range(len(outdata.index))
-    ax.scatter(x, outdata.low_s, label='low_s', c='b')
+    ax.scatter(x, outdata.med_s, label='med_s', c='b')
     ax.scatter(x, outdata.SD1_150, label='thies', c='r')
     ax.legend()
 

@@ -11,19 +11,20 @@ import os
 import shutil
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import \
+    get_race_data
+import pandas as pd
 
 
-# todo is from the old model tools need to refine it
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
-                ssm_crch=None, ssm_stress_period_data=None,
+                ssm_crch=None, ssm_stress_period_data=None, sft_spd=None,
                 adv_sov=0, adv_percel=1,
                 btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                 dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
                 nper=1, perlen=1, nstp=1, tsmult=1,  # these can be either value of list of values
                 # and must match flow model if it is not SS
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,  # these can be either value of list of values
-                gcg_isolve=1, gcg_inner=50, gcg_outer=1,
-                sft_spd=None):
+                gcg_isolve=1, gcg_inner=50, gcg_outer=1):
     """
 
     :param ftl_path: path to the FTL file to use with MT3D
@@ -31,6 +32,9 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     :param mt3d_ws: working directory for the MT3D model
     :param ssm_crch: the recharge concentration for species 1
     :param ssm_stress_period_data: stress period data for other source/sinks
+    :param sft_spd: sft stress period data
+
+    below here can generally be added by the default mt3d dictionary
     :param adv_sov: is an integer flag for the advection solution option. MIXELM = 0, the standard finite-difference
                     method with upstream or central-in-space weighting, depending on the value of NADVFD; = 1,
                     the forward-tracking method of characteristics (MOC); = 2, the backward-tracking modified method
@@ -65,13 +69,15 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     :param ssflag:  If SSFlag is set to SSTATE (case insensitive), the steady-state transport simulation is
                     automatically activated. (see mt3dms_V5_ supplemental for more info) must be an iterable otherwise
                     only the first letter will be written
-    :param sft_spd: sft stress period data
 
     :return: mt3d instance
     """
     # create a general MT3d class instance to run most of our mt3d models
 
     # check that FTL is in the model_ws folder and if not move it there
+    if not os.path.exists(mt3d_ws):
+        os.makedirs(mt3d_ws)
+
     ftl_name = os.path.basename(ftl_path)
     if not os.path.dirname(ftl_path) == mt3d_ws:
         shutil.copyfile(ftl_path, os.path.join(mt3d_ws, ftl_name))
@@ -203,7 +209,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
                              )
 
     # MTSFT
-    mtsft = flopy.mt3d.Mt3dSft(mt3d, #todo should be done
+    mtsft = flopy.mt3d.Mt3dSft(mt3d,  # todo should be done
                                nsfinit=1228,
                                mxsfbc=1228,
                                icbcsf=0,
@@ -242,13 +248,44 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws,
     return mt3d
 
 
-def get_ssm_stress_period_data(): #todo
-    # Wil Races and selwyn Races
-    # N boundary flux?  break up?
-    # constant head cells?... todo why did brioch specifiy these as 0?
-    #
+def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower_n_bnd_flux_con=2,
+                               well_stream_con=0, llrzf_con=0, ulrzf_con=0, s_race_con=0, chb_con=0):
+    """
+    get data for teh ssm package from wells.  cmp pathway is the default values
+    :param wil_race_con: concentration to apply to will race
+    :param upper_n_bnd_flux_con: from the gorge to ~ glentui terrace
+    :param lower_n_bnd_flux_con: from the glen tui terrace to broad road
+    :param well_stream_con: concentration to apply for the southern streams that are represented by injection wells
+    :param llrzf_con: the lower southwestern boundary flux concentration (below sh1)
+    :param ulrzf: the upper southwestern boundary flux concentration (above sh1)
+    :param s_race_con: the southern water races concentration
+    :param chb_con: the concentration for the constant head boundaries
+    :return:
+    """
+    cbc_cells = np.array(smt.model_where(smt.get_no_flow() < -0.1))
+    all_wells = get_race_data('NsmcBase')  # the model id parameter does not matter here as I only need the locations
+    all_wells.loc[all_wells.nsmc_type == 'llrzf', 'css'] = llrzf_con
+    all_wells.loc[all_wells.nsmc_type == 'ulrzf', 'css'] = ulrzf_con
+    all_wells.loc[all_wells.nsmc_type == 's_race', 'css'] = s_race_con
+    all_wells.loc[all_wells.nsmc_type == 'sriv', 'css'] = well_stream_con
+    all_wells.loc[all_wells.nsmc_type == 'n_race', 'css'] = wil_race_con
+    all_wells.loc[(all_wells.nsmc_type == 'nbndf') & (all_wells.col <= 150), 'css'] = upper_n_bnd_flux_con
+    all_wells.loc[(all_wells.nsmc_type == 'nbndf') & (all_wells.col > 150), 'css'] = lower_n_bnd_flux_con
 
-    raise NotImplementedError
+    num_recs = len(all_wells) + len(cbc_cells)
+    ssm_spd = np.recarray((num_recs), flopy.mt3d.Mt3dSsm.get_default_dtype())
+    k = np.concatenate((cbc_cells[:, 0], all_wells.loc[:, 'layer'].values))
+    i = np.concatenate((cbc_cells[:, 1], all_wells.loc[:, 'row'].values))
+    j = np.concatenate((cbc_cells[:, 2], all_wells.loc[:, 'col'].values))
+    itype = np.concatenate((np.repeat([1], len(cbc_cells)), np.repeat([2], all_wells.shape[0])))
+    css = np.concatenate((np.repeat([chb_con], len(cbc_cells)), all_wells.loc[:, 'css'].values))
+    for nm in ['k', 'i', 'j', 'itype', 'css']:
+        ssm_spd[nm] = eval(nm)
+    ssm_spd = pd.DataFrame(ssm_spd)
+
+    # remove all zero concentrations (should be fine)
+    ssm_spd = ssm_spd.loc[~np.isclose(ssm_spd.css, 0)] #todo confirm you do not need to specify the CHB cells
+    return ssm_spd.to_records(index=False)
 
 
 def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, cust_biwash=0.1, ash_tribs=0.35,
@@ -264,7 +301,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         okuku = ash_tribs
         makerikeri = ash_tribs
 
-    sft_spd = np.recarray((10, 3), flopy.mt3d.Mt3dSft.get_default_dtype())
+    sft_spd = np.recarray((10), flopy.mt3d.Mt3dSft.get_default_dtype())
     nodes = [
         # main inflows
         1,  # eyre inflow
@@ -295,37 +332,48 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
     }
     scons = [scon_dict[e] for e in nodes]
     sft_spd['node'] = nodes  # reach ids
-    sft_spd['isfbctype'] = 0  # set all to headwaters sites
+    sft_spd['isfbctyp'] = 0  # set all to headwaters sites
     sft_spd['cbcsf0'] = scons
 
     return sft_spd
 
 
-todos = {'m': None,
-         'mt3d_name': None,
-         'ssm_crch': None,
-         'ssm_stress_period_data': None}  # todo sort this out
+def get_default_mt3d_kwargs():
+    default_mt3d_dict = {
+        'adv_sov': 0,  # matches brioch
+        'adv_percel': 1,  # matcheds brioch
+        'btn_porsty': 1,  # modified to match brioch
+        'btn_scon': 0.1,  # modified to match brioch
+        'btn_nprs': 0,  # output timing (only at end)
+        'btn_timprs': None,  # not needed
+        'dsp_lon': 10,  # modified to match brioch
+        'dsp_trpt': 0.1,  # modified to match brioch
+        'dsp_trpv': 0.01,  # modified to match brioch
+        'nper': 1,  # from modflow model
+        'perlen': 7.3050E5,  # modified to match brioch's
+        'nstp': 1,  # modified to match briochs
+        'tsmult': 1,  # modified to match briochs
+        'ssflag': None,  # DO NOT SET
+        'dt0': 1,  # modified to match briochs
+        'mxstrn': 1000000,  # modified to match briochs
+        'ttsmult': 1.1,  # modified to match briochs
+        'ttsmax': 50,  # modified to match briochs
+        'gcg_isolve': 3,  # modified to match briochs
+        'gcg_inner': 500,  # modified to match briochs
+        'gcg_outer': 100  # modified to match briochs
+    }
+    return default_mt3d_dict
 
-default_mt3d_dict = {
-    'adv_sov': 0,  # matches brioch
-    'adv_percel': 1,  # matcheds brioch
-    'btn_porsty': 1,  # modified to match brioch
-    'btn_scon': 0.1,  # modified to match brioch
-    'btn_nprs': 0,  # todo
-    'btn_timprs': None,  # todo
-    'dsp_lon': 10,  # modified to match brioch
-    'dsp_trpt': 0.1,  # modified to match brioch
-    'dsp_trpv': 0.01,  # modified to match brioch
-    'nper': None,  # todo
-    'perlen': 7.3050E5,  # modified to match brioch's
-    'nstp': 1,  # modified to match briochs
-    'tsmult': 1,  # modified to match briochs
-    'ssflag': None,  # DO NOT SET
-    'dt0': 1,  # modified to match briochs
-    'mxstrn': 1000000,  # modified to match briochs
-    'ttsmult': 1.1,  # modified to match briochs
-    'ttsmax': 50,  # modified to match briochs
-    'gcg_isolve': 3,  # modified to match briochs
-    'gcg_inner': 500,  # modified to match briochs
-    'gcg_outer': 100  # modified to match briochs
-}
+
+if __name__ == '__main__':
+    from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import get_model
+    rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
+    mdt3d = create_mt3d(ftl_path= r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
+                        mt3d_name='test',
+                        mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d",
+                        ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
+                        ssm_stress_period_data={0:get_ssm_stress_period_data()},
+                        sft_spd={0:get_sft_stress_period_data()},
+                        **get_default_mt3d_kwargs())
+    mdt3d.write_input()
+    mdt3d.run_model()
