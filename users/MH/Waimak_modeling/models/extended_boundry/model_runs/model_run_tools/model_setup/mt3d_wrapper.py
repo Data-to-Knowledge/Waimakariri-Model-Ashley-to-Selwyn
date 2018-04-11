@@ -461,6 +461,10 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
         for file in files.loc[~idx]:
             os.remove(os.path.join(mt3d_ws,file))
 
+def setup_run_mt3d_mp(kwargs):
+    #todo add try/except loop
+    setup_run_mt3d(**kwargs)
+
 
 if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
@@ -472,7 +476,7 @@ if __name__ == '__main__':
         mdt3d = create_mt3d(
             ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version4",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version5",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},

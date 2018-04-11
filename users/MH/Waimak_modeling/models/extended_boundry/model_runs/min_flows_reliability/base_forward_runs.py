@@ -28,7 +28,7 @@ def setup_run_forward_run_mp(kwargs):
     try:
         name, success = setup_run_forward_run(**kwargs)
     except Exception as val:
-        name = kwargs['name']
+        name = '{}_{}'.format(kwargs['model_id'], kwargs['name'])
         success = format_exc().replace('\n', '')
     return name, success
 
@@ -36,7 +36,7 @@ def setup_run_forward_run_mp(kwargs):
 def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, pc5_well_reduction=False,
                           pc5_to_waimak_only=False, wil_eff=1, naturalised=False,
                           full_abs=False, pumping_well_scale=1, full_allo=False, org_efficency=None,
-                          org_pumping_wells=False, rm_ncarpet=True, super_gmp=False):
+                          org_pumping_wells=False, rm_ncarpet=True, super_gmp=False, write_ftl=False):
     """
     sets up and runs a forward run with a number of options
     :param model_id: which NSMC version to user (see mod_gns_model)
@@ -66,6 +66,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
     :param org_pumping_wells: if True use the model peiod wells if false use the 2014-2015 usage for the waimak wells
     :param rm_ncarpet: boolean if True remove the N carpet drains
     :param super_gmp: boolean if True run further GMP reductions for will area
+    :param write_ftl: boolean if True the model will write the FTL
     :return: (model name, convergence('convereged'/'did not converge'))
     """
 
@@ -102,7 +103,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
                           base_dir,
                           drain=drn,
                           safe_mode=False,
-                          mt3d_link=False,
+                          mt3d_link=write_ftl,
                           set_hdry=False)
     else:
         m = mod_gns_model(model_id,
@@ -112,7 +113,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
                           recharge={0: rch},
                           drain=drn,
                           safe_mode=False,
-                          mt3d_link=False,
+                          mt3d_link=write_ftl,
                           set_hdry=False)
 
     # below included for easy manipulation if needed
@@ -168,4 +169,4 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
         success = 'converged'
     else:
         success = 'did not converge'
-    return name, success
+    return '{}_{}'.format(model_id,name), success

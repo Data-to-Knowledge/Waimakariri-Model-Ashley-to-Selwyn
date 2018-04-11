@@ -9,7 +9,7 @@ from core import env
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.modpath_wrapper import \
     create_mp_slf, get_cbc, export_paths_to_shapefile
-from setup_reverse_modpath import particle_loc_from_grid
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.setup_reverse_modpath import particle_loc_from_grid
 import pandas as pd
 from glob import glob
 import os

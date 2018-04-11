@@ -391,6 +391,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
         wr = ['{}: {}\n'.format(e[0], e[1]) for e in pool_outputs]
         f.writelines(wr)
     print('{} runs completed in {} minutes'.format(len(runs), ((time.time() - t) / 60)))
+    return pool_outputs
 
 
 if __name__ == '__main__':
