@@ -141,7 +141,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              prsity=btn_porsty,
                              icbund=1,  # all cells active
                              sconc=btn_scon,
-                             cinact=-9999999,  # defualt
+                             cinact=-1,  # modified to match brioch's
                              thkmin=0.01,  # defualt
 
                              # printing flags 0 is not print
@@ -246,7 +246,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                                crntsf=1.0,
                                iprtxmd=0,
                                coldsf=0.0,  # inital concentrations in the stream network... should be fine at 0
-                               dispsf=0.0,
+                               dispsf=0.1,
                                nobssf=len(obs_sf),
                                obs_sf=obs_sf,  # I think this is the reach set up
                                sf_stress_period_data=sft_spd,
@@ -381,7 +381,7 @@ def get_default_mt3d_kwargs():
         'dsp_lon': 10,  # modified to match brioch
         'dsp_trpt': 0.1,  # modified to match brioch
         'dsp_trpv': 0.01,  # modified to match brioch
-        'nper': 0,  # modified to match brioch
+        'nper': 1,  # todo tried to modified to match brioch but didn't run so set back to 1
         'perlen': 7.3050E5,  # modified to match brioch's
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
@@ -465,13 +465,14 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
 if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
         get_model
+    # there were some differences which look like they could have been due to a sft diffusion problem, trying again
     testtype = 0
     if testtype==0:
         rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
         mdt3d = create_mt3d(
             ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version3",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version4",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},
