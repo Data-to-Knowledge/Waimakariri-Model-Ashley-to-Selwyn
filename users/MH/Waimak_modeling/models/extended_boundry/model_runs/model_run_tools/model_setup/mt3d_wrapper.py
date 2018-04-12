@@ -15,6 +15,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_race_data
 import pandas as pd
 from warnings import warn
+from traceback import format_exc
 
 
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
@@ -206,13 +207,13 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              )
     # DSP
     dsp = flopy.mt3d.Mt3dDsp(mt3d,
-                             al=dsp_lon,
-                             trpt=dsp_trpt,
-                             trpv=dsp_trpv,
-                             dmcoef=0,
+                             al=np.full((smt.layers,smt.rows,smt.cols),dsp_lon),
+                             trpt=np.full((smt.layers),dsp_trpt),
+                             trpv=np.full((smt.layers),dsp_trpv),
+                             dmcoef=smt.get_empty_model_grid(True),
                              # default don't think I need as only if multidiff True
                              extension='dsp',
-                             multiDiff=False,  # only one component
+                             multiDiff=True,  # only one component
                              unitnumber=504)
 
     # SSM
@@ -316,7 +317,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
     ssm_spd = pd.DataFrame(ssm_spd)
 
     # remove all zero concentrations (should be fine)
-    ssm_spd = ssm_spd.loc[~np.isclose(ssm_spd.css, 0)]  # todo confirm you do not need to specify the CHB cells
+    ssm_spd = ssm_spd.loc[(~np.isclose(ssm_spd.css, 0) | (ssm_spd.itype==1))]  # todo confirm you do not need to specify the CHB cells
     return ssm_spd.to_records(index=False)
 
 
@@ -386,10 +387,10 @@ def get_default_mt3d_kwargs():
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
         'ssflag': None,  # DO NOT SET
-        'dt0': 1,  # modified to match briochs
-        'mxstrn': 1000000,  # modified to match briochs
+        'dt0': 1e5,  #todo used to be 1 trying to get failure# modified to match briochs
+        'mxstrn': 10000000,  # modified to match briochs
         'ttsmult': 1.1,  # modified to match briochs
-        'ttsmax': 50,  # modified to match briochs
+        'ttsmax': 2e5, #todo used to be 50 trying to get fail  # modified to match briochs
         'gcg_isolve': 3,  # modified to match briochs
         'gcg_inner': 500,  # modified to match briochs
         'gcg_outer': 100  # modified to match briochs
@@ -462,9 +463,13 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
             os.remove(os.path.join(mt3d_ws,file))
 
 def setup_run_mt3d_mp(kwargs):
-    #todo add try/except loop
-    setup_run_mt3d(**kwargs)
-
+    name = kwargs['name']
+    try:
+        setup_run_mt3d(**kwargs)
+        success = 'may have run'
+    except:
+        success = format_exc().replace('\n', '')
+    return name, success
 
 if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
@@ -476,7 +481,7 @@ if __name__ == '__main__':
         mdt3d = create_mt3d(
             ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version5",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version7",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},

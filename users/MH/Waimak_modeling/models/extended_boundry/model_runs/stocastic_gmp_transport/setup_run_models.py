@@ -24,7 +24,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.nsmc_exploration_results.c
     make_ucn_netcd
 
 
-def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):  # todo debug
+def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
     if not os.path.exists(ftl_dir):
         os.makedirs(ftl_dir)
 
@@ -54,6 +54,10 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):  # todo de
     outputs = run_forward_runs(runs, base_modelling_dir, 'runs to set up a pc5 mt3d_run')
     outputs = pd.DataFrame(outputs, columns=['name', 'success'])
     successful_runs = outputs.loc[outputs.success == 'converged', 'name']
+    with open(os.path.join(base_modelling_dir, 'convergence_record.txt'), 'w') as f:
+        f.writelines(['{}\n'.format(e) for e in successful_runs])
+    shutil.copyfile(os.path.join(base_modelling_dir, 'convergence_record.txt'),
+                    os.path.join(ftl_dir, 'convergence_record.txt'))
     for nm in successful_runs:
         shutil.copyfile(os.path.join(base_modelling_dir, nm, '{}.ftl'.format(nm)),
                         os.path.join(ftl_dir, '{}.ftl'.format(nm)))
