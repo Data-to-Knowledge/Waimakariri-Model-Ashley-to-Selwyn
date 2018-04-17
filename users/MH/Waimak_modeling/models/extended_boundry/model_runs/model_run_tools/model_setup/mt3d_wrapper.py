@@ -28,8 +28,6 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 # and must match flow model if it is not SS
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,  # these can be either value of list of values
                 gcg_isolve=1, gcg_inner=50, gcg_outer=1):
-
-
     """
 
     :param ftl_path: path to the FTL file to use with MT3D
@@ -140,7 +138,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              lunit='M',
                              munit='G',
                              prsity=btn_porsty,
-                             icbund=1,  # all cells active
+                             icbund=smt.get_no_flow(),  # all cells active
                              sconc=btn_scon,
                              cinact=-1,  # modified to match brioch's
                              thkmin=0.01,  # defualt
@@ -207,9 +205,9 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              )
     # DSP
     dsp = flopy.mt3d.Mt3dDsp(mt3d,
-                             al=np.full((smt.layers,smt.rows,smt.cols),dsp_lon),
-                             trpt=np.full((smt.layers),dsp_trpt),
-                             trpv=np.full((smt.layers),dsp_trpv),
+                             al=np.full((smt.layers, smt.rows, smt.cols), dsp_lon),
+                             trpt=np.full((smt.layers), dsp_trpt),
+                             trpv=np.full((smt.layers), dsp_trpv),
                              dmcoef=smt.get_empty_model_grid(True),
                              # default don't think I need as only if multidiff True
                              extension='dsp',
@@ -317,7 +315,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
     ssm_spd = pd.DataFrame(ssm_spd)
 
     # remove all zero concentrations (should be fine)
-    ssm_spd = ssm_spd.loc[(~np.isclose(ssm_spd.css, 0) | (ssm_spd.itype==1))]  # todo confirm you do not need to specify the CHB cells
+    ssm_spd = ssm_spd.loc[(~np.isclose(ssm_spd.css, 0) | (ssm_spd.itype == 1))]
     return ssm_spd.to_records(index=False)
 
 
@@ -375,7 +373,7 @@ def get_default_mt3d_kwargs():
     default_mt3d_dict = {
         'adv_sov': 0,  # matches brioch
         'adv_percel': 1,  # matcheds brioch
-        'btn_porsty': 1,  # modified to match brioch
+        'btn_porsty': 0.3,  # modified to match brioch
         'btn_scon': 0.1,  # modified to match brioch
         'btn_nprs': 0,  # output timing (only at end)
         'btn_timprs': None,  # not needed
@@ -387,10 +385,10 @@ def get_default_mt3d_kwargs():
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
         'ssflag': None,  # DO NOT SET
-        'dt0': 1e5,  #todo used to be 1 trying to get failure# modified to match briochs
+        'dt0': 1,  # modified to match briochs #todo I may be able to increase this and reduce run time
         'mxstrn': 10000000,  # modified to match briochs
         'ttsmult': 1.1,  # modified to match briochs
-        'ttsmax': 2e5, #todo used to be 50 trying to get fail  # modified to match briochs
+        'ttsmax': 50,  # modified to match briochs # todo I may be able to increase this and reduce run time
         'gcg_isolve': 3,  # modified to match briochs
         'gcg_inner': 500,  # modified to match briochs
         'gcg_outer': 100  # modified to match briochs
@@ -447,20 +445,23 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                        adv_sov=adv_sov, adv_percel=adv_percel,
                        btn_porsty=btn_porsty, btn_scon=btn_scon, btn_nprs=btn_nprs, btn_timprs=btn_timprs,
                        dsp_lon=dsp_lon, dsp_trpt=dsp_trpt, dsp_trpv=dsp_trpv,
-                       nper=nper, perlen=perlen, nstp=nstp, tsmult=tsmult,  # these can be either value of list of values
+                       nper=nper, perlen=perlen, nstp=nstp, tsmult=tsmult,
+                       # these can be either value of list of values
                        # and must match flow model if it is not SS
                        ssflag=ssflag, dt0=dt0, mxstrn=mxstrn, ttsmult=ttsmult, ttsmax=ttsmax,
                        # these can be either value of list of values
                        gcg_isolve=gcg_isolve, gcg_inner=gcg_inner, gcg_outer=gcg_outer)
     mt3d.write_input()
     mt3d.run_model(silent=True)
-    if reduce_str_obs: # todo test carefully! and on a copy
-        reduce_sobs(os.path.join(mt3d_ws,'{}.sobs'.format(mt3d_name)))
+    if reduce_str_obs:
+        reduce_sobs(os.path.join(mt3d_ws, '{}.sobs'.format(mt3d_name)))
     if simplify:
         files = pd.Series(os.listdir(mt3d_ws)).str.lower()
-        idx = files.str.contains('ucn') | files.str.contains('list') | files.str.contains('mas')| files.str.contains('sobs')
-        for file in files.loc[~idx]:
-            os.remove(os.path.join(mt3d_ws,file))
+        idx = files.str.contains('ucn') | files.str.contains('list') | files.str.contains('mas') | files.str.contains(
+            'sobs')
+        for _file in files.loc[~idx]:
+            os.remove(os.path.join(mt3d_ws, _file))
+
 
 def setup_run_mt3d_mp(kwargs):
     name = kwargs['name']
@@ -471,17 +472,19 @@ def setup_run_mt3d_mp(kwargs):
         success = format_exc().replace('\n', '')
     return name, success
 
+
 if __name__ == '__main__':
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
         get_model
+
     # there were some differences which look like they could have been due to a sft diffusion problem, trying again
     testtype = 0
-    if testtype==0:
+    if testtype == 0:
         rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
         mdt3d = create_mt3d(
             ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_version7",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_fix_porocity",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},

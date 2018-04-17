@@ -17,11 +17,11 @@ import pandas as pd
 
 def get_current_pathway_n(mode, conservative_zones):
     if mode == '50th':
-        private_key = '50%_CP_con' #todo change the key so that PA N is not added (I'll add it below) ask zeb
+        private_key = '50%_gmp_con'
         wdc_key = '50%_gmp_con'
         stream_key = 'Median Current Pathways'
     elif mode == '95th':
-        private_key = '95%_CP_con'
+        private_key = '95%_gmp_con'
         wdc_key = '95%_gmp_con'
         stream_key = '95th percentile Current Pathways'
     else:
@@ -32,14 +32,14 @@ def get_current_pathway_n(mode, conservative_zones):
     data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
                          r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
                          r'results wells summary.xlsx',
-                         sheetname='CP WDC', index_col=0)
+                         sheetname='GMP WDC', index_col=0)
     for key in wdc_wells:
         outdata[key] = data.loc[key, wdc_key]
 
     data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
                          r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
                          r'results wells summary.xlsx',
-                         sheetname='CP private', index_col=0)
+                         sheetname='GMP private', index_col=0)
     for key in private_wells:
         outdata[key] = data.loc[key, private_key]
 
@@ -53,7 +53,7 @@ def get_current_pathway_n(mode, conservative_zones):
 
     # add PA n load increases
     pa_n = get_pa_reductions(conservative_zones)
-    for key in outdata.keys():
+    for key in set(outdata.keys())-streams:  # streams are hackish because I don't have the data avalible
         outdata[key] += outdata[key]*pa_n[key]/100
 
     return outdata
@@ -365,7 +365,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     # include waimak target of 0.1 as given.
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    current_paths = get_current_pathway_n(mode)
+    current_paths = get_current_pathway_n(mode, conservative_shp)
     base_shp_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results"
                             r"\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons")
 
