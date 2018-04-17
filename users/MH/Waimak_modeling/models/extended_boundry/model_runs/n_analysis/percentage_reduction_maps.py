@@ -53,8 +53,8 @@ def get_current_pathway_n(mode, conservative_zones):
 
     # add PA n load increases
     pa_n = get_pa_reductions(conservative_zones)
-    for key in set(outdata.keys())-streams:  # streams are hackish because I don't have the data avalible
-        outdata[key] += outdata[key]*pa_n[key]/100
+    for key in set(outdata.keys()) - streams:  # streams are hackish because I don't have the data avalible
+        outdata[key] += outdata[key] * pa_n[key] / 100
 
     return outdata
 
@@ -81,22 +81,33 @@ def get_pa_reductions(conservative_zones):
         wdc_path = env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_"
             r"va\n_results\wdc_wells_90\pa_rules_wdc_wells_90\load_overviews_with_paN.csv")
+    elif conservative_zones == 'use_mix':
+        wdc_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
+                           r"_bd_va\n_results\wdc_use_mix\pa_rules_wdc_use_mix\load_overviews_with_paN.csv")
     else:
         raise NotImplementedError('conservitive zones not implemented: {}'.format(conservative_zones))
+
     data = pd.read_csv(wdc_path, index_col=0)
     data.loc[:, 'pa_increase'] = data.loc[:, 'total_pa_N_kg'] / data.loc[:, 'gmp_nload_kg'] * 100
     for key in wdc_wells:
-        outdata[key] = data.loc[key.replace('wdc_',''), 'pa_increase']
+        outdata[key] = data.loc[key.replace('wdc_', ''), 'pa_increase']
 
     # private wells
-    if conservative_zones:
+    if conservative_zones == 'conservative':
         private_path = env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_"
             r"bd_va\n_results\private_wells\pa_rules_private_wells\load_overviews_with_paN.csv")
-    else:
+    elif conservative_zones == 'permissive':
         private_path = env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
             r"_bd_va\n_results\private_wells_90\pa_rules_private_wells_90\load_overviews_with_paN.csv")
+    elif conservative_zones == 'use_mix':
+        private_path = env.sci(
+            r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
+            r"_bd_va\n_results\private_wells_90\pa_rules_private_wells_90\load_overviews_with_paN.csv")
+    else:
+        raise NotImplementedError('conservitive zones not implemented: {}'.format(conservative_zones))
+
     data = pd.read_csv(private_path, index_col=0)
     data.loc[:, 'pa_increase'] = data.loc[:, 'total_pa_N_kg'] / data.loc[:, 'gmp_nload_kg'] * 100
     for key in private_wells:
@@ -291,7 +302,7 @@ def gen_stream_targets(scenario, stream_none=False):
         outdata.update({'cam_bramleys_s': 1.5,
                         'courtenay_kaiapoi_s': 3.1,
                         'cust_skewbridge': 3.8,
-                        'kaiapoi_harpers_s': 6.9,  # current measured is 9.4, set to national bottom line
+                        'kaiapoi_harpers_s': 3.8,  # current measured is 9.4, set to national bottom line
                         'kaiapoi_island_s': 5.4,
                         'ohoka_island_s': 4.5})
 
@@ -337,7 +348,7 @@ def gen_stream_targets(scenario, stream_none=False):
 
     return outdata
 
-# todo potentially make a mixed zone thing.
+
 def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,
                                mar_percentage=0, pc5_pa_rules=False, conservative_shp='conservative',
                                interzone_target=None, include_interzone=False, save_reason=True):
@@ -384,6 +395,8 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         wdc_dir = os.path.join(base_shp_path, 'wdc_wells')
     elif conservative_shp == 'permissive':
         wdc_dir = os.path.join(base_shp_path, 'wdc_wells_90_named_right')
+    elif conservative_shp == 'use_mix':
+        wdc_dir = os.path.join(base_shp_path, 'wdc_use_mix')  # a mix of the 90 for most zones unless serve > 1000 ppl
     else:
         raise NotImplementedError('conservitive shape not implemented: {}'.format(conservative_shp))
 
@@ -399,9 +412,11 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     wdc_reductions = np.nanmax(np.concatenate(wdc_reductions, axis=0), axis=0)
 
     # private wells
-    if conservative_shp=='conservative':
+    if conservative_shp == 'conservative':
         private_dir = os.path.join(base_shp_path, 'private_wells')
-    elif conservative_shp=='permissive':
+    elif conservative_shp == 'permissive':
+        private_dir = os.path.join(base_shp_path, 'private_wells_90_named_right')
+    elif conservative_shp == 'use_mix':
         private_dir = os.path.join(base_shp_path, 'private_wells_90_named_right')
     else:
         raise NotImplementedError('conservitive shape not implemented: {}'.format(conservative_shp))

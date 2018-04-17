@@ -380,7 +380,7 @@ def get_default_mt3d_kwargs():
         'dsp_lon': 10,  # modified to match brioch
         'dsp_trpt': 0.1,  # modified to match brioch
         'dsp_trpv': 0.01,  # modified to match brioch
-        'nper': 1,  # todo tried to modified to match brioch but didn't run so set back to 1
+        'nper': 1,  #  tried to modified to match brioch but didn't run so set back to 1
         'perlen': 7.3050E5,  # modified to match brioch's
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
@@ -390,8 +390,8 @@ def get_default_mt3d_kwargs():
         'ttsmult': 1.1,  # modified to match briochs
         'ttsmax': 50,  # modified to match briochs # todo I may be able to increase this and reduce run time
         'gcg_isolve': 3,  # modified to match briochs
-        'gcg_inner': 500,  # modified to match briochs
-        'gcg_outer': 100  # modified to match briochs
+        'gcg_inner': 5,#TODO 500,  # modified to match briochs
+        'gcg_outer': 1#TODO 100  # modified to match briochs
     }
     return default_mt3d_dict
 
@@ -462,12 +462,23 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
         for _file in files.loc[~idx]:
             os.remove(os.path.join(mt3d_ws, _file))
 
+    conv = mt3d_converged(os.path.join(mt3d_ws, '{}.list'.format(mt3d_name)))
+    return conv
+
+def mt3d_converged(list_path):
+    with open(list_path) as f:
+        lines = f.readlines()
+    converged = ' | 3 D | END OF MODEL OUTPUT\n' in lines
+    return converged
 
 def setup_run_mt3d_mp(kwargs):
     name = kwargs['name']
     try:
-        setup_run_mt3d(**kwargs)
-        success = 'may have run'
+        conv = setup_run_mt3d(**kwargs)
+        if conv:
+            success = 'converged'
+        else:
+            success = 'did not converge'
     except:
         success = format_exc().replace('\n', '')
     return name, success
@@ -484,7 +495,7 @@ if __name__ == '__main__':
         mdt3d = create_mt3d(
             ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_fix_porocity",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_breakit",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},

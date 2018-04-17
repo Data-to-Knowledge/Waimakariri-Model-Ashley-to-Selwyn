@@ -63,7 +63,7 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
                         os.path.join(ftl_dir, '{}.ftl'.format(nm)))
 
 
-def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd):
+def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd, dt0=None, ttsmax=None):
     runs = []
     ftl_paths = glob(os.path.join(ftl_repo, '*.ftl'))
     for ftl_path in ftl_paths:
@@ -78,6 +78,12 @@ def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_da
                                     'safe_mode': False,
                                     'reduce_str_obs': True,
                                     'simplify': False})
+        if dt0 is not None:
+            default_mt3d_kwargs['dt0'] = dt0
+        if ttsmax is not None:
+            default_mt3d_kwargs['ttsmax'] = ttsmax
+
+        runs.append(default_mt3d_kwargs)
 
     t = time.time()
     multiprocessing.log_to_stderr(logging.DEBUG)
@@ -110,8 +116,19 @@ def extract_data(base_mt3d_dir, outfile):
 
 
 if __name__ == '__main__':
+    ftl_repo = r"K:\mh_modeling\pc580_ftls"
     setup_ftls = True
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
                                  r"D:\mh_waimak_models\base_for_pc580_ftls",
-                                 r"K:\mh_modeling\pc580_ftls")
+                                 ftl_repo)
+    run_mt3d = True
+    if run_mt3d: #todo test
+        ssm_crch = None  # todo
+        ssm_spd = get_ssm_stress_period_data()
+        sft_spd = get_sft_stress_period_data()
+        setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d",
+                             ftl_repo=ftl_repo,
+                             ssm_crch={0: ssm_crch},
+                             ssm_stress_period_data={0: ssm_spd},
+                             sft_spd={0: sft_spd})

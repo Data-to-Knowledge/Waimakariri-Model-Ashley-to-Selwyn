@@ -6,7 +6,8 @@ Date Created: 17/04/2018 2:10 PM
 
 if __name__ == '__main__':
     import arcpy
-arcpy.env.workspace = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_excl_interzone_3scen"
+
+arcpy.env.workspace = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_use_zones_excl_interzone_3scen"
 import os
 
 workspace = arcpy.env.workspace
