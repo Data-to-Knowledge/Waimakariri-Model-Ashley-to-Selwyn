@@ -10,7 +10,7 @@ import itertools
 from percentage_reduction_maps import gen_stream_targets, gen_well_targets,gen_waimak_targets,calc_per_reduction_rasters
 
 
-if __name__ == '__main__': #todo debug/run
+if __name__ == '__main__':
     outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_res"
              r"ults\n_reductions_excl_interzone_3scen")
 
@@ -31,9 +31,9 @@ if __name__ == '__main__': #todo debug/run
         else:
             con_name = 'with_90_shapes'
         if mar:
-            mar_name = 'with_mar_pc5pa00'
+            mar_name = 'with_pc5pa00'
         else:
-            mar_name = 'without_mar_pc5pa00'
+            mar_name = 'without_pc5pa00'
 
         name = '{}_load_{}_{}_{}'.format(scen,mode,con_name,mar_name)
         # all receptors
@@ -41,7 +41,7 @@ if __name__ == '__main__': #todo debug/run
         stream_targets = gen_stream_targets(scen)
         waimak_target = gen_waimak_targets(scen)
         if mar:
-            mar_per = 40 # assume blanket 40% reduction for all streams (ex. cam)
+            mar_per = 0  # assume no mar
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=waimak_target,
@@ -53,7 +53,7 @@ if __name__ == '__main__': #todo debug/run
         stream_targets = gen_stream_targets(scen)
         waimak_target = 0
         if mar:
-            mar_per = 40 # assume blanket 40% reduction for all streams (ex. cam)
+            mar_per = 0  # assume no mar
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_stream_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,
@@ -65,7 +65,7 @@ if __name__ == '__main__': #todo debug/run
         stream_targets = gen_stream_targets(scen, True)
         waimak_target = 0
         if mar:
-            mar_per = 40 # assume blanket 40% reduction for all streams (ex. cam)
+            mar_per = 0  # assume no mar
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_private_wells_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,
@@ -77,7 +77,7 @@ if __name__ == '__main__': #todo debug/run
         stream_targets = gen_stream_targets(scen, True)
         waimak_target = 0
         if mar:
-            mar_per = 40 # assume blanket 40% reduction for all streams (ex. cam)
+            mar_per = 0  # assume no mar
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_wdc_wells_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,

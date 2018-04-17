@@ -110,6 +110,8 @@ def extract_data(base_mt3d_dir, outfile):
 
 
 if __name__ == '__main__':
-    setup_pc5_ftl_repository(['NsmcBase', 'StrOpt'],
-                             r"C:\Users\MattH\Downloads\test_ftl",
-                             r"C:\Users\MattH\Downloads\test_ftl_gen_base_models")
+    setup_ftls = True
+    if setup_ftls:
+        setup_pc5_ftl_repository(get_stocastic_set(),
+                                 r"D:\mh_waimak_models\base_for_pc580_ftls",
+                                 r"K:\mh_modeling\pc580_ftls")

@@ -59,7 +59,7 @@ def get_current_pathway_n(mode, conservative_zones):
     return outdata
 
 
-def get_pa_reductions(conservative_zones=True):
+def get_pa_reductions(conservative_zones):
     # get teh pa reductions to apply to the below script. need to integrate the conservative and non conservitive zones
     # pull from my PA load scripts
     outdata = {}
@@ -74,13 +74,15 @@ def get_pa_reductions(conservative_zones=True):
         outdata[key] = data.loc[key, 'pa_increase']
 
     # wdc wells
-    if conservative_zones:
+    if conservative_zones == 'conservative':
         wdc_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd"
                            r"_va\n_results\wdc_wells\pa_rules_wdc_wells\load_overviews_with_paN.csv")
-    else:
+    elif conservative_zones == 'permissive':
         wdc_path = env.sci(
             r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_"
             r"va\n_results\wdc_wells_90\pa_rules_wdc_wells_90\load_overviews_with_paN.csv")
+    else:
+        raise NotImplementedError('conservitive zones not implemented: {}'.format(conservative_zones))
     data = pd.read_csv(wdc_path, index_col=0)
     data.loc[:, 'pa_increase'] = data.loc[:, 'total_pa_N_kg'] / data.loc[:, 'gmp_nload_kg'] * 100
     for key in wdc_wells:
@@ -335,9 +337,9 @@ def gen_stream_targets(scenario, stream_none=False):
 
     return outdata
 
-
+# todo potentially make a mixed zone thing.
 def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,
-                               mar_percentage=0, pc5_pa_rules=False, conservative_shp=True,
+                               mar_percentage=0, pc5_pa_rules=False, conservative_shp='conservative',
                                interzone_target=None, include_interzone=False, save_reason=True):
     """
     pull togeather the different current pathway results at 95th percentile and calculate reduction rasters (from 95th),
@@ -378,10 +380,12 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         interzone_reduction = smt.get_empty_model_grid() * np.nan
 
     # wdc wells
-    if conservative_shp:
+    if conservative_shp == 'conservative':
         wdc_dir = os.path.join(base_shp_path, 'wdc_wells')
-    else:
+    elif conservative_shp == 'permissive':
         wdc_dir = os.path.join(base_shp_path, 'wdc_wells_90_named_right')
+    else:
+        raise NotImplementedError('conservitive shape not implemented: {}'.format(conservative_shp))
 
     wdc_reductions = []
     for well in wdc_wells:
@@ -395,10 +399,12 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     wdc_reductions = np.nanmax(np.concatenate(wdc_reductions, axis=0), axis=0)
 
     # private wells
-    if conservative_shp:
+    if conservative_shp=='conservative':
         private_dir = os.path.join(base_shp_path, 'private_wells')
-    else:
+    elif conservative_shp=='permissive':
         private_dir = os.path.join(base_shp_path, 'private_wells_90_named_right')
+    else:
+        raise NotImplementedError('conservitive shape not implemented: {}'.format(conservative_shp))
 
     private_reductions = []
     for well in private_wells:
