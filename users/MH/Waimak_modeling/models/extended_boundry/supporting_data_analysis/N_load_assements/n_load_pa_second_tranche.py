@@ -49,9 +49,18 @@ if __name__ == '__main__':
         run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'interzone'),
                             outdir=os.path.join(base_outdir, 'interzone'),
                             name='interzone')
-
-    if True:
         # springfed streams
         run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'second_tranche'),
                             outdir=os.path.join(base_outdir, 'nwaimak_springfeds'),
                             name='nwaimak_springfeds') #spring fed streams
+
+    if True:
+        # wdc_wells 90 perentage (smaller area)
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'wdc_wells_90_named_right'),
+                            outdir=os.path.join(base_outdir, 'wdc_wells_90'),
+                            name='wdc_wells_90') #spring fed streams
+
+        # private wells 90 perentage (smaller area)
+        run_nload_pa_stuffs(shp_dir=os.path.join(base_shp_dir, 'private_wells_90_named_right'),
+                            outdir=os.path.join(base_outdir, 'private_wells_90'),
+                            name='private_wells_90') #spring fed streams
