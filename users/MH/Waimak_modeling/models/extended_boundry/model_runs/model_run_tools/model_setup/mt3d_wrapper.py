@@ -452,7 +452,7 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                        # these can be either value of list of values
                        gcg_isolve=gcg_isolve, gcg_inner=gcg_inner, gcg_outer=gcg_outer)
     mt3d.write_input()
-    mt3d.run_model(silent=True)
+    mt3d.run_model(silent=False) #todo after debug set silent to True?
     if reduce_str_obs:
         reduce_sobs(os.path.join(mt3d_ws, '{}.sobs'.format(mt3d_name)))
     if simplify:
@@ -472,7 +472,7 @@ def mt3d_converged(list_path):
     return converged
 
 def setup_run_mt3d_mp(kwargs):
-    name = kwargs['name']
+    name = kwargs['mt3d_name']
     try:
         conv = setup_run_mt3d(**kwargs)
         if conv:
@@ -489,7 +489,7 @@ if __name__ == '__main__':
         get_model
 
     # there were some differences which look like they could have been due to a sft diffusion problem, trying again
-    testtype = 0
+    testtype = 1
     if testtype == 0:
         rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
         mdt3d = create_mt3d(

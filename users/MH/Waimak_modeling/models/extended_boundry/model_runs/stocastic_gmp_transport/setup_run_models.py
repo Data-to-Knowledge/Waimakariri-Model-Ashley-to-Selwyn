@@ -64,6 +64,8 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
 
 
 def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd, dt0=None, ttsmax=None):
+    if not os.path.exists(base_mt3d_dir):
+        os.makedirs(base_mt3d_dir)
     runs = []
     ftl_paths = glob(os.path.join(ftl_repo, '*.ftl'))
     for ftl_path in ftl_paths:
