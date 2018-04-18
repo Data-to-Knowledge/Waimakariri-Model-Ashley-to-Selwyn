@@ -7,24 +7,25 @@ Date Created: 17/04/2018 11:17 AM
 from __future__ import division
 from core import env
 import itertools
-from percentage_reduction_maps import gen_stream_targets, gen_well_targets,gen_waimak_targets,calc_per_reduction_rasters
+from percentage_reduction_maps import gen_stream_targets, gen_well_targets,gen_waimak_targets,\
+    calc_per_reduction_rasters, get_mode
 
 
 if __name__ == '__main__':
     outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_res"
-             r"ults\n_reductions_use_zones_excl_interzone_3scen")
+             r"ults\n_reductions_use_zones_use_scens")
 
     # 3 main scenarios
     scenarios = ['least_pain', 'middle_option', 'most_gain']
     # with and without and pc5pa
     mar_pc5pa = [True, False]
     # with mode  = 50th and 95th
-    modes = ['50th', '95th']
     # with and without conservative things
     conservative_shps = ['use_mix']
 
-    for scen, mar, mode, conserv in itertools.product(scenarios,mar_pc5pa, modes, conservative_shps):
-        print(scen, mar, mode, conserv)
+    for scen, mar, conserv in itertools.product(scenarios,mar_pc5pa, conservative_shps):
+        print(scen, mar, conserv)
+        mode = get_mode(scen)
 
         con_name = conserv
         if mar:
@@ -32,7 +33,7 @@ if __name__ == '__main__':
         else:
             mar_name = 'without_pc5pa00'
 
-        name = '{}_load_{}_{}_{}'.format(scen,mode,con_name,mar_name)
+        name = '{}_{}_{}'.format(scen,con_name,mar_name)
         # all receptors
         well_targets = gen_well_targets(scen)
         stream_targets = gen_stream_targets(scen)
