@@ -129,7 +129,7 @@ def extract_data(base_mt3d_dir, outfile):
 
 if __name__ == '__main__':
     ftl_repo = r"K:\mh_modeling\pc580_ftls"
-    setup_ftls = True
+    setup_ftls = False
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
                                  ftl_repo,

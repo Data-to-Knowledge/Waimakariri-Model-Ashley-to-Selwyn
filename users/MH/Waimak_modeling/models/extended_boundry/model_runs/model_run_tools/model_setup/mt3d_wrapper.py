@@ -91,6 +91,11 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     :return: mt3d instance
     """
     # todo add the parameters that are missing
+
+    # convert from pd.dataframe to record arrays as record arrays cannot be handled by pickle
+    ssm_stress_period_data = {key: val.to_records(index=False) for key, val in ssm_stress_period_data.items()}
+    sft_spd = {key: val.to_records(index=False) for key, val in sft_spd.items()}
+
     # create a general MT3d class instance to run most of our mt3d models
 
     if obs_sf is not None:
@@ -319,7 +324,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
 
     # remove all zero concentrations (should be fine)
     ssm_spd = ssm_spd.loc[(~np.isclose(ssm_spd.css, 0) | (ssm_spd.itype == 1))]
-    return ssm_spd.to_records(index=False)
+    return ssm_spd
 
 
 def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, cust_biwash=0.1, ash_tribs=0.35,
@@ -369,7 +374,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
     sft_spd['isfbctyp'] = 0  # set all to headwaters sites
     sft_spd['cbcsf0'] = scons
 
-    return sft_spd
+    return pd.DataFrame(sft_spd)
 
 
 def get_default_mt3d_kwargs():
@@ -455,7 +460,7 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                        # these can be either value of list of values
                        gcg_isolve=gcg_isolve, gcg_inner=gcg_inner, gcg_outer=gcg_outer)
     mt3d.write_input()
-    mt3d.run_model(silent=False) #todo after debug set silent to True?
+    mt3d.run_model(silent=True)
     if reduce_str_obs:
         reduce_sobs(os.path.join(mt3d_ws, '{}.sobs'.format(mt3d_name)))
     if simplify:
