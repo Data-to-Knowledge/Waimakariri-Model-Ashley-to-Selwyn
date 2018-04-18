@@ -598,7 +598,8 @@ class ModelTools(object):
         :param area_statistics: boolean if true first burn the raster at a finer detail and do some statistics to
                                 group up
         :param fine_spacing: int m of spacing to burn the raster to (limits the polygon overlay),
-                             only used if area_statistics is True
+                             only used if area_statistics is True.  fine spacing will be adusted to be a whole factor of
+                             self.grid_space
         :param resample_method: key to define resampling options
                                 near:
                                     nearest neighbour resampling (default, fastest algorithm, worst interpolation
@@ -639,7 +640,9 @@ class ModelTools(object):
             os.makedirs(self.temp_file_dir)
 
         if area_statistics:
-            assert self.grid_space % fine_spacing == 0, 'fine spacing {} must be an ' \
+            fs = np.array(list(factors(self.grid_space)))
+            fine_spacing = fs[np.argmin(np.abs(fs-fine_spacing))]
+            assert self.grid_space % fine_spacing == 0, 'should not get here: fine spacing {} must be an ' \
                                                         'even factor of gridspacing: {}'.format(fine_spacing,
                                                                                                 self.grid_space)
             trans = self.grid_space/fine_spacing
@@ -948,3 +951,8 @@ class ModelTools(object):
             outdata = outdata < return_min
 
         return outdata
+
+
+def factors(n):
+    return set(reduce(list.__add__,
+                ([i, n//i] for i in range(1, int(pow(n, 0.5) + 1)) if n % i == 0)))

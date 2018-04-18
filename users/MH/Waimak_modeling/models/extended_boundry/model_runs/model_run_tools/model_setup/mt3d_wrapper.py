@@ -385,13 +385,13 @@ def get_default_mt3d_kwargs():
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
         'ssflag': None,  # DO NOT SET
-        'dt0': 1,  # modified to match briochs #todo I may be able to increase this and reduce run time
+        'dt0': 1,  # modified to match briochs # I may be able to increase this and reduce run time
         'mxstrn': 10000000,  # modified to match briochs
         'ttsmult': 1.1,  # modified to match briochs
-        'ttsmax': 50,  # modified to match briochs # todo I may be able to increase this and reduce run time
+        'ttsmax': 50,  # modified to match briochs # I may be able to increase this and reduce run time
         'gcg_isolve': 3,  # modified to match briochs
-        'gcg_inner': 5,#TODO 500,  # modified to match briochs
-        'gcg_outer': 1#TODO 100  # modified to match briochs
+        'gcg_inner': 500,  # modified to match briochs
+        'gcg_outer': 100  # modified to match briochs
     }
     return default_mt3d_dict
 
@@ -426,7 +426,7 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     :param simplify: boolean if True only the list, sobs, mas, ucn files saved
     :return:
     """
-
+    print('#### starting model: {} ####'.format(mt3d_name))
     if os.path.exists(mt3d_ws):
         if safe_mode:
             cont = input(

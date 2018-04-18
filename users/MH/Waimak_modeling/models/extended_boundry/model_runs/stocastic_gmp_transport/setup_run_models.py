@@ -22,6 +22,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     setup_run_mt3d_mp, get_default_mt3d_kwargs, get_sft_stress_period_data, get_ssm_stress_period_data
 from users.MH.Waimak_modeling.models.extended_boundry.nsmc_exploration_results.combine_nsmc_results.ucn_netcdf import \
     make_ucn_netcd
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import get_gmp_con_layer
 
 
 def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
@@ -96,7 +97,7 @@ def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_da
     pool_outputs = results.get()
     pool.close()  # no more tasks
     pool.join()
-    with open(os.path.join(base_mt3d_dir, 'readme.txt'), 'w') as f:
+    with open(os.path.join(base_mt3d_dir, 'status.txt'), 'w') as f:
         f.writelines(['{}\n'.format(e) for e in pool_outputs])
 
 
@@ -116,18 +117,20 @@ def extract_data(base_mt3d_dir, outfile):
 
 if __name__ == '__main__':
     ftl_repo = r"K:\mh_modeling\pc580_ftls"
-    setup_ftls = True
+    setup_ftls = False
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
                                  ftl_repo,
                                  r"D:\mh_waimak_models\base_for_pc580_ftls")
     run_mt3d = True
     if run_mt3d: #todo test
-        ssm_crch = None  # todo
+        ssm_crch = get_gmp_con_layer()
         ssm_spd = get_ssm_stress_period_data()
         sft_spd = get_sft_stress_period_data()
         setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d",
                              ftl_repo=ftl_repo,
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
-                             sft_spd={0: sft_spd})
+                             sft_spd={0: sft_spd},
+                             dt0=1e3, #todo I'm going to try to run this faster for at least the test
+                             ttsmax=1e4) # todo I'm going to try to run this faster for at least the test

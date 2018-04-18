@@ -17,7 +17,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitr
     get_well_ids, get_str_ids
 from warnings import warn
 
-# todo break up the private and WDC wells into different folders for this process to avoid name overlaps
+# break up the private and WDC wells into different folders for this process to avoid name overlaps
 well_zones_to_modify = {
     # site name: modified n value
 

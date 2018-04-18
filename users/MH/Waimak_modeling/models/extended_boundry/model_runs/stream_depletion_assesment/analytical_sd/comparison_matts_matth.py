@@ -80,4 +80,4 @@ if __name__ == '__main__':
     ax.scatter(x, outdata.low_s, label='low_s', c='b')
     ax.legend()
     plt.show()
-    # todo talk with zeb about this...
+    #  talk with zeb about this... we bailed
