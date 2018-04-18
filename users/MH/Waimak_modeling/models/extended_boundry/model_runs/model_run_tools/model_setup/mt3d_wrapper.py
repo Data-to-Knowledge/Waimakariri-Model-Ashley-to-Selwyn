@@ -6,6 +6,7 @@ Date Created: 9/01/2018 3:36 PM
 
 from __future__ import division
 from core import env
+from future.builtins import input
 import flopy
 import os
 import shutil
@@ -276,6 +277,8 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
         # mt3d.add_output('{}{:03d}.OBS'.format(mt3d_name,i),400+i,False) # not using, but should put in flopy
         mt3d.add_output('{}{:03d}.MAS'.format(mt3d_name, i), 600 + i, False)
 
+    mt3d.ftlfree = True # to handle a weird change in my FTL packages with doesn not include the ''s mt3d seems to still
+                        # read everything just fine
     return mt3d
 
 
@@ -489,11 +492,11 @@ if __name__ == '__main__':
         get_model
 
     # there were some differences which look like they could have been due to a sft diffusion problem, trying again
-    testtype = 1
+    testtype = 0
     if testtype == 0:
         rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
         mdt3d = create_mt3d(
-            ftl_path=r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mf_aw_ex.ftl",
+            ftl_path=r"K:\mh_modeling\pc580_ftls\NsmcReal000018_pc5_80.ftl",
             mt3d_name='test',
             mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_breakit",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
