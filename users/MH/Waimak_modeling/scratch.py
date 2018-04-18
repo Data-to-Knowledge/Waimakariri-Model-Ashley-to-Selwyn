@@ -16,10 +16,18 @@ from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.a
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.base_modflow_wrapper import get_model
 import time
 from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
+from osgeo import gdal
 
 if __name__ == '__main__':
+    n_load_path = env.sci(
+        'Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
 
-    flopy.mbase.run_model(exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
-                                      "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)),
-                          namefile='mt_aw_ex.nam',
-                          model_ws=r"C:\Users\MattH\Desktop\AWT20180103_Ash0_rerun_on_matts_pc")
+
+    t2 = smt.shape_file_to_model_array(n_load_path,'nload_cmp',True, area_statistics=True)
+    t1 = smt.shape_file_to_model_array(n_load_path,'nload_cmp',True)
+    smt.plt_matrix(t1, title='orginal')
+    smt.plt_matrix(t2, title='with areastats')
+    print('done')
+
+
+

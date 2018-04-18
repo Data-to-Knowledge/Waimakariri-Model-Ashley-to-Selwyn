@@ -475,12 +475,52 @@ class ModelTools(object):
 
         return fig, ax
 
-    def geodb_to_model_array(self, path, shape_name, attribute, alltouched=False):
+    def geodb_to_model_array(self, path, shape_name, attribute, alltouched=False,
+                             area_statistics=False, fine_spacing=10, resample_method='average'
+                             ):
         """
         create model array from a shapefile in a geodatabase
         :param path: path to geodatabase
         :param shape_name: name of the shape file
         :param attribute: name of the attribute to convert to matrix
+        :param area_statistics: boolean if true first burn the raster at a finer detail and do some statistics to
+                                group up
+        :param fine_spacing: int m of spacing to burn the raster to (limits the polygon overlay),
+                             only used if area_statistics is True
+        :param resample_method: key to define resampling options
+                                near:
+                                    nearest neighbour resampling (default, fastest algorithm, worst interpolation
+                                    quality).
+                                bilinear:
+                                    bilinear resampling.
+                                cubic:
+                                    cubic resampling.
+                                cubicspline:
+                                    cubic spline resampling.
+                                lanczos:
+                                    Lanczos windowed sinc resampling.
+                                average:
+                                    average resampling, computes the average of all non-NODATA contributing pixels.
+                                     (GDAL >= 1.10.0)
+                                mode:
+                                    mode resampling, selects the value which appears most often of all the
+                                    sampled points. (GDAL >= 1.10.0)
+                                max:
+                                    maximum resampling, selects the maximum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                min:
+                                    minimum resampling, selects the minimum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                med:
+                                    median resampling, selects the median value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q1:
+                                    first quartile resampling, selects the first quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q3:
+                                    third quartile resampling, selects the third quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+
         :return: np array of the matrix
         """
         from osgeo import ogr
@@ -488,14 +528,55 @@ class ModelTools(object):
         ds = driver.Open(path, 0)
         source_layer = ds.GetLayer(shape_name)
 
-        outdata = self._layer_to_model_array(source_layer, attribute, alltouched=alltouched)
+        outdata = self._layer_to_model_array(source_layer, attribute, alltouched=alltouched,
+                                             area_statistics=area_statistics, fine_spacing=fine_spacing,
+                                             resample_method=resample_method)
         return outdata
 
-    def shape_file_to_model_array(self, path, attribute, alltouched=False):
+    def shape_file_to_model_array(self, path, attribute, alltouched=False,
+                                  area_statistics=False, fine_spacing=10, resample_method='average'):
         """
         shape file to vistas array
         :param path: path to shapefile
         :param attribute: attribute name to convert
+        :param area_statistics: boolean if true first burn the raster at a finer detail and do some statistics to
+                                group up
+        :param fine_spacing: int m of spacing to burn the raster to (limits the polygon overlay),
+                             only used if area_statistics is True
+        :param resample_method: key to define resampling options
+                                near:
+                                    nearest neighbour resampling (default, fastest algorithm, worst interpolation
+                                    quality).
+                                bilinear:
+                                    bilinear resampling.
+                                cubic:
+                                    cubic resampling.
+                                cubicspline:
+                                    cubic spline resampling.
+                                lanczos:
+                                    Lanczos windowed sinc resampling.
+                                average:
+                                    average resampling, computes the average of all non-NODATA contributing pixels.
+                                     (GDAL >= 1.10.0)
+                                mode:
+                                    mode resampling, selects the value which appears most often of all the
+                                    sampled points. (GDAL >= 1.10.0)
+                                max:
+                                    maximum resampling, selects the maximum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                min:
+                                    minimum resampling, selects the minimum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                med:
+                                    median resampling, selects the median value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q1:
+                                    first quartile resampling, selects the first quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q3:
+                                    third quartile resampling, selects the third quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+
         :return:  np.array of the data in model format
         """
         # open shape file
@@ -503,25 +584,76 @@ class ModelTools(object):
         source_ds = ogr.Open(path)
         source_layer = source_ds.GetLayer()
 
-        outdata = self._layer_to_model_array(source_layer, attribute, alltouched=alltouched)
+        outdata = self._layer_to_model_array(source_layer, attribute, alltouched=alltouched,
+                                             area_statistics=area_statistics, fine_spacing=fine_spacing,
+                                             resample_method=resample_method)
         return outdata
 
-    def _layer_to_model_array(self, source_layer, attribute, alltouched=False):
+    def _layer_to_model_array(self, source_layer, attribute, alltouched=False,
+                              area_statistics=False, fine_spacing=10, resample_method='average'): #todo propogate these to upper level
         """
         hidden function to convert a source layer to a rasterized np array
         :param source_layer: from either function above
         :param attribute: attribute to convert.
+        :param area_statistics: boolean if true first burn the raster at a finer detail and do some statistics to
+                                group up
+        :param fine_spacing: int m of spacing to burn the raster to (limits the polygon overlay),
+                             only used if area_statistics is True
+        :param resample_method: key to define resampling options
+                                near:
+                                    nearest neighbour resampling (default, fastest algorithm, worst interpolation
+                                    quality).
+                                bilinear:
+                                    bilinear resampling.
+                                cubic:
+                                    cubic resampling.
+                                cubicspline:
+                                    cubic spline resampling.
+                                lanczos:
+                                    Lanczos windowed sinc resampling.
+                                average:
+                                    average resampling, computes the average of all non-NODATA contributing pixels.
+                                     (GDAL >= 1.10.0)
+                                mode:
+                                    mode resampling, selects the value which appears most often of all the
+                                    sampled points. (GDAL >= 1.10.0)
+                                max:
+                                    maximum resampling, selects the maximum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                min:
+                                    minimum resampling, selects the minimum value from all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                med:
+                                    median resampling, selects the median value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q1:
+                                    first quartile resampling, selects the first quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
+                                q3:
+                                    third quartile resampling, selects the third quartile value of all non-NODATA
+                                    contributing pixels. (GDAL >= 2.0.0)
         :return:  np array of rasterized data
         """
         from osgeo import gdal, osr #todo see if I can use tempfile for this
         if not os.path.exists(self.temp_file_dir):
             os.makedirs(self.temp_file_dir)
 
-        pixelWidth = pixelHeight = self.grid_space  # depending how fine you want your raster
+        if area_statistics:
+            assert self.grid_space % fine_spacing == 0, 'fine spacing {} must be an ' \
+                                                        'even factor of gridspacing: {}'.format(fine_spacing,
+                                                                                                self.grid_space)
+            trans = self.grid_space/fine_spacing
+            cols = int(self.cols * trans)
+            rows = int(self.rows * trans)
+            pixelWidth = pixelHeight = fine_spacing  # depending how fine you want your raster
+        else:
+            cols = self.cols
+            rows = self.rows
+            pixelWidth = pixelHeight = self.grid_space  # depending how fine you want your raster
 
         x_min, y_min = self.ulx, self.uly - self.grid_space * self.rows
 
-        target_ds = gdal.GetDriverByName('GTiff').Create('{}/temp.tif'.format(self.temp_file_dir), self.cols, self.rows,
+        target_ds = gdal.GetDriverByName('GTiff').Create('{}/temp.tif'.format(self.temp_file_dir), cols, rows,
                                                          1,
                                                          gdal.GDT_Float64)
         target_ds.SetGeoTransform((x_min, pixelWidth, 0, y_min, 0, pixelHeight))
@@ -539,10 +671,19 @@ class ModelTools(object):
         target_dsSRS.ImportFromEPSG(2193)
         target_ds.SetProjection(target_dsSRS.ExportToWkt())
         target_ds = None
+        temp_file = '{}/temp.tif'.format(self.temp_file_dir)
+        if area_statistics:
+            gdal.Warp('{}/temp2.tif'.format(self.temp_file_dir), temp_file,
+                      xRes=self.grid_space, yRes=self.grid_space, resampleAlg=resample_method)
+            os.remove(temp_file)
+            temp_file = '{}/temp2.tif'.format(self.temp_file_dir)
 
-        outdata = gdal.Open('{}/temp.tif'.format(self.temp_file_dir)).ReadAsArray()
-        outdata = np.flipud(outdata)
+        outdata = gdal.Open(temp_file).ReadAsArray()
+        if not area_statistics:
+            outdata = np.flipud(outdata)
         outdata[np.isclose(outdata, -999999)] = np.nan
+        os.remove(temp_file)
+
         return outdata
 
     def get_well_postions(self, well_nums, screen_handling='middle', raise_exct=True, error_log_path=None,
