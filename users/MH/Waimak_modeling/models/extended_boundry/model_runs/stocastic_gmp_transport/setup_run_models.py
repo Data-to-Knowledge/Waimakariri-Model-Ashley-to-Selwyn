@@ -15,7 +15,7 @@ import multiprocessing
 import psutil
 import time
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.min_flows_reliability.forward_runs import \
-    run_forward_runs, start_process
+    run_forward_runs
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
     get_stocastic_set
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.mt3d_wrapper import \
@@ -23,6 +23,16 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.nsmc_exploration_results.combine_nsmc_results.ucn_netcdf import \
     make_ucn_netcd
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import get_gmp_con_layer
+
+def start_process():
+    """
+    function to run at the start of each multiprocess sets the priority lower
+    :return:
+    """
+    print('Starting', multiprocessing.current_process().name)
+    p = psutil.Process(os.getpid())
+    # set to lowest priority, this is windows only, on Unix use ps.nice(19)
+    p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
