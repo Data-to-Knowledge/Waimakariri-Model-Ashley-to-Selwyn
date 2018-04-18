@@ -21,6 +21,7 @@ def get_gmp_con_layer(recalc=False):
                           'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
     outdata = smt.shape_file_to_model_array(n_load_path,attribute='nconc_gmp',alltouched=True,
                                             area_statistics=True,fine_spacing=10, resample_method='average')
+    outdata[np.isnan(outdata)] = 0
     np.savetxt(pickle_path,outdata)
 
 def get_orginal_cmp_layer():
@@ -31,5 +32,5 @@ def get_orginal_cmp_layer():
     return flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)')
 
 if __name__ == '__main__':
-    get_gmp_con_layer()
+    get_gmp_con_layer(True)
     get_orginal_cmp_layer()

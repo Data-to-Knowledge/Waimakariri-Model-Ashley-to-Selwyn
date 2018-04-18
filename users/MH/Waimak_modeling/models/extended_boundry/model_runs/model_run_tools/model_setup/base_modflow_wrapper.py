@@ -86,7 +86,8 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
     if mt3d_link:
         mt3d_outunit = 54
         mt3d_outname = '{}.ftl'.format(m.name)
-        link = flopy.modflow.ModflowLmt(m, output_file_name=mt3d_outname, output_file_unit=mt3d_outunit, unitnumber=21)
+        link = flopy.modflow.ModflowLmt(m, output_file_name=mt3d_outname, output_file_unit=mt3d_outunit, unitnumber=21,
+                                        output_file_format='formatted')
         m.add_output(mt3d_outname, mt3d_outunit, True, 'LMT')
 
     if set_hdry:
