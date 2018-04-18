@@ -16,16 +16,25 @@ import pandas as pd
 
 
 def get_current_pathway_n(mode, conservative_zones):
-    if mode == '50th':
-        private_key = '50%_gmp_con'
-        wdc_key = '50%_gmp_con'
-        stream_key = 'Median Current Pathways'
-    elif mode == '95th':
-        private_key = '95%_gmp_con'
-        wdc_key = '95%_gmp_con'
-        stream_key = '95th percentile Current Pathways'
-    else:
-        raise ValueError('unexpected value for mode: {} expected "50th" or "95th"'.format(mode))
+    if not isinstance(mode, dict):
+        if mode == '50th':
+            mode = {}
+            for key in private_wells:
+                mode[key] = '50%_gmp_con'
+            for key in wdc_wells:
+                mode[key] = '50%_gmp_con'
+            for key in streams:
+                mode[key] = 'Median Current Pathways'
+        elif mode == '95th':
+            mode = {}
+            for key in private_wells:
+                mode[key] = '95%_gmp_con'
+            for key in wdc_wells:
+                mode[key] = '95%_gmp_con'
+            for key in streams:
+                mode[key] = '95th percentile Current Pathways'
+        else:
+            raise ValueError('unexpected value for mode: {} expected "50th" or "95th"'.format(mode))
     outdata = {}
 
     # wells
@@ -34,14 +43,14 @@ def get_current_pathway_n(mode, conservative_zones):
                          r'results wells summary.xlsx',
                          sheetname='GMP WDC', index_col=0)
     for key in wdc_wells:
-        outdata[key] = data.loc[key, wdc_key]
+        outdata[key] = data.loc[key, mode[key]]
 
     data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
                          r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
                          r'results wells summary.xlsx',
                          sheetname='GMP private', index_col=0)
     for key in private_wells:
-        outdata[key] = data.loc[key, private_key]
+        outdata[key] = data.loc[key, mode[key]]
 
     # steams
     data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
@@ -49,11 +58,11 @@ def get_current_pathway_n(mode, conservative_zones):
                          r'reductions Streams 050418.xlsx', skiprows=1, index_col=0)
 
     for key in streams:
-        outdata[key] = data.loc[str_header_conversion[key], stream_key].iloc[0]
+        outdata[key] = data.loc[str_header_conversion[key], mode[key]].iloc[0]
 
     # add PA n load increases
     pa_n = get_pa_reductions(conservative_zones)
-    for key in set(outdata.keys()) - streams:  # streams are hackish because I don't have the data avalible
+    for key in set(outdata.keys()) - streams:  # streams are not included as they don't change size
         outdata[key] += outdata[key] * pa_n[key] / 100
 
     return outdata
@@ -192,6 +201,23 @@ str_header_conversion = {'cam_bramleys_s': 'Cam  at Bramleys Rd',
                          'kaiapoi_island_s': 'Kaiapoi  at Island Rd',
                          'ohoka_island_s': 'Ohoka  at Island  at Rd'}
 
+
+def get_mode(scenario):
+    if scenario == 'least_pain':
+        mode = '50th'
+    elif scenario == 'middle_option':
+        mode = {}
+        for key in (wdc_wells|private_wells):
+            mode[key] = '50%_gmp_con'
+        for key in streams:
+            mode[key] = '95th percentile Current Pathways'
+        mode['cam_bramleys_s'] = 'Median Current Pathways'
+    elif scenario == 'most_gain':
+        mode = '95th'
+    else:
+        raise NotImplementedError('scenario: {} not implmented'.format(scenario))
+
+    return mode
 
 def gen_waimak_targets(scenario):
     if scenario == 'waimak_None':
