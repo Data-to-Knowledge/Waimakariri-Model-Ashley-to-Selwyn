@@ -88,7 +88,7 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
         mt3d_outname = '{}.ftl'.format(m.name)
         link = flopy.modflow.ModflowLmt(m, output_file_name=mt3d_outname, output_file_unit=mt3d_outunit, unitnumber=21,
                                         output_file_format='formatted', package_flows=['sfr'])
-        m.add_output(mt3d_outname, mt3d_outunit, False, 'LMT')
+        # do not add the output it changes the file format
 
     if set_hdry:
         m.upw.iphdry = 1
@@ -419,7 +419,7 @@ def zip_non_essential_files(model_dir, include_list=False, other_files=None):
 if __name__ == '__main__':
     testtype = 5
     if testtype ==5:
-        m = import_gns_model('NsmcBase', 'modpath_tester', r"C:\Users\MattH\Desktop\modpath_tester2", False)
+        m = import_gns_model('AshOpt', 'ftl_test', r"C:\Users\MattH\Desktop\ftl_test2", False, True)
         m.write_name_file()
         m.write_input()
         m.run_model()

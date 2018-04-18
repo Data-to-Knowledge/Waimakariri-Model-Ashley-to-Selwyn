@@ -501,9 +501,9 @@ if __name__ == '__main__':
     if testtype == 0:
         rch_path = r"K:\mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\nconc_cmp_200m.ref"
         mdt3d = create_mt3d(
-            ftl_path=r"K:\mh_modeling\pc580_ftls\NsmcReal000018_pc5_80.ftl",
+            ftl_path=r"C:\Users\MattH\Desktop\AshOpt_modpath_tester2\AshOpt_ftl_test.ftl",
             mt3d_name='test',
-            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_breakit",
+            mt3d_ws=r"C:\Users\MattH\Downloads\test_mt3d_weirdftl",
             ssm_crch=flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)'),
             ssm_stress_period_data={0: get_ssm_stress_period_data()},
             sft_spd={0: get_sft_stress_period_data()},

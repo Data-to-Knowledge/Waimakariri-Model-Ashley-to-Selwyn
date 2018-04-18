@@ -19,15 +19,8 @@ from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
 from osgeo import gdal
 
 if __name__ == '__main__':
-    n_load_path = env.sci(
-        'Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
-
-
-    t2 = smt.shape_file_to_model_array(n_load_path,'nload_cmp',True, area_statistics=True)
-    t1 = smt.shape_file_to_model_array(n_load_path,'nload_cmp',True)
-    smt.plt_matrix(t1, title='orginal')
-    smt.plt_matrix(t2, title='with areastats')
-    print('done')
+    flopy.mbase.run_model(exe_name=r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\models_exes\modflow-nwt_from_brioch\MODFLOW-NWT_64.exe",
+                          namefile="NsmcReal000017_pc5_80.nam", model_ws="C:\Users\MattH\Desktop\NsmcReal000017_pc5_80")
 
 
 
