@@ -54,8 +54,7 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir):
     outputs = run_forward_runs(runs, base_modelling_dir, 'runs to set up a pc5 mt3d_run')
     outputs = pd.DataFrame(outputs, columns=['name', 'success'])
     successful_runs = outputs.loc[outputs.success == 'converged', 'name']
-    with open(os.path.join(base_modelling_dir, 'convergence_record.txt'), 'w') as f:
-        f.writelines(['{}\n'.format(e) for e in successful_runs])
+    outputs.to_csv(os.path.join(base_modelling_dir, 'convergence_record.txt'))
     shutil.copyfile(os.path.join(base_modelling_dir, 'convergence_record.txt'),
                     os.path.join(ftl_dir, 'convergence_record.txt'))
     for nm in successful_runs:
@@ -120,8 +119,8 @@ if __name__ == '__main__':
     setup_ftls = True
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
-                                 r"D:\mh_waimak_models\base_for_pc580_ftls",
-                                 ftl_repo)
+                                 ftl_repo,
+                                 r"D:\mh_waimak_models\base_for_pc580_ftls")
     run_mt3d = True
     if run_mt3d: #todo test
         ssm_crch = None  # todo
