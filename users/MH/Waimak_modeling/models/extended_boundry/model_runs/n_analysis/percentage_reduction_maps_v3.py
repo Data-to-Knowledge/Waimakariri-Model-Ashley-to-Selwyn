@@ -49,7 +49,7 @@ if __name__ == '__main__':
         # streams only receptors
         well_targets = gen_well_targets(scen, True, True)
         stream_targets = gen_stream_targets(scen)
-        waimak_target = 0
+        waimak_target = gen_waimak_targets(scen)
         if mar:
             mar_per = 0  # assume no mar
         else:

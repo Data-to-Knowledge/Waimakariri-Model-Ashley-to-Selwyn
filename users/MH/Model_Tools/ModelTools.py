@@ -635,7 +635,7 @@ class ModelTools(object):
                                     contributing pixels. (GDAL >= 2.0.0)
         :return:  np array of rasterized data
         """
-        from osgeo import gdal, osr #todo see if I can use tempfile for this
+        from osgeo import gdal, osr #todo see if I can use tempfile for this probably tempfile.TemporaryDirectory  only in python 3
         if not os.path.exists(self.temp_file_dir):
             os.makedirs(self.temp_file_dir)
 
