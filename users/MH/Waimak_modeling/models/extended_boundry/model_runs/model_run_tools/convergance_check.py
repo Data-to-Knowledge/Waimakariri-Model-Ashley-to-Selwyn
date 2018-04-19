@@ -54,6 +54,13 @@ def modpath_converged(mplist_path):
         out = 'Normal termination' in f.read()
     return out
 
+def mt3d_converged(list_path):
+    with open(list_path) as f:
+        lines = f.readlines()
+    converged = ' | 3 D | END OF MODEL OUTPUT\n' in lines
+    return converged
+
+
 if __name__ == '__main__':
     print(modpath_converged(r"C:\Users\MattH\Desktop\NsmcBase_simple_modpath\modpath_files\chch.mplst"))
     print('done')
