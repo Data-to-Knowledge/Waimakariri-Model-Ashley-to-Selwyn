@@ -282,8 +282,6 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
         # mt3d.add_output('{}{:03d}.OBS'.format(mt3d_name,i),400+i,False) # not using, but should put in flopy
         mt3d.add_output('{}{:03d}.MAS'.format(mt3d_name, i), 600 + i, False)
 
-    mt3d.ftlfree = True # to handle a weird change in my FTL packages with doesn not include the ''s mt3d seems to still
-                        # read everything just fine
     return mt3d
 
 
@@ -489,6 +487,7 @@ def setup_run_mt3d_mp(kwargs):
             success = 'did not converge'
     except:
         success = format_exc().replace('\n', '')
+    print(name, success)
     return name, success
 
 

@@ -109,6 +109,7 @@ def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_da
     pool_outputs = results.get()
     pool.close()  # no more tasks
     pool.join()
+    print('completed {} runs in {} min'.format(len(runs),(time.time()-t)/60))
     with open(os.path.join(base_mt3d_dir, 'status.txt'), 'w') as f:
         f.writelines(['{}\n'.format(e) for e in pool_outputs])
 
@@ -129,13 +130,13 @@ def extract_data(base_mt3d_dir, outfile):
 
 if __name__ == '__main__':
     ftl_repo = r"K:\mh_modeling\pc580_ftls"
-    setup_ftls = False
+    setup_ftls = True
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
                                  ftl_repo,
                                  r"D:\mh_waimak_models\base_for_pc580_ftls")
-    run_mt3d = True
-    if run_mt3d: #todo test
+    run_mt3d = False
+    if run_mt3d: #todo run
         ssm_crch = get_gmp_con_layer()
         ssm_spd = get_ssm_stress_period_data()
         sft_spd = get_sft_stress_period_data()
@@ -144,5 +145,5 @@ if __name__ == '__main__':
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
                              sft_spd={0: sft_spd},
-                             dt0=1e3, #todo I'm going to try to run this faster for at least the test
-                             ttsmax=1e4) # todo I'm going to try to run this faster for at least the test
+                             dt0=1e4,  #todo I'm going to try to run this faster for at least the test
+                             ttsmax=1e5)  # todo I'm going to try to run this faster for at least the test
