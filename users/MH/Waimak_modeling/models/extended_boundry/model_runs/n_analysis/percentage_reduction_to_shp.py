@@ -28,7 +28,7 @@ def contourftoshpfile(data, levels, out_path, lon, lat, extend="both", smooth=Fa
     :param smooth: bool if true smooth the contours
     """
 
-
+    out_path = out_path.replace('.shp','')
     # plot contourf
     if smooth:
         # fill NAN space so that there is not blocky shorelines
@@ -108,7 +108,10 @@ def contourftoshpfile(data, levels, out_path, lon, lat, extend="both", smooth=Fa
         feat.SetField('midpoint', (min + max)/2)  # working here
 
         # Make a geometry, from Shapely object
-        geom = ogr.CreateGeometryFromWkb(poly.wkb)
+        try:
+            geom = ogr.CreateGeometryFromWkb(poly.wkb)
+        except ValueError:
+            continue
         feat.SetGeometry(geom)
 
         layer.CreateFeature(feat)
@@ -120,7 +123,7 @@ def contourftoshpfile(data, levels, out_path, lon, lat, extend="both", smooth=Fa
 
 
 if __name__ == '__main__':
-    levels = [0,5] + range(10,110,10)
+    levels = [0, 3, 7, 20, 100]
     lon,lat = smt.get_model_x_y(False)
     temp_file = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_use_zones_excl_interzone_3scen\most_gain_load_95th_use_mix_with_pc5pa00_private_wells_only_reduction.tif"
     outpath = r"C:\Users\MattH\Downloads\testcontour_to_shp2"
