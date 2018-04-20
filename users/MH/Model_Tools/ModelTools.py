@@ -681,11 +681,12 @@ class ModelTools(object):
             os.remove(temp_file)
             temp_file = '{}/temp2.tif'.format(self.temp_file_dir)
 
-        outdata = gdal.Open(temp_file).ReadAsArray()
+        f = gdal.Open(temp_file)
+        outdata = f.ReadAsArray()
+        f = None
         if not area_statistics:
             outdata = np.flipud(outdata)
         outdata[np.isclose(outdata, -999999)] = np.nan
-        os.remove(temp_file)
 
         return outdata
 

@@ -28,6 +28,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.nsmc_exploration_results.combine_nsmc_results.cell_budget_netcdf import make_cellbud_netcdf
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.LSR_arrays import get_lsrm_base_array
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.cwms_index import get_zone_array_index
 
 def start_process():
     """
@@ -194,18 +195,18 @@ if __name__ == '__main__':
         shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_ucn.nc",
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc")
 
-
-    run_8_kg_ha = False
-    if run_8_kg_ha: #todo check then run
+    # #### gmp flow with 8kg/ha n load in interzone ####
+    run_8_kg_ha = True #todo run
+    if run_8_kg_ha:
         shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
                                 "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
-                                "s\interzone\conservative_interzone.shp") #todo WE NEED TO DECIDE CONSERVITIVE OR NOT
+                                "s\interzone\conservative_interzone.shp")
         ssm_crch = get_gmp_con_layer()
         temp = smt.shape_file_to_model_array(shp_file_path,'Id',True)
         rch = get_lsrm_base_array('pc5',None,None,None,'mean')
         kg_ha = 8  # kg/ha/year
         load = smt.grid_space**2 * 0.0001 * kg_ha *1000  # g/year
-        rch_con = load * (1/(rch*smt.grid_space**2*365))  #g/yr * yr/m3 = g/m3 #todo dbl check against
+        rch_con = load * (1/(rch*smt.grid_space**2*365))  #g/yr * yr/m3 = g/m3
         idx = (np.isfinite(temp)) & (ssm_crch > rch_con)
         ssm_crch[idx] = rch_con[idx]
         ssm_spd = get_ssm_stress_period_data()
@@ -220,7 +221,7 @@ if __name__ == '__main__':
                              dt0=1e4,  # I'm going to try to run this faster for at least the test
                              ttsmax=1e5)  # I'm going to try to run this faster for at least the test
 
-    condence_8kgha_results = False #todo run
+    condence_8kgha_results = True #todo run
     if condence_8kgha_results:
         description = ('the n concentration for the gmp load and a 8kg/ha load on interzone on a gmp flow '
                        'simulation (see pc5_80)')
@@ -230,19 +231,52 @@ if __name__ == '__main__':
                      nname='mednload',
                      units='g/m3')
 
+    #chch version
+    run_8_kg_ha_chch = True #todo run
+    if run_8_kg_ha_chch:
+        ssm_crch = smt.get_empty_model_grid()
+        kg_ha = 8  # kg/ha/year
+        idx = get_zone_array_index(['chch'])
+        rch = get_lsrm_base_array('pc5',None,None,None,'mean')
+        load = smt.grid_space**2 * 0.0001 * kg_ha *1000  # g/year
+        rch_con = load * (1/((rch[idx].mean()*1000*365)/1000*smt.grid_space**2))  #g/yr * yr/m3 = g/m3 # assume an average of 150 mm/yr
+        ssm_crch[idx] = rch_con
+        ssm_spd = get_ssm_stress_period_data()
+
+        sft_spd = get_sft_stress_period_data()
+
+        setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_8kg_ha_chch",
+                             ftl_repo=ftl_repo,
+                             ssm_crch={0: ssm_crch},
+                             ssm_stress_period_data={0: ssm_spd},
+                             sft_spd={0: sft_spd},
+                             dt0=1e4,  # I'm going to try to run this faster for at least the test
+                             ttsmax=1e5)  # I'm going to try to run this faster for at least the test
+
+    condence_8kgha_chch_results = True #todo run
+    if condence_8kgha_chch_results:
+        description = ('the n concentration for the gmp load and a 8kg/ha load on the christchurch westmelton zone'
+                       ' on a gmp flow '
+                       'simulation (see pc5_80)')
+        extract_data(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_8kg_ha_chch",
+                     outfile=r"C:\mh_waimak_model_data\GMP_mednload_ucn_8kg_ha_chch.nc",
+                     description=description,
+                     nname='mednload',
+                     units='g/m3')
+
     # ####PC5/GMP flow + Eyre Mar ####
 
-    #todo run an increased eyre river option (Eyre Mar)
+    # run an increased eyre river option (Eyre Mar)
     # set additional water to enter at top of segment 4 which is near oxford
-    increase_eyre_ftl = r"C:\Users\MattH\Downloads\test_add_eyre_ftl" #todo re-define after test
-    increase_eyre_cumics = 2 #todo talk through! amount, perhaps look at sfo r"C:\Users\MattH\Downloads\test_add_eyre_ftl_models\NsmcBase_pc5_80\NsmcBase_pc5_80.sfo"
-    increase_eyre_mt3d_base = r"C:\Users\MattH\Downloads\base_for_pc580_mt3d_eyre_inflow" #todo update
+    increase_eyre_ftl = r"K:\mh_modeling\pc580_eyre_mar_ftls"
+    increase_eyre_cumics = 1
+    increase_eyre_mt3d_base = r"D:\mh_waimak_models\base_for_pc580_mt3d_eyre_mar"
 
     setup_increase_eyre_ftl = True #todo run
     if setup_increase_eyre_ftl:
         setup_pc5_ftl_repository(model_ids=['NsmcBase'],
                                  ftl_dir=increase_eyre_ftl,
-                                 base_modelling_dir=r"C:\Users\MattH\Downloads\test_add_eyre_ftl_models", #todo update
+                                 base_modelling_dir=r"D:\mh_waimak_models\base_for_pc580_modflow_eyre_mar",
                                  increase_eyre=2)
 
     run_mt3d_increase_eyre = True #todo run
@@ -250,7 +284,7 @@ if __name__ == '__main__':
         # as present it took about 10 hours to run the set
         ssm_crch = get_gmp_con_layer()
         ssm_spd = get_ssm_stress_period_data()
-        sft_spd = get_sft_stress_period_data(eyre_mar=0.1) #todo  test this
+        sft_spd = get_sft_stress_period_data(eyre_mar=0.1)
         setup_run_mt3d_suite(base_mt3d_dir=increase_eyre_mt3d_base,
                              ftl_repo=increase_eyre_ftl,
                              ssm_crch={0: ssm_crch},
@@ -259,7 +293,7 @@ if __name__ == '__main__':
                              dt0=1e4,  # I'm going to try to run this faster for at least the test
                              ttsmax=1e5)  # I'm going to try to run this faster for at least the test
 
-    condence_eyre_mar_results = False #todo run
+    condence_eyre_mar_results = True #todo run
     if condence_eyre_mar_results:
         description = ('the n concentration for the gmp load on a gmp flow simulation with an additional {} m3/s '
                        'added to the eyre near oxford (see pc5_80)'.format(increase_eyre_cumics))
