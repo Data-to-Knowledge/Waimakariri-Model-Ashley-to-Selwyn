@@ -310,3 +310,11 @@ if __name__ == '__main__':
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc")
 
 # todo run everything and check it
+
+    extract_cbcs = True #todo run
+    if extract_cbcs:
+        description = 'the cbc for the gmp flow simulation (see pc5_80) with additional 1 m3/s added to eyre'
+        extract_cbc_data(base_modflow_dir=r"D:\mh_waimak_models\base_for_pc580_modflow_eyre_mar",
+                         description=description,
+                         nc_path=r"C:\mh_waimak_model_data\GMP_eyre_mar_cbc.nc")
+
