@@ -230,6 +230,8 @@ if __name__ == '__main__':
                      description=description,
                      nname='mednload',
                      units='g/m3')
+        shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_ucn_8kg_ha_interzone.nc",
+                        r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc")
 
     #chch version
     run_8_kg_ha_chch = True #todo run
@@ -263,6 +265,8 @@ if __name__ == '__main__':
                      description=description,
                      nname='mednload',
                      units='g/m3')
+        shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_ucn_8kg_ha_chch.nc",
+                        r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc")
 
     # ####PC5/GMP flow + Eyre Mar ####
 
@@ -274,7 +278,7 @@ if __name__ == '__main__':
 
     setup_increase_eyre_ftl = True #todo run
     if setup_increase_eyre_ftl:
-        setup_pc5_ftl_repository(model_ids=['NsmcBase'],
+        setup_pc5_ftl_repository(model_ids=get_stocastic_set(),
                                  ftl_dir=increase_eyre_ftl,
                                  base_modelling_dir=r"D:\mh_waimak_models\base_for_pc580_modflow_eyre_mar",
                                  increase_eyre=2)
@@ -302,3 +306,7 @@ if __name__ == '__main__':
                      description=description,
                      nname='mednload',
                      units='g/m3')
+        shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_eyre_mar_ucn.nc",
+                        r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc")
+
+# todo run everything and check it
