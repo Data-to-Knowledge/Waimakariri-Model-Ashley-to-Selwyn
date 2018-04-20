@@ -326,7 +326,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
 
 
 def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, cust_biwash=0.1, ash_tribs=0.35,
-                               glen_tui=None, garry=None, bullock=None, okuku=None, makerikeri=None):
+                               glen_tui=None, garry=None, bullock=None, okuku=None, makerikeri=None, eyre_mar=0):
     ashtrib_input = ash_tribs is not None and all([e is None for e in [glen_tui, garry, bullock, okuku, makerikeri]])
     individual_trib_input = ash_tribs is None and all(
         [e is not None for e in [glen_tui, garry, bullock, okuku, makerikeri]])
@@ -338,13 +338,15 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         okuku = ash_tribs
         makerikeri = ash_tribs
 
-    sft_spd = np.recarray((10), flopy.mt3d.Mt3dSft.get_default_dtype())
+
+    sft_spd = np.recarray((11), flopy.mt3d.Mt3dSft.get_default_dtype())
     nodes = [
         # main inflows
         1,  # eyre inflow
         77,  # waimakariri inflow
         262,  # ashley inflow
         347,  # cust inflow
+        203, # eyre mar inflow
         # ashley tribs
 
         373,  # glen tui
@@ -361,6 +363,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         262: ash_gorge,
         347: cust,
         373: glen_tui,
+        203: eyre_mar,  # eyre mar inflow
         717: garry,
         822: cust_biwash,
         867: bullock,

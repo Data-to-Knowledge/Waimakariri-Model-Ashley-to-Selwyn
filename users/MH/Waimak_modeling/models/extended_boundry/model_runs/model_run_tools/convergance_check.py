@@ -9,6 +9,7 @@ from core import env
 import os
 import zipfile
 
+#todo add to ModelTools
 
 def zipped_modflow_converged(name_File_path, zipped_file_name ='non_essential_components.zip', return_nans = False):
     """

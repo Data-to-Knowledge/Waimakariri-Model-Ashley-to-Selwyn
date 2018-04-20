@@ -17,6 +17,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from traceback import format_exc
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import \
     get_drn_no_ncarpet_spd
+import pandas as pd
 
 
 def setup_run_forward_run_mp(kwargs):
@@ -36,7 +37,7 @@ def setup_run_forward_run_mp(kwargs):
 def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, pc5_well_reduction=False,
                           pc5_to_waimak_only=False, wil_eff=1, naturalised=False,
                           full_abs=False, pumping_well_scale=1, full_allo=False, org_efficency=None,
-                          org_pumping_wells=False, rm_ncarpet=True, super_gmp=False, write_ftl=False):
+                          org_pumping_wells=False, rm_ncarpet=True, super_gmp=False, write_ftl=False, increase_eyre=0):
     """
     sets up and runs a forward run with a number of options
     :param model_id: which NSMC version to user (see mod_gns_model)
@@ -67,6 +68,7 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
     :param rm_ncarpet: boolean if True remove the N carpet drains
     :param super_gmp: boolean if True run further GMP reductions for will area
     :param write_ftl: boolean if True the model will write the FTL
+    :param increase_eyre: a value to increase the eyre inflow in cumics
     :return: (model name, convergence('convereged'/'did not converge'))
     """
 
@@ -155,6 +157,11 @@ def setup_run_forward_run(model_id, name, base_dir, cc_inputs=None, pc5=False, p
     with open(os.path.join(m.model_ws, 'cc_mult_info.txt'), 'w') as f:
         f.write('cc_mult (unitless): ' + str(cc_mult) + '\n')
         f.write('missing_water (m3/day): ' + str(new_water) + '\n')
+
+    # add the extra Eyre water at start of segment 4 near oxford township
+    seg_data = pd.DataFrame(m.sfr.segment_data[0])
+    seg_data.loc[seg_data.nseg==4,'flow'] += increase_eyre*86400
+    m.sfr.segment_data[0] = seg_data.to_records(index=False)
 
     m.write_name_file()
     m.write_input()
