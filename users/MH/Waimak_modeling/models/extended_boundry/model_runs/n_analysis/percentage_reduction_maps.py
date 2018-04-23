@@ -13,6 +13,8 @@ import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import os
 import pandas as pd
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import \
+    get_gmp_load_raster, get_pc5pa_additonal_load
 
 
 def get_current_pathway_n(mode, conservative_zones):
@@ -207,7 +209,7 @@ def get_mode(scenario):
         mode = '50th'
     elif scenario == 'middle_option':
         mode = {}
-        for key in (wdc_wells|private_wells):
+        for key in (wdc_wells | private_wells):
             mode[key] = '50%_gmp_con'
         for key in streams:
             mode[key] = '95th percentile Current Pathways'
@@ -218,6 +220,7 @@ def get_mode(scenario):
         raise NotImplementedError('scenario: {} not implmented'.format(scenario))
 
     return mode
+
 
 def gen_waimak_targets(scenario):
     if scenario == 'waimak_None':
@@ -375,9 +378,30 @@ def gen_stream_targets(scenario, stream_none=False):
     return outdata
 
 
+def get_interzone_reduction(target_load=8, pc5pa=False):
+    """
+    modelled off GMP loads assumes the conservative zone
+    :param target_load: the load that we want to achieve
+    :return:
+    """
+
+    gmp_load = get_gmp_load_raster()
+
+    if pc5pa:
+        gmp_load += get_pc5pa_additonal_load()
+
+    interzone_reductions = target_load / gmp_load
+    shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
+                            "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
+                            "s\interzone\conservative_interzone.shp")
+    interzone_idx = np.isfinite(smt.shape_file_to_model_array(shp_file_path, 'Id', True))
+    interzone_reductions[~interzone_idx] = 0
+    return interzone_reductions
+
+
 def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,
                                mar_percentage=0, pc5_pa_rules=False, conservative_shp='conservative',
-                               interzone_target=None, include_interzone=False, save_reason=True):
+                               interzone_target_load=None, include_interzone=False, save_reason=True):
     """
     pull togeather the different current pathway results at 95th percentile and calculate reduction rasters (from 95th),
     also calculate a 5 integer raster that says whether it is surface water or ground water (split into wdc and private)
@@ -412,7 +436,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         pa_reductions = get_pa_reductions(conservative_shp)
     # interzone
     if include_interzone:
-        raise NotImplementedError
+        interzone_reduction = get_interzone_reduction(interzone_target_load, pc5_pa_rules)
     else:
         interzone_reduction = smt.get_empty_model_grid() * np.nan
 
@@ -515,4 +539,4 @@ if __name__ == '__main__':
         calc_per_reduction_rasters(outdir,
                                    'cp_{}_well_{}_stream_{}'.format(mode, well, stream),
                                    mode, well_targets, stream_targets, waimak_target=27,
-                                   interzone_target=None, include_interzone=False)
+                                   interzone_target_load=None, include_interzone=False)

@@ -43,8 +43,8 @@ if __name__ == '__main__':
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=waimak_target,
-                               mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
-                               interzone_target=None, include_interzone=False)
+                                   mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
+                                   interzone_target_load=None, include_interzone=False)
 
         # streams only receptors
         well_targets = gen_well_targets(scen, True, True)
@@ -55,8 +55,8 @@ if __name__ == '__main__':
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_stream_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,
-                               mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
-                               interzone_target=None, include_interzone=False, save_reason=False)
+                                   mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
+                                   interzone_target_load=None, include_interzone=False, save_reason=False)
 
         # private wells only
         well_targets = gen_well_targets(scen,wdc_none=True, private_none=False)
@@ -67,8 +67,8 @@ if __name__ == '__main__':
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_private_wells_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,
-                               mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
-                               interzone_target=None, include_interzone=False, save_reason=False)
+                                   mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
+                                   interzone_target_load=None, include_interzone=False, save_reason=False)
 
         # wdc wells only
         well_targets = gen_well_targets(scen,wdc_none=False, private_none=True)
@@ -79,6 +79,6 @@ if __name__ == '__main__':
         else:
             mar_per = 0
         calc_per_reduction_rasters(outdir, '{}_wdc_wells_only'.format(name), mode, well_targets, stream_targets, waimak_target=waimak_target,
-                               mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
-                               interzone_target=None, include_interzone=False, save_reason=False)
+                                   mar_percentage=mar_per, pc5_pa_rules=mar, conservative_shp=conserv,
+                                   interzone_target_load=None, include_interzone=False, save_reason=False)
 
