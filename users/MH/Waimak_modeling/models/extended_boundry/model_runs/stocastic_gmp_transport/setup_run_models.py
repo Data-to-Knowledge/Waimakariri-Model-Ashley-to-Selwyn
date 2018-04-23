@@ -196,7 +196,8 @@ if __name__ == '__main__':
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc")
 
     # #### gmp flow with 8kg/ha n load in interzone ####
-    run_8_kg_ha = True #todo run
+    print('starting 8kg/ha interzone')
+    run_8_kg_ha = False
     if run_8_kg_ha:
         shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
                                 "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
@@ -221,7 +222,7 @@ if __name__ == '__main__':
                              dt0=1e4,  # I'm going to try to run this faster for at least the test
                              ttsmax=1e5)  # I'm going to try to run this faster for at least the test
 
-    condence_8kgha_results = True #todo run
+    condence_8kgha_results = False
     if condence_8kgha_results:
         description = ('the n concentration for the gmp load and a 8kg/ha load on interzone on a gmp flow '
                        'simulation (see pc5_80)')
@@ -234,7 +235,8 @@ if __name__ == '__main__':
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc")
 
     #chch version
-    run_8_kg_ha_chch = True #todo run
+    print('starting 8kg/ha chch')
+    run_8_kg_ha_chch = False
     if run_8_kg_ha_chch:
         ssm_crch = smt.get_empty_model_grid()
         kg_ha = 8  # kg/ha/year
@@ -255,7 +257,7 @@ if __name__ == '__main__':
                              dt0=1e4,  # I'm going to try to run this faster for at least the test
                              ttsmax=1e5)  # I'm going to try to run this faster for at least the test
 
-    condence_8kgha_chch_results = True #todo run
+    condence_8kgha_chch_results = False
     if condence_8kgha_chch_results:
         description = ('the n concentration for the gmp load and a 8kg/ha load on the christchurch westmelton zone'
                        ' on a gmp flow '
@@ -276,14 +278,14 @@ if __name__ == '__main__':
     increase_eyre_cumics = 1
     increase_eyre_mt3d_base = r"D:\mh_waimak_models\base_for_pc580_mt3d_eyre_mar"
 
-    setup_increase_eyre_ftl = True #todo run
+    setup_increase_eyre_ftl = False
     if setup_increase_eyre_ftl:
         setup_pc5_ftl_repository(model_ids=get_stocastic_set(),
                                  ftl_dir=increase_eyre_ftl,
                                  base_modelling_dir=r"D:\mh_waimak_models\base_for_pc580_modflow_eyre_mar",
                                  increase_eyre=2)
 
-    run_mt3d_increase_eyre = True #todo run
+    run_mt3d_increase_eyre = False
     if run_mt3d_increase_eyre:
         # as present it took about 10 hours to run the set
         ssm_crch = get_gmp_con_layer()
@@ -297,7 +299,7 @@ if __name__ == '__main__':
                              dt0=1e4,  # I'm going to try to run this faster for at least the test
                              ttsmax=1e5)  # I'm going to try to run this faster for at least the test
 
-    condence_eyre_mar_results = True #todo run
+    condence_eyre_mar_results = False
     if condence_eyre_mar_results:
         description = ('the n concentration for the gmp load on a gmp flow simulation with an additional {} m3/s '
                        'added to the eyre near oxford (see pc5_80)'.format(increase_eyre_cumics))
@@ -309,9 +311,8 @@ if __name__ == '__main__':
         shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_eyre_mar_ucn.nc",
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc")
 
-# todo run everything and check it
 
-    extract_cbcs = True #todo run
+    extract_cbcs = False
     if extract_cbcs:
         description = 'the cbc for the gmp flow simulation (see pc5_80) with additional 1 m3/s added to eyre'
         extract_cbc_data(base_modflow_dir=r"D:\mh_waimak_models\base_for_pc580_modflow_eyre_mar",
