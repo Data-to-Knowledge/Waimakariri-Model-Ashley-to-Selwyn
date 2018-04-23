@@ -13,7 +13,8 @@ import itertools
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
     get_stocastic_set
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.source_delmination.interzone_source_delineation import base_receptors_path
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.source_delmination.interzone_source_delineation import \
+    base_receptors_path
 import os
 import psutil
 import geopandas as gpd
@@ -34,7 +35,7 @@ layer_names = {
 }
 
 scenario_paths = {
-    'cmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
+    'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc", #this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
     'gmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc"),
     'interzone_8kgha': env.gw_met_data(
         r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
@@ -51,9 +52,10 @@ def make_shapefiles(outdir):
     base_pieces = gpd.read_file(base_receptors_path)
     for site, zones in zone_nums.items():
         temp = base_pieces.loc[np.in1d(base_pieces.zone, zones)]
-        temp.loc[:,'grouper'] = 1
+        temp.loc[:, 'grouper'] = 1
         temp = temp.dissolve(by='grouper')
-        temp.to_file(os.path.join(outdir,site+'.shp'))
+        temp.to_file(os.path.join(outdir, site + '.shp'))
+
 
 zone_nums = {
     'north_western_tla': [1, 2],
@@ -63,6 +65,8 @@ zone_nums = {
     'southern_chch': [9, 12],
     'full_city': [8, 11, 14, 7, 10, 13, 6, 9, 12]
 }
+
+
 def get_chch_area_zones():
     base_zone = smt.shape_file_to_model_array(base_receptors_path, 'zone', True)
     out_zones = {}
@@ -87,10 +91,11 @@ def get_interzone_n(scenarios, outpath):
                                                               names=['scenario', 'stat']), dtype=float)
 
     for lay, idx_name, scen in itertools.product(layers, index_names, scenarios):
+        print(lay, idx_name, scen)
         layer_name = layer_names[lay[0]]
         raw_data = get_raw_model_results(scen, lay, all_indexes[idx_name])
         stocastic_data = apply_nload_uncertainty(raw_data, scen)
-        t = _np_describe(stocastic_data, percentiles)
+        t = _np_describe(np.random.choice(stocastic_data,100000), percentiles)
         for per in pers_names:
             outdata.loc[(layer_name, idx_name), (scen, per)] = t[per]
     outdata.to_csv(outpath)
@@ -108,8 +113,8 @@ def get_raw_model_results(scenario, layers, index):
 def apply_nload_uncertainty(raw_data, scenario):
     if 'gmp' in scenario:
         modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
-                               r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\without_trans\nload_gmp_"
-                               r"interzone\raw_data\conservative_interzone.txt")[0:1000]
+                               r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\without_trans\nload_cmp_"
+                               r"interzone\raw_data\conservative_interzone.txt")[0:1000] #cmp because it's referenced to cmp
     elif 'cmp' in scenario:
         modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
                                r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\with_trans\nconc_cmp_"
@@ -120,7 +125,7 @@ def apply_nload_uncertainty(raw_data, scenario):
     raw_data = raw_data.astype(np.float32)
     if len(raw_data) > max_size:
         raw_data = np.random.choice(raw_data, (max_size))  # to get around run size errors
-    all_n = raw_data[:, np.newaxis] * modifiers[np.newaxis, :].astype(np.float32)
+    all_n = (raw_data[:, np.newaxis] * modifiers[np.newaxis, :].astype(np.float32)).flatten()
     return all_n
 
 
@@ -142,10 +147,10 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
 
 
 if __name__ == '__main__':
-    if True:
-        make_shapefiles(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\chch_wm_receptor_shapes")
+    if False:
+        make_shapefiles(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
+                        r"_bd_va\n_results\interzone_n_results\chch_wm_receptor_shapes")
 
     if True:
         get_interzone_n(scenario_paths.keys(),
-        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\
-        n_results\interzone_n_results\n_data.csv")
+                        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv")
