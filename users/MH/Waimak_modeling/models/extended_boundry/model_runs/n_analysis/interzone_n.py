@@ -145,12 +145,18 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
     outdata.loc['max'] = np.nanmax(ndarray)
     return outdata
 
+def make_shpfile_with_data():
+    #todo take the data generated and add it to shapefiles for easy viewing
+    layers = [[1], [3], [5], [7], [8, 9]]
+    for lay in layers:
+        raise NotImplementedError
+
 
 if __name__ == '__main__':
     if False:
         make_shapefiles(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
                         r"_bd_va\n_results\interzone_n_results\chch_wm_receptor_shapes")
 
-    if True:
+    if False:
         get_interzone_n(scenario_paths.keys(),
                         r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv")

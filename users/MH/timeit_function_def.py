@@ -13,20 +13,13 @@ import pandas as pd
 import flopy
 import itertools
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.extract_data import open_path_file_as_df
+base_data = np.random.rand(50000000)
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.interzone_n import _np_describe
 
 def timeit_function():
-    with open(r"C:\Users\MattH\Downloads\test_mt3d\test") as f:
-        num_lines = sum([1 for l in f])
-    data = pd.read_table(r"C:\Users\MattH\Downloads\test_mt3d\test", skiprows=int(num_lines - 2*(num_lines-2)/1228),
-                         delim_whitespace=True,
-                         names=[u'TIME', u'SFR-NODE', u'SFR-CONCENTRATION', u'FLOWGW', u'GW-CONC'],
-                         dtype={u'TIME':float, u'SFR-NODE':int, u'SFR-CONCENTRATION':float, u'FLOWGW':float, u'GW-CONC':float},
-                         low_memory=True)
-    data = data.loc[np.isclose(data.TIME, data.TIME.max())]
+    _np_describe(base_data)
 def timeit_function2():
-    data = pd.read_table(r"C:\Users\MattH\Downloads\test_mt3d\test", skiprows=1, delim_whitespace=True,
-                         low_memory=True)
-    data = data.loc[np.isclose(data.TIME, data.TIME.max())]
+    _np_describe(np.random.choice(base_data,100000))
 
 
 
