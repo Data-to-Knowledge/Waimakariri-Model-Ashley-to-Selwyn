@@ -35,7 +35,8 @@ layer_names = {
 }
 
 scenario_paths = {
-    'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc", #this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
+    'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc",
+    # this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
     'gmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc"),
     'interzone_8kgha': env.gw_met_data(
         r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
@@ -95,7 +96,7 @@ def get_interzone_n(scenarios, outpath):
         layer_name = layer_names[lay[0]]
         raw_data = get_raw_model_results(scen, lay, all_indexes[idx_name])
         stocastic_data = apply_nload_uncertainty(raw_data, scen)
-        t = _np_describe(np.random.choice(stocastic_data,100000), percentiles)
+        t = _np_describe(np.random.choice(stocastic_data, 100000), percentiles)
         for per in pers_names:
             outdata.loc[(layer_name, idx_name), (scen, per)] = t[per]
     outdata.to_csv(outpath)
@@ -114,7 +115,8 @@ def apply_nload_uncertainty(raw_data, scenario):
     if 'gmp' in scenario:
         modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
                                r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\without_trans\nload_cmp_"
-                               r"interzone\raw_data\conservative_interzone.txt")[0:1000] #cmp because it's referenced to cmp
+                               r"interzone\raw_data\conservative_interzone.txt")[
+                    0:1000]  # cmp because it's referenced to cmp
     elif 'cmp' in scenario:
         modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
                                r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\with_trans\nconc_cmp_"
@@ -145,11 +147,50 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
     outdata.loc['max'] = np.nanmax(ndarray)
     return outdata
 
-def make_shpfile_with_data():
-    #todo take the data generated and add it to shapefiles for easy viewing
+
+def make_shpfile_with_data(outdir):
+    names = {
+        u'chch_8kgha_50%': 'chch50',
+        u'chch_8kgha_95%': 'chch95',
+        u'interzone_8kgha_50%': 'inter50',
+        u'interzone_8kgha_95%': 'inder95',
+        u'gmp_50%': 'gmp_50',
+        u'gmp_95%': 'gmp_95',
+        u'gmp_eyre_mar_50%': 'mar50',
+        u'gmp_eyre_mar_95%': 'mar95',
+        u'cmp_50%': 'cmp_50',
+        u'cmp_95%': 'cmp_95',
+        u'chch_8kgha_plus_interzone_8kgha_50%': '8_8_50',
+        u'chch_8kgha_plus_interzone_8kgha_95%': '8_8_95',
+        u'chch_8kgha_plus_gmp_50%': '8_gmp50',
+        u'chch_8kgha_plus_gmp_95%': '8_gmp95',
+        u'chch_8kgha_plus_gmp_eyre_mar_50%': '8_mar50',
+        u'chch_8kgha_plus_gmp_eyre_mar_95%': '8_mar95',
+        u'chch_8kgha_plus_cmp_50%': '8_cmp50',
+        u'chch_8kgha_plus_cmp_95%': '8_cmp95'}
+
     layers = [[1], [3], [5], [7], [8, 9]]
+    all_data = pd.read_csv(
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv",
+        index_col=[0, 1], header=[0, 1])
     for lay in layers:
-        raise NotImplementedError
+        lay_name = layer_names[lay[0]]
+
+        base_pieces = gpd.read_file(base_receptors_path)
+        for site, zones in zone_nums.items():
+            temp = base_pieces.loc[np.in1d(base_pieces.zone, zones)]
+            temp.loc[:, 'grouper'] = 1
+            temp = temp.dissolve(by='grouper')
+
+            for scen, per in itertools.product(scenario_paths.keys(), ['50%', '95%']):
+                temp.loc[1, '{}_{}'.format(scen, per)] = all_data.loc[(lay_name, site), (scen, per)]
+
+            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp']:
+                for per in ['50%', '95%']:
+                    temp.loc[1, 'chch_8kgha_plus_{}_{}'.format(scen, per)] = temp.loc[1, 'chch_8kgha_{}'.format(per)] + \
+                                                                             temp.loc[1, '{}_{}'.format(scen, per)]
+            temp = temp.rename(columns=names)
+            temp.to_file(os.path.join(outdir, '{}_{}.shp'.format(site, lay_name)))
 
 
 if __name__ == '__main__':
@@ -160,3 +201,6 @@ if __name__ == '__main__':
     if False:
         get_interzone_n(scenario_paths.keys(),
                         r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv")
+    if False:
+        make_shpfile_with_data(
+            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\receptors_with_data")
