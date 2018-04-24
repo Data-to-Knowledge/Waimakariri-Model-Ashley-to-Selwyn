@@ -391,6 +391,8 @@ def get_interzone_reduction(target_load=8, pc5pa=False):
         gmp_load += get_pc5pa_additonal_load()
 
     interzone_reductions = target_load / gmp_load
+    interzone_reductions[np.abs(gmp_load)<target_load] = 1
+    interzone_reductions = (1-interzone_reductions)*100
     shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
                             "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
                             "s\interzone\conservative_interzone.shp")
@@ -418,7 +420,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     :param conservative_shp: boolean if True, use the larger zones if False use the smaller zones
     :param save_reason: boolean if True will save the reason, otherwise will not
     :return: save rasters percentage reduction needed (0-100) and limiting raster:
-                             {1:'interzone', 2:'wdc_wells', 3:'private_wells', 4: 'springfed_streams', 5: 'waimakariri'
+                             {0: no reduction, 1:'interzone', 2:'wdc_wells', 3:'private_wells', 4: 'springfed_streams', 5: 'waimakariri'
                              6: 'all same'}
     """
     # something to pull togeather different well/stream target scenarios and look at the percentage reduction required for
@@ -513,8 +515,12 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
                                                                              waimak_reduction]], axis=0)
     reduction = np.nanmax(temp, axis=0)
     reduction[reduction < 0] = 0
-    reason = np.nanargmax(temp.astype(int), axis=0).astype(
-        float) + 1
+    temp2 = temp.copy()
+    temp2[temp2<=0] = -99
+    temp2[np.isnan(temp2)] = -99
+    temp2 = np.concatenate((smt.get_empty_model_grid()[np.newaxis],temp2),axis=0)
+    reason = np.nanargmax(temp2.astype(int), axis=0).astype(
+        float)
     reason[idx & np.isfinite(reduction)] = 6
     reason[np.isnan(reduction)] = np.nan
     if save_reason:

@@ -8,10 +8,13 @@ from __future__ import division
 from core import env
 import itertools
 from percentage_reduction_maps import gen_stream_targets, gen_well_targets,gen_waimak_targets,\
-    calc_per_reduction_rasters, get_mode
+    calc_per_reduction_rasters, get_mode, get_interzone_reduction
 
 
 if __name__ == '__main__':
+
+    test = get_interzone_reduction(8,True)
+    test2 = get_interzone_reduction(8,False)
     outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_res"
              r"ults\n_reductions_use_zones_use_scens_inc_interzone")
     interzone_target_load = 8

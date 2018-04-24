@@ -52,7 +52,7 @@ def get_pc5pa_additonal_load(recalc=False):
     n_load_path = r"P:\Groundwater\Waimakariri\Landuse\Shp\Results_New_WF_rule_May17.gdb\Results_New_WF_rule_May17.gdb"
     layer = 'BAU_PC5_diff_woIrrig_180315'
 
-    outdata = smt.geodb_to_model_array(n_load_path, layer, attribute='New_NLoss_PC5', alltouched=True,
+    outdata = smt.geodb_to_model_array(n_load_path, layer, attribute='BAU_PC5_diff', alltouched=True,
                                        area_statistics=True, fine_spacing=10, resample_method='average')
     outdata[np.isnan(outdata)] = 0
     np.savetxt(pickle_path, outdata)
@@ -83,6 +83,7 @@ def get_orginal_cmp_layer():
 
 
 if __name__ == '__main__':
+    test = get_pc5pa_additonal_load(True)
     if True:
         gmp = get_gmp_con_layer()
         cmp = get_new_cmp_con()
