@@ -234,6 +234,40 @@ if __name__ == '__main__':
         shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_ucn_8kg_ha_interzone.nc",
                         r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc")
 
+    print('starting 50% reduc interzone')
+    run_50reduc_ha = True
+    if run_50reduc_ha:
+        shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
+                                "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
+                                "s\interzone\conservative_interzone.shp")
+        ssm_crch = get_gmp_con_layer()
+        temp = smt.shape_file_to_model_array(shp_file_path,'Id',True)
+        idx = np.isfinite(temp)
+        ssm_crch[idx] *= 0.5
+        ssm_spd = get_ssm_stress_period_data()
+
+        sft_spd = get_sft_stress_period_data()
+
+        setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_interzone_50red",
+                             ftl_repo=ftl_repo,
+                             ssm_crch={0: ssm_crch},
+                             ssm_stress_period_data={0: ssm_spd},
+                             sft_spd={0: sft_spd},
+                             dt0=1e4,  # I'm going to try to run this faster for at least the test
+                             ttsmax=1e5)  # I'm going to try to run this faster for at least the test
+
+    condence_50_reduc_results = True
+    if condence_50_reduc_results:
+        description = ('the n concentration for the gmp load and a 50% reduction of load on interzone on a gmp flow '
+                       'simulation (see pc5_80)')
+        extract_data(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_interzone_50red",
+                     outfile=r"C:\mh_waimak_model_data\GMP_mednload_ucn_50_reduc_interzone.nc",
+                     description=description,
+                     nname='mednload',
+                     units='g/m3')
+        shutil.copyfile(r"C:\mh_waimak_model_data\GMP_mednload_ucn_50_reduc_interzone.nc",
+                        r"K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_50_reduc_interzone.nc")
+
     #chch version
     print('starting 8kg/ha chch')
     run_8_kg_ha_chch = False
