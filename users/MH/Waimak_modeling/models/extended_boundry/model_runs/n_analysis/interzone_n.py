@@ -42,7 +42,7 @@ scenario_paths = {
         r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
     'chch_8kgha': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc"),
     'gmp_eyre_mar': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc"),
-}
+} #todo add the 50% reduction version
 
 
 def make_shapefiles(outdir):
@@ -167,7 +167,7 @@ def make_shpfile_with_data(outdir):
         u'chch_8kgha_plus_gmp_eyre_mar_50%': '8_mar50',
         u'chch_8kgha_plus_gmp_eyre_mar_95%': '8_mar95',
         u'chch_8kgha_plus_cmp_50%': '8_cmp50',
-        u'chch_8kgha_plus_cmp_95%': '8_cmp95'}
+        u'chch_8kgha_plus_cmp_95%': '8_cmp95'} #todo add the 50% reduction scenario
 
     layers = [[1], [3], [5], [7], [8, 9]]
     all_data = pd.read_csv(
@@ -185,7 +185,7 @@ def make_shpfile_with_data(outdir):
             for scen, per in itertools.product(scenario_paths.keys(), ['50%', '95%']):
                 temp.loc[1, '{}_{}'.format(scen, per)] = all_data.loc[(lay_name, site), (scen, per)]
 
-            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp']:
+            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp']: #todo add the 50% interzone option
                 for per in ['50%', '95%']:
                     temp.loc[1, 'chch_8kgha_plus_{}_{}'.format(scen, per)] = temp.loc[1, 'chch_8kgha_{}'.format(per)] + \
                                                                              temp.loc[1, '{}_{}'.format(scen, per)]
