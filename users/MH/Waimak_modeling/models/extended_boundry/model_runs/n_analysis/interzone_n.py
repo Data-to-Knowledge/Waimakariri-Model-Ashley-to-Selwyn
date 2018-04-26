@@ -42,7 +42,8 @@ scenario_paths = {
         r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
     'chch_8kgha': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc"),
     'gmp_eyre_mar': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc"),
-} #todo add the 50% reduction version
+    'interzone_50_red': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_50_reduc_interzone.nc")
+}
 
 
 def make_shapefiles(outdir):
@@ -148,12 +149,16 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
     return outdata
 
 
-def make_shpfile_with_data(outdir):
+def make_shpfile_with_data(n_data_path, outdir):
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     names = {
         u'chch_8kgha_50%': 'chch50',
         u'chch_8kgha_95%': 'chch95',
         u'interzone_8kgha_50%': 'inter50',
         u'interzone_8kgha_95%': 'inder95',
+        'interzone_50_red_50%': 'in50_50',
+        'interzone_50_red_95%': 'in50_95',
         u'gmp_50%': 'gmp_50',
         u'gmp_95%': 'gmp_95',
         u'gmp_eyre_mar_50%': 'mar50',
@@ -167,11 +172,13 @@ def make_shpfile_with_data(outdir):
         u'chch_8kgha_plus_gmp_eyre_mar_50%': '8_mar50',
         u'chch_8kgha_plus_gmp_eyre_mar_95%': '8_mar95',
         u'chch_8kgha_plus_cmp_50%': '8_cmp50',
-        u'chch_8kgha_plus_cmp_95%': '8_cmp95'} #todo add the 50% reduction scenario
+        u'chch_8kgha_plus_cmp_95%': '8_cmp95',
+        'chch_8kgha_plus_interzone_50_red_50%': '8_in50_50',
+        'chch_8kgha_plus_interzone_50_red_95%': '8_in50_95'}
 
     layers = [[1], [3], [5], [7], [8, 9]]
     all_data = pd.read_csv(
-        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv",
+        n_data_path,
         index_col=[0, 1], header=[0, 1])
     for lay in layers:
         lay_name = layer_names[lay[0]]
@@ -185,7 +192,7 @@ def make_shpfile_with_data(outdir):
             for scen, per in itertools.product(scenario_paths.keys(), ['50%', '95%']):
                 temp.loc[1, '{}_{}'.format(scen, per)] = all_data.loc[(lay_name, site), (scen, per)]
 
-            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp']: #todo add the 50% interzone option
+            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp', 'interzone_50_red']:
                 for per in ['50%', '95%']:
                     temp.loc[1, 'chch_8kgha_plus_{}_{}'.format(scen, per)] = temp.loc[1, 'chch_8kgha_{}'.format(per)] + \
                                                                              temp.loc[1, '{}_{}'.format(scen, per)]
@@ -200,7 +207,18 @@ if __name__ == '__main__':
 
     if False:
         get_interzone_n(scenario_paths.keys(),
-                        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data.csv")
-    if False:
-        make_shpfile_with_data(
-            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\receptors_with_data")
+                        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
+                        r"s\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv")
+        data = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
+                           r"s\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv",
+                           index_col=[0,1], header=[0,1])
+        data = data.reorder_levels(['stat','scenario'],axis=1)
+        data['50%'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
+                           r"s\ex_bd_va\n_results\interzone_n_results\n_data_50ths_v2.csv")
+        data['95%'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
+                           r"s\ex_bd_va\n_results\interzone_n_results\n_data_95ths_v2.csv")
+        data['mean'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
+                            r"s\ex_bd_va\n_results\interzone_n_results\n_data_means_v2.csv")
+    if True:
+        make_shpfile_with_data(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv",
+            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\receptors_with_data_inc_50_red")
