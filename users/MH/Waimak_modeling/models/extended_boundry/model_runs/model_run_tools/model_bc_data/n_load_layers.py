@@ -112,7 +112,7 @@ def get_orginal_cmp_layer():
 
 def get_gmp_plus_con_layer(
         add_half_pc5pa=False,
-        exclude_ashley=True,
+        exclude_ashley=False,
         Arable=None,
         DairyFarm=None,
         DairySupport=None,
