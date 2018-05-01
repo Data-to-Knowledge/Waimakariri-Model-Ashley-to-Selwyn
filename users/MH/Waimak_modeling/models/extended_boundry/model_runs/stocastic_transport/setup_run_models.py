@@ -88,7 +88,7 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir, increase_ey
                         os.path.join(ftl_dir, '{}.ftl'.format(nm)))
 
 
-def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd, dt0=None, ttsmax=None):
+def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd, dt0=None, ttsmax=None, scon=None):
     if not os.path.exists(base_mt3d_dir):
         os.makedirs(base_mt3d_dir)
     runs = []
@@ -105,6 +105,8 @@ def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_da
                                     'safe_mode': False,
                                     'reduce_str_obs': True,
                                     'simplify': False})
+        if scon is not None:
+            default_mt3d_kwargs['btn_scon'] = scon
         if dt0 is not None:
             default_mt3d_kwargs['dt0'] = dt0
         if ttsmax is not None:
@@ -153,14 +155,14 @@ def extract_cbc_data(base_modflow_dir, description, nc_path, zlib=False):
     make_cellbud_netcdf(nsmc_nums, sfo_paths, cbc_paths, description, nc_path, zlib)
 
 
+pc5_ftl_repo = env.gw_met_data("mh_modeling/pc580_ftls")
 if __name__ == '__main__':
 
     # ####PC5/GMP flow ####
-    ftl_repo = r"K:\mh_modeling\pc580_ftls"
     setup_ftls = False  # a method to stop re-run
     if setup_ftls:
         setup_pc5_ftl_repository(get_stocastic_set(),
-                                 ftl_repo,
+                                 pc5_ftl_repo,
                                  r"D:\mh_waimak_models\base_for_pc580_ftls")
 
     extract_cbcs = False
@@ -177,7 +179,7 @@ if __name__ == '__main__':
         ssm_spd = get_ssm_stress_period_data()
         sft_spd = get_sft_stress_period_data()
         setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d",
-                             ftl_repo=ftl_repo,
+                             ftl_repo=pc5_ftl_repo,
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
                              sft_spd={0: sft_spd},
@@ -215,7 +217,7 @@ if __name__ == '__main__':
         sft_spd = get_sft_stress_period_data()
 
         setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_8kg_ha",
-                             ftl_repo=ftl_repo,
+                             ftl_repo=pc5_ftl_repo,
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
                              sft_spd={0: sft_spd},
@@ -249,7 +251,7 @@ if __name__ == '__main__':
         sft_spd = get_sft_stress_period_data()
 
         setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_interzone_50red",
-                             ftl_repo=ftl_repo,
+                             ftl_repo=pc5_ftl_repo,
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
                              sft_spd={0: sft_spd},
@@ -284,7 +286,7 @@ if __name__ == '__main__':
         sft_spd = get_sft_stress_period_data()
 
         setup_run_mt3d_suite(base_mt3d_dir=r"D:\mh_waimak_models\base_for_pc580_mt3d_8kg_ha_chch",
-                             ftl_repo=ftl_repo,
+                             ftl_repo=pc5_ftl_repo,
                              ssm_crch={0: ssm_crch},
                              ssm_stress_period_data={0: ssm_spd},
                              sft_spd={0: sft_spd},

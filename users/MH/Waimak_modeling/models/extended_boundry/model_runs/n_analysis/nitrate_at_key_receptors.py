@@ -154,9 +154,13 @@ def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
     outdata = {}
     for zone_set, key in zip(zone_sets, ['Zone','Zone_1','zone_2']):
         for zone in zone_set:
+            if key=='Zone': # to deal with the overlap in wdc and private well group names
+                use_zone = 'wdc_{}'.format(zone)
+            else:
+                use_zone = zone
             idxs = well_data.loc[well_data[key]==zone].index
             temp = all_well_data.transpose().loc[idxs].mean()
-            outdata[zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
+            outdata[use_zone] = temp.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.95])
     outdata = pd.DataFrame(outdata).transpose()
     outdata.to_csv(os.path.join(outdir, 'stocastic_set_grouped_wells.csv'))
 

@@ -80,7 +80,14 @@ def get_chch_area_zones():
     return out_zones
 
 
-def get_interzone_n(scenarios, outpath):
+def get_interzone_n(scenario_dict, outpath):
+    """
+
+    :param scenario_dict: dictionary of scenario: path to netcdf file
+    :param outpath: outpath for the csv
+    :return:
+    """
+    scenarios = scenario_dict.keys()
     all_indexes = get_chch_area_zones()
     layers = [[1], [3], [5], [7], [8, 9]]  # lump the big deep layers
     index_names = all_indexes.keys()
@@ -95,7 +102,7 @@ def get_interzone_n(scenarios, outpath):
     for lay, idx_name, scen in itertools.product(layers, index_names, scenarios):
         print(lay, idx_name, scen)
         layer_name = layer_names[lay[0]]
-        raw_data = get_raw_model_results(scen, lay, all_indexes[idx_name])
+        raw_data = get_raw_model_results(scenario_dict[scen], lay, all_indexes[idx_name])
         stocastic_data = apply_nload_uncertainty(raw_data, scen)
         t = _np_describe(np.random.choice(stocastic_data, 100000), percentiles)
         for per in pers_names:
@@ -103,9 +110,9 @@ def get_interzone_n(scenarios, outpath):
     outdata.to_csv(outpath)
 
 
-def get_raw_model_results(scenario, layers, index):
+def get_raw_model_results(scenario_path, layers, index):
     nsmc_nums = get_stocastic_set(False)
-    data = nc.Dataset(scenario_paths[scenario])
+    data = nc.Dataset(scenario_path)
     nsmc_idx = np.in1d(data.variables['nsmc_num'][:], nsmc_nums)
     out_data = np.array(data.variables['mednload'][nsmc_idx, layers])[:, :, index].flatten()
 
@@ -206,7 +213,7 @@ if __name__ == '__main__':
                         r"_bd_va\n_results\interzone_n_results\chch_wm_receptor_shapes")
 
     if False:
-        get_interzone_n(scenario_paths.keys(),
+        get_interzone_n(scenario_paths,
                         r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
                         r"s\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv")
         data = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"

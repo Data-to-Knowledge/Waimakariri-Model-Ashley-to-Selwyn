@@ -11,44 +11,19 @@ import shutil
 import os
 import pandas as pd
 import flopy
+from copy import deepcopy
 import itertools
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.modpath_sims.extract_data import open_path_file_as_df
-base_data = np.random.rand(50000000)
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.interzone_n import _np_describe
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.mt3d_wrapper import \
+    setup_run_mt3d_mp, get_default_mt3d_kwargs, get_sft_stress_period_data, get_ssm_stress_period_data
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import \
+    get_gmp_con_layer, get_gmp_plus_con_layer
+
+
 
 def timeit_function():
-    _np_describe(base_data)
+    test = get_gmp_plus_con_layer(False,False,DairySupport=25,DairyFarm=25)
+
 def timeit_function2():
-    _np_describe(np.random.choice(base_data,100000))
-
-
-
-if __name__ == '__main__':
-    print 'hello world'
-    bot = smt.calc_elv_db()[1]
-    hds = flopy.utils.HeadFile(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\from_gns\NsmcBase\AW20171024_2_i2_optver\i2\mf_aw_ex.hds").get_alldata()[0][0]
-    idx = get_zone_array_index('waimak')
-    hds[hds>1e20] = np.nan
-    dif1 = hds-bot
-    dif1[dif1<0] = np.nan
-    hds[~idx] = np.nan
-    dif2 = hds-bot
-    dif2[dif2<0] = np.nan
-
-    for nm, data in zip(['all','waimak'],[dif1,dif2]):
-        print nm
-        print 'min: {}'.format(np.nanmin(data))
-        print '1 :{}'.format(np.nanpercentile(data,1))
-        print '5 :{}'.format(np.nanpercentile(data,5))
-        print '25 :{}'.format(np.nanpercentile(data,25))
-        print '50 :{}'.format(np.nanpercentile(data,50))
-        print '75 :{}'.format(np.nanpercentile(data,75))
-        print '95 :{}'.format(np.nanpercentile(data,95))
-        print '99 :{}'.format(np.nanpercentile(data,99))
-        print 'max: {}'.format(np.nanmax(data))
-        print 'u :{}'.format(np.nanmean(data))
-        print 'std: {}'.format(np.nanstd(data))
-
-
-
-    print 'done'
+    pass
