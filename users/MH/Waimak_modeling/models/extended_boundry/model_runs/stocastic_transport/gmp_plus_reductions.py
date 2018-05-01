@@ -252,10 +252,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):  # todo check/test
     intrazone_dir = os.path.join(outdir, 'waimakariri_zone')
 
     # raw data
-    raw_dir = os.path.join(intrazone_dir, 'raw_model_data')
     corrected_dir = os.path.join(intrazone_dir, 'corrected_model_data')
-    if not os.path.exists(raw_dir):
-        os.makedirs(raw_dir)
     if not os.path.exists(corrected_dir):
         os.makedirs(corrected_dir)
     scenarios = scenario_paths.keys()
@@ -273,6 +270,9 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):  # todo check/test
                                     r"well_data.csv"),index_col=0).transpose()
     }
     for scen, path in scenario_paths.items():
+        raw_dir = os.path.join(intrazone_dir, 'raw_model_data', scen)
+        if not os.path.exists(raw_dir):
+            os.makedirs(raw_dir)
         plot_dir = os.path.join(corrected_dir,'{}_plots'.format(scen))
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
