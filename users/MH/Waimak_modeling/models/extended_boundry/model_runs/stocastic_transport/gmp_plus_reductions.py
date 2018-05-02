@@ -30,7 +30,7 @@ def get_alpine_fractions(site=None, return_paths=False, number=1000):
     # if path then just send out the data (to replace alpine fraction so that I can patch this thing
     # if site is not None get teh value
 
-    base_dir = env.sci(r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Groundwater Quality\End member "
+    base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Groundwater Quality\End member "
                        r"mixing model\emma_for_n_adjustment\4_endmembers\raw_data")
     paths = {
         # site name: path to the stocastic data
@@ -164,7 +164,7 @@ def get_alpine_fractions(site=None, return_paths=False, number=1000):
     }
 
     for key in paths.keys():
-        paths[key] = os.path.join(base_dir, paths[key])
+        paths[key] = [os.path.join(base_dir, e) for e in paths[key]]
 
     if return_paths:
         return paths
@@ -177,7 +177,7 @@ def get_alpine_fractions(site=None, return_paths=False, number=1000):
     return outdata
 
 
-alpine_fractions = get_alpine_fractions(paths=True)
+alpine_fractions = get_alpine_fractions(return_paths=True)
 sites = {
     # streams
     'cust_skewbridge',
