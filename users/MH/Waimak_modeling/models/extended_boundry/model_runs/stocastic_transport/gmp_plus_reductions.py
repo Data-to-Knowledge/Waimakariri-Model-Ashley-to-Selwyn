@@ -21,15 +21,18 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.inte
     _np_describe
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
+from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.realisation_id import \
+    get_stocastic_set
 
 
-def get_alpine_fractions(site=None, paths=False, number=1000):  # todo check all paths exist and think about number
+def get_alpine_fractions(site=None, return_paths=False, number=1000):
     # number is the number of samples to pull out
     # if path then just send out the data (to replace alpine fraction so that I can patch this thing
     # if site is not None get teh value
 
-    base_dir = None  # todo add
-    paths = {  # todo check
+    base_dir = env.sci(r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Groundwater Quality\End member "
+                       r"mixing model\emma_for_n_adjustment\4_endmembers\raw_data")
+    paths = {
         # site name: path to the stocastic data
 
         # site name: modified n value
@@ -146,15 +149,15 @@ def get_alpine_fractions(site=None, paths=False, number=1000):  # todo check all
         #  when I think it should be SQ35170 which I think is the main courtenay
         # after discusstion with adrian M we decided to scrap the correction of this data as much of the saline in the
         # samples we have avalible could be derived from tidal cloride contributions
-        #'courtenay_kaiapoi_s': ['courtenay_kaiapoi_stream_river.txt'],
+        # 'courtenay_kaiapoi_s': ['courtenay_kaiapoi_stream_river.txt'],
 
         # kaiapoi (silver stream) at harpers road
         'kaiapoi_harpers_s': ['kaiapoi_harpers_stream_river.txt'],
-    # from emma we can expect a median of 23% waimak water
+        # from emma we can expect a median of 23% waimak water
 
         # kaiapoi at island road
         'kaiapoi_island_s': ['kaiapoi_islands_stream_river.txt'],
-    # from emma we can expect a median of 20% waimak water
+        # from emma we can expect a median of 20% waimak water
 
         # ohoka at island road
         'ohoka_island_s': ['ohoka_islands_stream_river.txt']  # from emma we can expect a median of 12% waimak water
@@ -163,7 +166,7 @@ def get_alpine_fractions(site=None, paths=False, number=1000):  # todo check all
     for key in paths.keys():
         paths[key] = os.path.join(base_dir, paths[key])
 
-    if paths:
+    if return_paths:
         return paths
 
     data = []
@@ -271,7 +274,7 @@ def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=
     extract_data(base_mt3d_dir, outfile=out_nc, description=nc_description, nname='mednload', units='g/m3')
 
 
-def extract_receptor_data(scenario_paths, cbc_paths, outdir):  # todo check/test
+def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     """
 
     :param scenario_paths: dictionary scenario:path to nc file;  scenario must have gmp or cmp in the scenario name
@@ -334,7 +337,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):  # todo check/test
             use_cbc_path = cbc_paths[scen]
         else:
             raise ValueError('unexpected types for cbc_paths: {}'.format(type(cbc_paths)))
-        get_n_at_points_nc(outdir, nsmc_nums='all', ucn_var_name='mednload',
+        get_n_at_points_nc(outdir, nsmc_nums=get_stocastic_set(False), ucn_var_name='mednload',
                            ucn_nc_path=path,
                            cbc_nc_path=use_cbc_path,
                            missing_str_obs='raise')
@@ -431,4 +434,25 @@ def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
 
 
 if __name__ == '__main__':
+    for key, paths in alpine_fractions.items(): #todo run test
+        for path in paths:
+            if not os.path.exists(path):
+                print('missing', key, path)
+
+
+    if False: #todo test
+        # a test of the extract receptor data... I expect something to break...
+        gmp_cbc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc")
+        out_nc_25 = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_plus25per_dairy_ucn.nc")
+        out_nc_15 = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_plus15per_dairy_ucn.nc")
+        extract_receptor_data(scenario_paths={
+            'gmp_15_red': out_nc_15,
+            'gmp_25_red': out_nc_25,
+        },
+            cbc_paths={
+                'gmp_15_red': gmp_cbc,
+                'gmp_25_red': gmp_cbc,
+            },
+            outdir=r"C:\Users\matth\Downloads\test_extract_receptor_data")
+
     print('done')

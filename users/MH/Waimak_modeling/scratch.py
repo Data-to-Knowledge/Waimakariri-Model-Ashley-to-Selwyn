@@ -19,8 +19,6 @@ from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
 from osgeo import gdal
 
 if __name__ == '__main__':
-    flopy.mbase.run_model(exe_name=r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\models_exes\modflow-nwt_from_brioch\MODFLOW-NWT_64.exe",
-                          namefile="NsmcReal000017_pc5_80.nam", model_ws="C:\Users\MattH\Desktop\NsmcReal000017_pc5_80")
-
-
-
+    test = pd.Series([1,2,4])
+    t = test.loc[10]
+    print('done')

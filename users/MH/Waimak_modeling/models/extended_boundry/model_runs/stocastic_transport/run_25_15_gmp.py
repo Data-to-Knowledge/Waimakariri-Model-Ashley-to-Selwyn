@@ -28,11 +28,3 @@ if __name__ == '__main__':
         nc_description = 'a 15 percent reduction on all dairy and dairy support in the waimakariri zone'
         base_mt3d_dir = r"D:\mh_waimak_models\base_for_GMP_plus15per_dairy"
         setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc_15, nc_description, dt0=1e4, ttsmax=1e5)
-
-    get_recptor_data = False #todo test and then run this
-    if get_recptor_data:
-        extract_receptor_data(scenario_paths={'gmp_15_red': out_nc_15, #todo add all of the other key scenarios
-                                              'gmp_25_red': out_nc_25},
-                              cbc_paths=env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc"), #todo if add eyre mar... manage this
-                              outdir=env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
-                                             "ns and results\ex_bd_va\zone_committee_n_solutions\gmp_15_25_red"))
