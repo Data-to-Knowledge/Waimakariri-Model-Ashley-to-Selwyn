@@ -42,6 +42,8 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
         nsmc_filter_idx = np.in1d(filter_nums, emma_nums)
         nsmc_nums = emma_nums
     else:
+        if len(set(nsmc_nums))>len(set(emma_nums)):
+            nsmc_nums = emma_nums
         nsmc_nums = np.atleast_1d(nsmc_nums)
         ucn_num_idx = np.in1d(emma_nums, nsmc_nums)
         nsmc_filter_idx = np.in1d(filter_nums, nsmc_nums)
@@ -126,6 +128,8 @@ def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, 
         num_idx = np.ones(emma_nums.shape).astype(bool)
         nsmc_nums = emma_nums
     else:
+        if len(set(nsmc_nums))>len(set(emma_nums)):
+            nsmc_nums = emma_nums
         nsmc_nums = np.atleast_1d(nsmc_nums)
         num_idx = np.in1d(emma_nums, nsmc_nums)
 

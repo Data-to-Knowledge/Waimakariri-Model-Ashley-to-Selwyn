@@ -282,27 +282,6 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     :return:
     """
     # extract the raw data from the model runs for all receptors intra and interzone...
-
-    # interzone receptors including n load uncertainty
-    interzone_outdir = os.path.join(outdir, 'interzone')
-    if not os.path.exists(interzone_outdir):
-        os.makedirs(interzone_outdir)
-    get_interzone_n(scenario_paths.keys(),
-                    os.path.join(interzone_outdir, 'all_n_interzone.csv'))
-    data = pd.read_csv(os.path.join(interzone_outdir, 'all_n_interzone.csv'),
-                       index_col=[0, 1], header=[0, 1])
-    data = data.reorder_levels(['stat', 'scenario'], axis=1)
-    data['1%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_1ths.csv'))
-    data['5%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_5ths.csv'))
-    data['10%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_10ths.csv'))
-    data['25%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_25ths.csv'))
-    data['50%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_50ths.csv'))
-    data['75%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_75ths.csv'))
-    data['95%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_95ths.csv'))
-    data['99%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_99ths.csv'))
-    data['mean'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_mean.csv'))
-    data['std'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_std.csv'))
-
     # intrazone data
     intrazone_dir = os.path.join(outdir, 'waimakariri_zone')
 
@@ -337,7 +316,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
             use_cbc_path = cbc_paths[scen]
         else:
             raise ValueError('unexpected types for cbc_paths: {}'.format(type(cbc_paths)))
-        get_n_at_points_nc(outdir, nsmc_nums=get_stocastic_set(False), ucn_var_name='mednload',
+        get_n_at_points_nc(raw_dir, nsmc_nums=get_stocastic_set(False), ucn_var_name='mednload',
                            ucn_nc_path=path,
                            cbc_nc_path=use_cbc_path,
                            missing_str_obs='raise')
@@ -365,16 +344,42 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 
     outdata.to_csv(os.path.join(corrected_dir, 'all_n_waimak_zone.csv'))
     outdata = outdata.reorder_levels(['stat', 'scenario'], axis=1)
-    outdata['1%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_1ths.csv'))
-    outdata['5%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_5ths.csv'))
-    outdata['10%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_10ths.csv'))
-    outdata['25%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_25ths.csv'))
-    outdata['50%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_50ths.csv'))
-    outdata['75%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_75ths.csv'))
-    outdata['95%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_95ths.csv'))
-    outdata['99%'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_99ths.csv'))
-    outdata['mean'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_mean.csv'))
-    outdata['std'].to_csv(os.path.join(interzone_outdir, 'n_data_waimak_zone_std.csv'))
+    outdata['1%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_1ths.csv'))
+    outdata['5%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_5ths.csv'))
+    outdata['10%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_10ths.csv'))
+    outdata['25%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_25ths.csv'))
+    outdata['50%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_50ths.csv'))
+    outdata['75%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_75ths.csv'))
+    outdata['95%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_95ths.csv'))
+    outdata['99%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_99ths.csv'))
+    outdata['mean'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_mean.csv'))
+    outdata['std'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_std.csv'))
+
+
+
+
+    ##### interzone receptors including n load uncertainty #####
+    interzone_outdir = os.path.join(outdir, 'interzone')
+    if not os.path.exists(interzone_outdir):
+        os.makedirs(interzone_outdir)
+    get_interzone_n(scenario_paths,
+                    os.path.join(interzone_outdir, 'all_n_interzone.csv'))
+    data = pd.read_csv(os.path.join(interzone_outdir, 'all_n_interzone.csv'),
+                       index_col=[0, 1], header=[0, 1])
+    data = data.reorder_levels(['stat', 'scenario'], axis=1)
+    data['1%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_1ths.csv'))
+    data['5%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_5ths.csv'))
+    data['10%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_10ths.csv'))
+    data['25%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_25ths.csv'))
+    data['50%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_50ths.csv'))
+    data['75%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_75ths.csv'))
+    data['95%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_95ths.csv'))
+    data['99%'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_99ths.csv'))
+    data['mean'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_mean.csv'))
+    data['std'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_std.csv'))
+
+    #todo add a function to take all this data and put it a presentation format
+
 
 
 def add_stocastic_load(site, base_data):
@@ -403,33 +408,23 @@ def add_stocastic_load(site, base_data):
 
 
 def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
+    print(site) #todo DADB
     warn('correcting data for EMMA results please review plots in: {}'.format(plot_dir))
     if site in get_str_ids():
         # stream stuff
         wai = waimak_data['stream'].loc[site]
-        n = n_data.loc[site]
+        n = n_data
     else:
         wai = waimak_data['well'].loc[well_sites[site]].mean(axis=0)
-        n = n_data.loc[well_sites[site]].mean(axis=0)
+        n = n_data.mean(axis=0)
         # well stuff
-    plot_data = pd.merge(pd.DataFrame(wai, columns=['wai']), pd.DataFrame(n, columns=['n']),
+    n.name='n'
+    wai.name='wai'
+    plot_data = pd.merge(pd.DataFrame(wai), pd.DataFrame(n),
                          left_index=True, right_index=True)
     model = LR(plot_data.wai, plot_data.n)
     outdata = model.predict(get_alpine_fractions(site))
-    n_temp = plot_data.n
-    wai_temp = plot_data.wai
-    fig, ax = plt.subplots(figsize=(18.5, 9.5))
-    model = LR(wai_temp, n_temp)
-    ax.scatter(wai_temp, n_temp)
-    ax.plot(wai_temp, model.predict(wai_temp))
-    anchored_text = AnchoredText("formula: {}\nadj_R2: {}".format(model.formula, model.adj_rval), loc=2)
-    ax.add_artist(anchored_text)
-    ax.set_ylabel('N')
-    ax.set_xlabel('alpine_river_fraction (or ashley_loss)')
-    ax.set_title(site)
-    fig.savefig(os.path.join(plot_dir, 'plots', '{}.png'.format(site)))
-    plt.close(fig)
-
+    model.plot(False,os.path.join(plot_dir, '{}.png'.format(site)))
     return outdata
 
 
@@ -440,7 +435,7 @@ if __name__ == '__main__':
                 print('missing', key, path)
 
 
-    if False: #todo test
+    if True: #todo test
         # a test of the extract receptor data... I expect something to break...
         gmp_cbc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc")
         out_nc_25 = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_plus25per_dairy_ucn.nc")

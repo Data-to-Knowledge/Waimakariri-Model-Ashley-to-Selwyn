@@ -97,7 +97,8 @@ class LR(object):
 
         ax6.set_xlim(0,5)
         ax6.set_ylim(0,5)
-        ax6.text(0.5, 1, 'R2: {}'.format(self.rval))
+        ax6.text(0.5, 1, self.formula)
+        ax6.text(0.5, 1.5, 'R2: {}'.format(self.rval))
         ax6.text(0.5, 2, 'adj-R2: {}'.format(self.adj_rval))
         ax6.text(0.5, 3, 'P: int: {}, slope: {}'.format(*self.pval))
         ax6.text(0.5, 3.5, 'params: int: {}, slope: {}'.format(*self.model.params))
