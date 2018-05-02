@@ -111,6 +111,9 @@ stream_zones_to_modify = {
 
     # the below modified from regressions created from n_vs_waimak_per values are in mg/l
     # courtaney at the kaiapoi
+    # note the courtenay is possibly wrong zeb used SQ35169 which looks like a side trib
+    #  when I think it should be SQ35170 which I think is the main courtenay
+
     'courtenay_kaiapoi_s': 6.33,  # from emma we expect a median of 8% waimak water
 
     # kaiapoi (silver stream) at harpers road

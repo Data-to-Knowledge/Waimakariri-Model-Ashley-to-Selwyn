@@ -31,8 +31,8 @@ if __name__ == '__main__':
 
     get_recptor_data = False #todo test and then run this
     if get_recptor_data:
-        extract_receptor_data(scenario_paths={'gmp_15_red': out_nc_15,
+        extract_receptor_data(scenario_paths={'gmp_15_red': out_nc_15, #todo add all of the other key scenarios
                                               'gmp_25_red': out_nc_25},
-                              cbc_paths=env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc"),
+                              cbc_paths=env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc"), #todo if add eyre mar... manage this
                               outdir=env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
                                              "ns and results\ex_bd_va\zone_committee_n_solutions\gmp_15_25_red"))

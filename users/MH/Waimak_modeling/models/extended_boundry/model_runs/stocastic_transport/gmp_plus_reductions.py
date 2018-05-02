@@ -22,107 +22,159 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.inte
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
 
-alpine_fractions = {
-    # site name: modified n value
 
-    # WDC wells
-    # ## leave as is:
-    # ###### fernside
-    # ###### manderville
-    # ###### oxford urban
-    # ###### pegasus
-    # ###### poyntzs rd
-    # ###### waikuku
+def get_alpine_fractions(site=None, paths=False, number=1000):  # todo check all paths exist and think about number
+    # number is the number of samples to pull out
+    # if path then just send out the data (to replace alpine fraction so that I can patch this thing
+    # if site is not None get teh value
 
-    # cust emmma calculation s median of 18% alpine
-    'wdc_Cust': .18,
+    base_dir = None  # todo add
+    paths = {  # todo check
+        # site name: path to the stocastic data
 
-    # kaiapoi # from emma medain of 32% alpine
-    'wdc_Kaiapoi': .32,
+        # site name: modified n value
 
-    # kairaki  #from emma medain from kaiakpoi of 32% alpine
-    'wdc_Kairaki': .32,
+        # WDC wells
+        # ## leave as is:
+        # ###### fernside
+        # ###### manderville
+        # ###### oxford urban
+        # ###### pegasus
+        # ###### poyntzs rd
+        # ###### waikuku
 
-    # ohoka # from EMMA median of 20%
-    'wdc_Ohoka': .20,
+        # cust emmma calculation s median of 18% alpine
+        'wdc_Cust': ['cust-springbank_river.txt'],
 
-    # rangiora #from emma medain from kaiakpoi of 32% alpine
-    'wdc_Rangiora': .32,
+        # kaiapoi # from emma medain of 32% alpine
+        'wdc_Kaiapoi': [
+            'kaiapoi_M35_0706_river.txt',
+            'kaiapoi_M35_0788_river.txt',
+            'kaiapoi_M35_0834_river.txt',
+            'kaiapoi_M35_0847_river.txt',
+            'kaiapoi_M35_11199_river.txt',
+        ],
 
-    # west eyreton as west eyreton wells  # from emma 19% alpine
-    'wdc_West Eyreton': .19,
+        # kairaki  #from emma medain from kaiakpoi of 32% alpine
+        'wdc_Kairaki': [
+            'kaiapoi_M35_0706_river.txt',
+            'kaiapoi_M35_0788_river.txt',
+            'kaiapoi_M35_0834_river.txt',
+            'kaiapoi_M35_0847_river.txt',
+            'kaiapoi_M35_11199_river.txt',
+        ],
 
-    # private wells
-    # ## leave as is:
-    # 'Fernside',
-    # 'Flaxton',
-    # 'Horellville',
-    # 'Mandeville',
-    # 'North East Eyrewell_shallow',
-    # 'North West Eyrewell_shallow',
-    # 'Rangiora',
-    # 'Swannanoa_shallow',
-    # 'Waikuku',
-    # 'Woodend - Tuahiwi',
-    # 'West Eyreton_shallow',
+        # ohoka # from EMMA median of 20%
+        'wdc_Ohoka': ['Ohoka-deep_river.txt'],
+
+        # rangiora #from emma medain from kaiakpoi of 32% alpine
+        'wdc_Rangiora': [
+            'kaiapoi_M35_0706_river.txt',
+            'kaiapoi_M35_0788_river.txt',
+            'kaiapoi_M35_0834_river.txt',
+            'kaiapoi_M35_0847_river.txt',
+            'kaiapoi_M35_11199_river.txt',
+        ],
+
+        # west eyreton as west eyreton wells  # from emma 19% alpine
+        'wdc_West Eyreton': ['swannanoa-west-eyreton_river.txt'],
+
+        # private wells
+        # ## leave as is:
+        # 'Fernside',
+        # 'Flaxton',
+        # 'Horellville',
+        # 'Mandeville',
+        # 'North East Eyrewell_shallow',
+        # 'North West Eyrewell_shallow',
+        # 'Rangiora',
+        # 'Swannanoa_shallow',
+        # 'Waikuku',
+        # 'Woodend - Tuahiwi',
+        # 'West Eyreton_shallow',
 
 
-    # Clarkville , scale similar to kaiapoi at island road waimakariri component 20% alpine river water
-    'Clarkville': .20,
+        # Clarkville , scale similar to kaiapoi at island road waimakariri component 20% alpine river water
+        'Clarkville': ['kaiapoi_islands_stream_river.txt'],
 
-    # Cust, similar to cust WDC well emmma calculation s median of 18% alpine
-    'Cust': .18,
+        # Cust, similar to cust WDC well emmma calculation s median of 18% alpine
+        'Cust': ['cust-springbank_river.txt'],
 
-    # 'Eyreton_deep', use our EMMA data 32% alpine river water
-    'Eyreton_deep': .32,
+        # 'Eyreton_deep', use our EMMA data 32% alpine river water
+        'Eyreton_deep': [
+            'eyreton_M35_12017_river.txt',
+            'eyreton_M35_12018_river.txt'
+        ],
 
-    # 'Eyreton_shallow', as kaiapoi at island road component 20% alpine river water
-    'Eyreton_shallow': .20,
+        # 'Eyreton_shallow', as kaiapoi at island road component 20% alpine river water
+        'Eyreton_shallow': ['kaiapoi_islands_stream_river.txt'],
 
-    # 'North East Eyrewell_deep', # look for EMMA lump with NW eyrewell 28% alpine river water from emma
-    'North East Eyrewell_deep': .28,
+        # 'North East Eyrewell_deep', # look for EMMA lump with NW eyrewell 28% alpine river water from emma
+        'North East Eyrewell_deep': ['NE-eyrewell-deep_river.txt'],
 
-    # 'North West Eyrewell_deep', # look for EMMA lump with NE eyrewell 28% alpine river water from emma
-    'North West Eyrewell_deep': .28,
+        # 'North West Eyrewell_deep', # look for EMMA lump with NE eyrewell 28% alpine river water from emma
+        'North West Eyrewell_deep': ['west-NW-eyrewell_river.txt'],
 
-    # 'Ohoka_deep', # as ohoka WDC well  from EMMA median of 20%
-    'Ohoka_deep': .20,
+        # 'Ohoka_deep', # as ohoka WDC well  from EMMA median of 20%
+        'Ohoka_deep': ['Ohoka-deep_river.txt'],
 
-    # 'Ohoka_shallow', # as ohoka stream # from emma we can expect a median of 12% waimak water
-    'Ohoka_shallow': .12,
+        # 'Ohoka_shallow', # as ohoka stream # from emma we can expect a median of 12% waimak water
+        'Ohoka_shallow': ['ohoka_islands_stream_river.txt'],
 
-    # 'Springbank', #as cust (and cust wdc) emmma calculation s median of 18% alpine
-    'Springbank': .18,
+        # 'Springbank', #as cust (and cust wdc) emmma calculation s median of 18% alpine
+        'Springbank': ['cust-springbank_river.txt'],
 
-    # 'Summerhill', # look for emma 26% alpine river water
-    'Summerhill': .26,
+        # 'Summerhill', # look for emma 26% alpine river water
+        'Summerhill': ['summerhill_river.txt'],
 
-    # 'Swannanoa_deep', as WDC west eyreton # from emma 19% alpine
-    'Swannanoa_deep': .19,
+        # 'Swannanoa_deep', as WDC west eyreton # from emma 19% alpine
+        'Swannanoa_deep': ['swannanoa-west-eyreton_river.txt'],
 
-    # 'West Eyreton_deep', as swannanowa/WDC west eyreton # from emma 19% alpine
-    'West Eyreton_deep': .19,
-    # site name: modified n value
+        # 'West Eyreton_deep', as swannanowa/WDC west eyreton # from emma 19% alpine
+        'West Eyreton_deep': ['swannanoa-west-eyreton_river.txt'],
+        # site name: modified n value
 
-    # not modifing
-    # cam_bramley_s: no change, we do not have EMMA data and it is unlikely to lead to any real changes (e.g. NOF bands)
-    # cam at mashes as cam at bramleys
-    # cust_skewbridge: no change, it is unlikely to lead to any real changes (e.g. NOF bands)
-    # northbrook and southbrook at marshes: no change, it is unlikely to lead to any real changes (e.g. NOF bands)
+        # not modifing
+        # cam_bramley_s: no change, we do not have EMMA data and it is unlikely to lead to any real changes (e.g. NOF bands)
+        # cam at mashes as cam at bramleys
+        # cust_skewbridge: no change, it is unlikely to lead to any real changes (e.g. NOF bands)
+        # northbrook and southbrook at marshes: no change, it is unlikely to lead to any real changes (e.g. NOF bands)
 
-    # the below modified from regressions created from n_vs_waimak_per values are in mg/l
-    # courtaney at the kaiapoi
-    'courtenay_kaiapoi_s': 0.8,  # from emma we expect a median of 8% waimak water
+        # the below modified from regressions created from n_vs_waimak_per values are in mg/l
+        # courtaney at the kaiapoi
+        # note the courtenay is possibly wrong zeb used SQ35169 which looks like a side trib
+        #  when I think it should be SQ35170 which I think is the main courtenay
+        # after discusstion with adrian M we decided to scrap the correction of this data as much of the saline in the
+        # samples we have avalible could be derived from tidal cloride contributions
+        #'courtenay_kaiapoi_s': ['courtenay_kaiapoi_stream_river.txt'],
 
-    # kaiapoi (silver stream) at harpers road
-    'kaiapoi_harpers_s': .23,  # from emma we can expect a median of 23% waimak water
+        # kaiapoi (silver stream) at harpers road
+        'kaiapoi_harpers_s': ['kaiapoi_harpers_stream_river.txt'],
+    # from emma we can expect a median of 23% waimak water
 
-    # kaiapoi at island road
-    'kaiapoi_island_s': .20,  # from emma we can expect a median of 20% waimak water
+        # kaiapoi at island road
+        'kaiapoi_island_s': ['kaiapoi_islands_stream_river.txt'],
+    # from emma we can expect a median of 20% waimak water
 
-    # ohoka at island road
-    'ohoka_island_s': .12  # from emma we can expect a median of 12% waimak water
-}
+        # ohoka at island road
+        'ohoka_island_s': ['ohoka_islands_stream_river.txt']  # from emma we can expect a median of 12% waimak water
+    }
+
+    for key in paths.keys():
+        paths[key] = os.path.join(base_dir, paths[key])
+
+    if paths:
+        return paths
+
+    data = []
+    for path in paths[site]:
+        data.append(np.loadtxt(path))
+    data = np.concatenate(data).flatten()
+    outdata = np.random.choice(data, number)
+    return outdata
+
+
+alpine_fractions = get_alpine_fractions(paths=True)
 sites = {
     # streams
     'cust_skewbridge',
@@ -267,13 +319,13 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):  # todo check/test
                                       r"_str_data.csv"), index_col=0).transpose(),
         'well': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations a"
                                     r"nd results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set_"
-                                    r"well_data.csv"),index_col=0).transpose()
+                                    r"well_data.csv"), index_col=0).transpose()
     }
     for scen, path in scenario_paths.items():
         raw_dir = os.path.join(intrazone_dir, 'raw_model_data', scen)
         if not os.path.exists(raw_dir):
             os.makedirs(raw_dir)
-        plot_dir = os.path.join(corrected_dir,'{}_plots'.format(scen))
+        plot_dir = os.path.join(corrected_dir, '{}_plots'.format(scen))
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
         if isinstance(cbc_paths, str):
@@ -346,7 +398,8 @@ def add_stocastic_load(site, base_data):
     outdata = _np_describe(all_n)
     return outdata
 
-def correct_alpine_river(site, waimak_data, n_data,well_sites, plot_dir):
+
+def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
     warn('correcting data for EMMA results please review plots in: {}'.format(plot_dir))
     if site in get_str_ids():
         # stream stuff
@@ -356,10 +409,10 @@ def correct_alpine_river(site, waimak_data, n_data,well_sites, plot_dir):
         wai = waimak_data['well'].loc[well_sites[site]].mean(axis=0)
         n = n_data.loc[well_sites[site]].mean(axis=0)
         # well stuff
-    plot_data = pd.merge(pd.DataFrame(wai,columns=['wai']),pd.DataFrame(n,columns=['n']),
+    plot_data = pd.merge(pd.DataFrame(wai, columns=['wai']), pd.DataFrame(n, columns=['n']),
                          left_index=True, right_index=True)
     model = LR(plot_data.wai, plot_data.n)
-    outdata = model.predict(alpine_fractions[site])
+    outdata = model.predict(get_alpine_fractions(site))
     n_temp = plot_data.n
     wai_temp = plot_data.wai
     fig, ax = plt.subplots(figsize=(18.5, 9.5))
@@ -375,6 +428,7 @@ def correct_alpine_river(site, waimak_data, n_data,well_sites, plot_dir):
     plt.close(fig)
 
     return outdata
+
 
 if __name__ == '__main__':
     print('done')

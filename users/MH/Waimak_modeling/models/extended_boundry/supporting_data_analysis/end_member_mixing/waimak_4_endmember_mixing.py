@@ -15,7 +15,7 @@ from scipy.stats import mode
 import matplotlib.pyplot as plt
 
 
-def mc_calc_end_members(outdir, sites, o18_u, o18_s, cl_u, cl_s, n=10000):
+def mc_calc_end_members(outdir, sites, o18_u, o18_s, cl_u, cl_s, n=10000, export_raw=False):
     percentages = np.array(list(itertools.product(range(101), range(101), range(101), range(101))))
     percentages = percentages[percentages.sum(axis=1) == 100] / 100
 
@@ -55,6 +55,15 @@ def mc_calc_end_members(outdir, sites, o18_u, o18_s, cl_u, cl_s, n=10000):
                 continue
             temp.append(percentages[idx[:, i]])
         temp_out = np.concatenate(temp, axis=0)
+        if export_raw: # save the original data
+            export_dir = os.path.join(outdir,'raw_data')
+            if not os.path.exists(export_dir):
+                os.makedirs(export_dir)
+            saver = pd.DataFrame(temp_out, columns=['coastal', 'inland', 'river', 'eyre'])
+            for key in ['coastal', 'inland', 'river', 'eyre']:
+                saver.loc[key].to_csv(os.path.join(export_dir,'{}_{}.txt'.format(site,key)),
+                                        index=False, header=False, sep=' ')
+
         out_5th = np.percentile(temp_out, 5, axis=0)
         outdata_5th.loc[site] = out_5th
         out_50th = np.percentile(temp_out, 50, axis=0)
