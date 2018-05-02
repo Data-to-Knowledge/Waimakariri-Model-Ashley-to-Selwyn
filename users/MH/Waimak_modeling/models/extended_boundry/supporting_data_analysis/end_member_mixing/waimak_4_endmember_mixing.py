@@ -41,6 +41,7 @@ def mc_calc_end_members(outdir, sites, o18_u, o18_s, cl_u, cl_s, n=10000, export
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
     for site in sites.keys():
+        print(site)
         cl_lower = sites[site]['cl_lower'] - 0.5  # these values are for the analytical error
         cl_upper = sites[site]['cl_upper'] + 0.5
         o18_lower = sites[site]['o18_lower'] - 0.2
@@ -60,8 +61,8 @@ def mc_calc_end_members(outdir, sites, o18_u, o18_s, cl_u, cl_s, n=10000, export
             if not os.path.exists(export_dir):
                 os.makedirs(export_dir)
             saver = pd.DataFrame(temp_out, columns=['coastal', 'inland', 'river', 'eyre'])
-            for key in ['coastal', 'inland', 'river', 'eyre']:
-                saver.loc[key].to_csv(os.path.join(export_dir,'{}_{}.txt'.format(site,key)),
+            for key in ['river']: # only saving river as that's what I'll use and I'm tight on space
+                saver[key].to_csv(os.path.join(export_dir,'{}_{}.txt'.format(site,key)),
                                         index=False, header=False, sep=' ')
 
         out_5th = np.percentile(temp_out, 5, axis=0)
