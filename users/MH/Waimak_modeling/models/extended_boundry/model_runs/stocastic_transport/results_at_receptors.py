@@ -42,6 +42,6 @@ if __name__ == '__main__':
                                          'interzone_8': gmp_cbc,
                                          'interzone_50_red': gmp_cbc
                                          },
-                              outdir=env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
-                                             r"ns and results\ex_bd_va\zone_committee_n_solution"
-                                             r"s\all_scens_as_of_{}".format(datetime.date.today().isoformat())))
+                              outdir=(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
+                                             r"ns and results\ex_bd_va\zc_n_sol"
+                                             r"s\all_scens"))
