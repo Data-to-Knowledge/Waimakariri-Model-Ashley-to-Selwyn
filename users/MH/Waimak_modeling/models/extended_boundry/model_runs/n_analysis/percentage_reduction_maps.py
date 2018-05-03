@@ -17,55 +17,59 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_gmp_load_raster, get_pc5pa_additonal_load
 
 
-def get_current_pathway_n(mode, conservative_zones):
-    if not isinstance(mode, dict):
-        if mode == '50th':
-            mode = {}
-            for key in private_wells:
-                mode[key] = '50%_gmp_con'
-            for key in wdc_wells:
-                mode[key] = '50%_gmp_con'
-            for key in streams:
-                mode[key] = 'Median Current Pathways'
-        elif mode == '95th':
-            mode = {}
-            for key in private_wells:
-                mode[key] = '95%_gmp_con'
-            for key in wdc_wells:
-                mode[key] = '95%_gmp_con'
-            for key in streams:
-                mode[key] = '95th percentile Current Pathways'
-        else:
-            raise ValueError('unexpected value for mode: {} expected "50th" or "95th"'.format(mode))
-    outdata = {}
+def get_current_pathway_n(mode, conservative_zones,
+                          from_mt3d_runs=False):  # todo add a version to get data from the stocastic mt3d runs
+    if from_mt3d_runs:  # todo define
+        raise NotImplementedError
+    else:
+        if not isinstance(mode, dict):
+            if mode == '50th':
+                mode = {}
+                for key in private_wells:
+                    mode[key] = '50%_gmp_con'
+                for key in wdc_wells:
+                    mode[key] = '50%_gmp_con'
+                for key in streams:
+                    mode[key] = 'Median Current Pathways'
+            elif mode == '95th':
+                mode = {}
+                for key in private_wells:
+                    mode[key] = '95%_gmp_con'
+                for key in wdc_wells:
+                    mode[key] = '95%_gmp_con'
+                for key in streams:
+                    mode[key] = '95th percentile Current Pathways'
+            else:
+                raise ValueError('unexpected value for mode: {} expected "50th" or "95th"'.format(mode))
+        outdata = {}
 
-    # wells
-    data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
-                         r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
-                         r'results wells summary.xlsx',
-                         sheetname='GMP WDC', index_col=0)
-    for key in wdc_wells:
-        outdata[key] = data.loc[key, mode[key]]
+        # wells
+        data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
+                             r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
+                             r'results wells summary.xlsx',
+                             sheetname='GMP WDC', index_col=0)
+        for key in wdc_wells:
+            outdata[key] = data.loc[key, mode[key]]
 
-    data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
-                         r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
-                         r'results wells summary.xlsx',
-                         sheetname='GMP private', index_col=0)
-    for key in private_wells:
-        outdata[key] = data.loc[key, mode[key]]
+        data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
+                             r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N '
+                             r'results wells summary.xlsx',
+                             sheetname='GMP private', index_col=0)
+        for key in private_wells:
+            outdata[key] = data.loc[key, mode[key]]
 
-    # steams
-    data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
-                         r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N load '
-                         r'reductions Streams 050418.xlsx', skiprows=1, index_col=0)
+        # steams
+        data = pd.read_excel(r'\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model '
+                             r'simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop\N load '
+                             r'reductions Streams 050418.xlsx', skiprows=1, index_col=0)
 
-    for key in streams:
-        outdata[key] = data.loc[str_header_conversion[key], mode[key]].iloc[0]
+        for key in streams:
+            outdata[key] = data.loc[str_header_conversion[key], mode[key]].iloc[0]
 
-    # add PA n load increases
-    pa_n = get_pa_reductions(conservative_zones)
-    for key in set(outdata.keys()) - streams:  # streams are not included as they don't change size
-        outdata[key] += outdata[key] * pa_n[key] / 100
+        # add PA n load increases
+        pa_n = get_pa_reductions(conservative_zones)
+        for key in set(outdata.keys()) - streams:  # streams are not included as they don't change size
+            outdata[key] += outdata[key] * pa_n[key] / 100
 
     return outdata
 
@@ -391,8 +395,8 @@ def get_interzone_reduction(target_load=8, pc5pa=False):
         gmp_load += get_pc5pa_additonal_load()
 
     interzone_reductions = target_load / gmp_load
-    interzone_reductions[np.abs(gmp_load)<target_load] = 1
-    interzone_reductions = (1-interzone_reductions)*100
+    interzone_reductions[np.abs(gmp_load) < target_load] = 1
+    interzone_reductions = (1 - interzone_reductions) * 100
     shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
                             "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
                             "s\interzone\conservative_interzone.shp")
@@ -403,7 +407,8 @@ def get_interzone_reduction(target_load=8, pc5pa=False):
 
 def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets, waimak_target=27,
                                mar_percentage=0, pc5_pa_rules=False, conservative_shp='conservative',
-                               interzone_target_load=None, include_interzone=False, save_reason=True):
+                               interzone_target_load=None, include_interzone=False, save_reason=True,
+                               current_pathway_from_mt3d=False):
     """
     pull togeather the different current pathway results at 95th percentile and calculate reduction rasters (from 95th),
     also calculate a 5 integer raster that says whether it is surface water or ground water (split into wdc and private)
@@ -430,7 +435,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     # include waimak target of 0.1 as given.
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    current_paths = get_current_pathway_n(mode, conservative_shp)
+    current_paths = get_current_pathway_n(mode, conservative_shp, from_mt3d_runs=current_pathway_from_mt3d)
     base_shp_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results"
                             r"\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons")
 
@@ -516,9 +521,9 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     reduction = np.nanmax(temp, axis=0)
     reduction[reduction < 0] = 0
     temp2 = temp.copy()
-    temp2[temp2<=0] = -99
+    temp2[temp2 <= 0] = -99
     temp2[np.isnan(temp2)] = -99
-    temp2 = np.concatenate((smt.get_empty_model_grid()[np.newaxis],temp2),axis=0)
+    temp2 = np.concatenate((smt.get_empty_model_grid()[np.newaxis], temp2), axis=0)
     reason = np.nanargmax(temp2.astype(int), axis=0).astype(
         float)
     reason[idx & np.isfinite(reduction)] = 6

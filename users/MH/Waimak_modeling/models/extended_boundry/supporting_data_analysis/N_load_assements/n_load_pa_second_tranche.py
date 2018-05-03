@@ -28,6 +28,8 @@ def run_nload_pa_stuffs(shp_dir, outdir, name, output_act_n=True):
     create_farm_scale_data(catchments=cments, outdir=os.path.join(outdir, 'pa_rules_{}'.format(name)))
     sumaraize(os.path.join(outdir, 'pa_rules_{}'.format(name)))
 
+    # apply the load increase to the data generated
+
 
 if __name__ == '__main__':
     base_outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results"
