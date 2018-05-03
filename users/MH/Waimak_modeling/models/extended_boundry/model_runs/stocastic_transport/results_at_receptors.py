@@ -42,6 +42,7 @@ if __name__ == '__main__':
                                          'interzone_8': gmp_cbc,
                                          'interzone_50_red': gmp_cbc
                                          },
-                              outdir=(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
+                              outdir=(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
                                              r"ns and results\ex_bd_va\zc_n_sol"
                                              r"s\all_scens"))
+    #todo add pc5pa rules/ current pathway... to waimak zone targets...

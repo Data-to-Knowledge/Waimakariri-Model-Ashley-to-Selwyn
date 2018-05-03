@@ -208,20 +208,23 @@ str_header_conversion = {'cam_bramleys_s': 'Cam  at Bramleys Rd',
                          'ohoka_island_s': 'Ohoka  at Island  at Rd'}
 
 
-def get_mode(scenario):
-    if scenario == 'least_pain':
-        mode = '50th'
-    elif scenario == 'middle_option':
-        mode = {}
-        for key in (wdc_wells | private_wells):
-            mode[key] = '50%_gmp_con'
-        for key in streams:
-            mode[key] = '95th percentile Current Pathways'
-        mode['cam_bramleys_s'] = 'Median Current Pathways'
-    elif scenario == 'most_gain':
-        mode = '95th'
+def get_mode(scenario, current_from_mt3d=False): #todo add a from mt3d tag
+    if current_from_mt3d:
+        raise NotImplementedError
     else:
-        raise NotImplementedError('scenario: {} not implmented'.format(scenario))
+        if scenario == 'least_pain':
+            mode = '50th'
+        elif scenario == 'middle_option':
+            mode = {}
+            for key in (wdc_wells | private_wells):
+                mode[key] = '50%_gmp_con'
+            for key in streams:
+                mode[key] = '95th percentile Current Pathways'
+            mode['cam_bramleys_s'] = 'Median Current Pathways'
+        elif scenario == 'most_gain':
+            mode = '95th'
+        else:
+            raise NotImplementedError('scenario: {} not implmented'.format(scenario))
 
     return mode
 
@@ -385,10 +388,16 @@ def gen_stream_targets(scenario, stream_none=False):
 def get_interzone_reduction(target_load=8, pc5pa=False):
     """
     modelled off GMP loads assumes the conservative zone
-    :param target_load: the load that we want to achieve
+    :param target_load: the load that we want to achieve or a blanket % reduction e.g. '50%'
     :return:
     """
-
+    shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
+                            "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
+                            "s\interzone\conservative_interzone.shp")
+    interzone_idx = np.isfinite(smt.shape_file_to_model_array(shp_file_path, 'Id', True))
+    if isinstance(target_load,str):
+        interzone_reductions = smt.get_empty_model_grid()
+        interzone_reductions[interzone_idx] = float(target_load.strip('%'))
     gmp_load = get_gmp_load_raster()
 
     if pc5pa:
@@ -397,10 +406,6 @@ def get_interzone_reduction(target_load=8, pc5pa=False):
     interzone_reductions = target_load / gmp_load
     interzone_reductions[np.abs(gmp_load) < target_load] = 1
     interzone_reductions = (1 - interzone_reductions) * 100
-    shp_file_path = env.sci("Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resul"
-                            "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
-                            "s\interzone\conservative_interzone.shp")
-    interzone_idx = np.isfinite(smt.shape_file_to_model_array(shp_file_path, 'Id', True))
     interzone_reductions[~interzone_idx] = 0
     return interzone_reductions
 

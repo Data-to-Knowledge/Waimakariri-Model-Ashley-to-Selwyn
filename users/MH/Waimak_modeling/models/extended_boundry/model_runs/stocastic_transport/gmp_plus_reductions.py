@@ -378,7 +378,10 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     data['mean'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_mean.csv'))
     data['std'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_std.csv'))
 
-    #todo add a function to take all this data and put it a presentation format
+
+# todo make a function to create current pathways(gmp+1/2pa) and full PA data. (then the reduction raster scenario fixes are easy)
+
+# todo add a function to take all this data and put it a presentation format of some sort
 
 
 
@@ -395,8 +398,8 @@ def add_stocastic_load(site, base_data):
                            r"s\ex_bd_va\n_results\wdc_use_mix\stocastic_n_wdc_use_mix\without_trans\nconc_cmp_wdc_use"
                            r"_mix\raw_data")  # cmp as gmp has a reduction associated
     else:
-        # private well
-        base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_"
+        # private well # path must not be ucn as it is more than the maxpath length
+        base_dir = (r"P:/Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_"
                            r"bd_va\n_results\private_wells_90\stocastic_n_private_wells_90\without_trans\nconc_cmp_"
                            r"private_wells_90_named_right\raw_data")  # cmp as gmp has a reduction associated
     modifiers = np.loadtxt(os.path.join(base_dir, '{}.txt'.format(site.replace('wdc_', ''))))
@@ -408,7 +411,7 @@ def add_stocastic_load(site, base_data):
 
 
 def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
-    print(site) #todo DADB
+    print(site)
     warn('correcting data for EMMA results please review plots in: {}'.format(plot_dir))
     if site in get_str_ids():
         # stream stuff
@@ -429,13 +432,13 @@ def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
 
 
 if __name__ == '__main__':
-    for key, paths in alpine_fractions.items(): #todo run test
+    for key, paths in alpine_fractions.items():
         for path in paths:
             if not os.path.exists(path):
                 print('missing', key, path)
 
 
-    if True: #todo test
+    if False:
         # a test of the extract receptor data... I expect something to break...
         gmp_cbc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc")
         out_nc_25 = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_plus25per_dairy_ucn.nc")
