@@ -15,10 +15,9 @@ scenarios = ['option4', 'option5', 'least_pain', 'middle_option',
              'most_gain']  # note that the mode is defined for each scenario
 
 if __name__ == '__main__':
-    # todo set up new scenario, and setup from mt3d run options
     include_interzone = False
     if include_interzone:
-        interzone_target_load = 8  # todo I can also pass a '50%' str
+        interzone_target_load = 8  # I can also pass a '50%' str
     else:
         interzone_target_load = None
 

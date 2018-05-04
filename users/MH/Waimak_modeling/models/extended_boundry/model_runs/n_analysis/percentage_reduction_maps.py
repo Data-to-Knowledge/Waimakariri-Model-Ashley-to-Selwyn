@@ -26,7 +26,6 @@ def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False):
         temp = get_mt3d_current_pathway_n()
         for key in mode.keys():
             outdata[key] = temp.loc[key, mode[key]]
-        raise NotImplementedError
     else:
         if not isinstance(mode, dict):
             if mode == '50th':
@@ -274,7 +273,7 @@ def get_mode(scenario, current_from_mt3d=False):
 def gen_waimak_targets(scenario):
     if scenario == 'waimak_None':
         out = 0
-    elif scenario == 'least_pain':
+    elif scenario in ['least_pain', 'option4', 'option5']:
         out = 0
     elif scenario == 'middle_option':
         out = 28
