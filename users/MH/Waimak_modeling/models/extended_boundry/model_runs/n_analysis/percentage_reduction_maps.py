@@ -233,6 +233,24 @@ def get_mode(scenario, current_from_mt3d=False):
             mode = {}
             for key in (wdc_wells | private_wells | streams):
                 mode[key] = '95%'
+        elif scenario == 'option4':
+            mode = {}
+            for key in (streams):
+                mode[key] = '50%'
+            for key in (wdc_wells):
+                mode[key] = '99%'
+            for key in (private_wells):
+                mode[key] = '50%'
+
+        elif scenario == 'option5':
+            mode = {}
+            for key in (streams):
+                mode[key] = '50%'
+            for key in (wdc_wells):
+                mode[key] = '99%'
+            for key in (private_wells):
+                mode[key] = '95%'
+
         else:
             raise NotImplementedError('scenario: {} not implmented'.format(scenario))
     else:
@@ -285,7 +303,7 @@ def gen_well_targets(scenario, wdc_none=False, private_none=False):
         for key in (wdc_wells | private_wells):
             outdata[key] = 5.65
 
-    # following 3 scenarios match zeb's options
+    # following 5 scenarios match zeb's options
     elif scenario == 'least_pain':
         for key in wdc_wells:
             outdata[key] = 5.65
@@ -295,12 +313,25 @@ def gen_well_targets(scenario, wdc_none=False, private_none=False):
         for key in wdc_wells:
             outdata[key] = 5.65
         for key in private_wells:
-            outdata[key] = 5.65  # a number which should represent close to below the drinking water standard
+            outdata[key] = 5.65
     elif scenario == 'most_gain':
         for key in wdc_wells:
             outdata[key] = 5.65
         for key in private_wells:
-            outdata[key] = 5.65  # a number which should represent close to below the drinking water standard
+            outdata[key] = 5.65
+    elif scenario == 'option4':
+        for key in wdc_wells:
+            outdata[key] = 10.2
+        for key in private_wells:
+            outdata[key] = 7.1  # a number which should represent close to below the drinking water standard
+    elif scenario == 'option5':
+        for key in wdc_wells:
+            outdata[key] = 10.2
+        for key in private_wells:
+            outdata[key] = 11.3
+
+
+
 
     elif scenario == 'permissive':
         for key in wdc_wells:
@@ -344,7 +375,7 @@ def gen_stream_targets(scenario, stream_none=False):
         for key in streams:
             outdata[key] = 1
     # following 3 scenarios match zeb's options
-    elif scenario == 'least_pain':
+    elif scenario in ['least_pain', 'option4', 'option5']:
         outdata.update({'cam_bramleys_s': 2.4,
                         'courtenay_kaiapoi_s': 6.9,
                         'cust_skewbridge': 6.9,
