@@ -12,11 +12,13 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.percentage_reduction_maps_v5_from_mt3d import outdir as reduction_map_dir, scenarios as red_scens
 import os
 import gdal
+from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 if __name__ == '__main__':
     run_long_term_reductions = True
     extract_data = True
     data_to_report_format = False
+    red_scens = red_scens[1:]  # not running option 5 at this point as it is less permissive than 'least_pain'
 
     scenarios = {}  # scens are pulled from V5
     for scen in red_scens:
@@ -24,7 +26,6 @@ if __name__ == '__main__':
 
     for key in scenarios.keys():
         scenarios[key] = os.path.join(reduction_map_dir, scenarios[key])
-    # todo check reduction layers!!!! and their paths
     if run_long_term_reductions:
         for scen, red_layer_path in scenarios.items():
             out_nc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\long_red_{}_ucn.nc".format(scen))

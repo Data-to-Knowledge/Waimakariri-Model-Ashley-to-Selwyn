@@ -11,7 +11,7 @@ from percentage_reduction_maps import gen_stream_targets, gen_well_targets, gen_
 
 outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_res"
           r"ults\n_red_mt3d")
-scenarios = ['option4', 'option5', 'least_pain', 'middle_option',
+scenarios = ['option5', 'option4', 'least_pain', 'middle_option',
              'most_gain']  # note that the mode is defined for each scenario
 
 if __name__ == '__main__':
