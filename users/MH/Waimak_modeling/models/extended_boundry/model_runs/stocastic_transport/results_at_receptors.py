@@ -24,7 +24,7 @@ if __name__ == '__main__':
     out_nc_interzone_8 = r"C:\mh_waimak_model_data\GMP_mednload_ucn_8kg_ha_interzone.nc"
     out_nc_50_red = r"C:\mh_waimak_model_data\GMP_mednload_ucn_50_reduc_interzone.nc"
 
-    get_recptor_data = False  # todo test and then run this
+    get_recptor_data = False
     if get_recptor_data:
         extract_receptor_data(scenario_paths={'cmp': cmp_nc,
                                               'gmp': gmp_nc,
@@ -45,4 +45,3 @@ if __name__ == '__main__':
                               outdir=(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
                                              r"ns and results\ex_bd_va\zc_n_sol"
                                              r"s\all_scens"))
-    #todo add pc5pa rules/ current pathway... to waimak zone targets...

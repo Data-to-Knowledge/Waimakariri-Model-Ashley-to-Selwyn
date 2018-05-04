@@ -379,11 +379,6 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     data['std'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_std.csv'))
 
 
-# todo make a function to create current pathways(gmp+1/2pa) and full PA data. (then the reduction raster scenario fixes are easy)
-
-# todo add a function to take all this data and put it a presentation format of some sort
-
-
 
 def add_stocastic_load(site, base_data):
     base_data = np.atleast_1d(base_data)

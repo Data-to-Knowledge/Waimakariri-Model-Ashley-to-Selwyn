@@ -15,11 +15,17 @@ import os
 import pandas as pd
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import \
     get_gmp_load_raster, get_pc5pa_additonal_load
+from get_current_pathway_n import get_mt3d_current_pathway_n
 
 
-def get_current_pathway_n(mode, conservative_zones,
-                          from_mt3d_runs=False):  # todo add a version to get data from the stocastic mt3d runs
-    if from_mt3d_runs:  # todo define
+def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False):
+    if from_mt3d_runs:
+        if not isinstance(mode, dict):
+            raise NotImplementedError('mode must be dict if using mt3d')
+        outdata = {}
+        temp = get_mt3d_current_pathway_n()
+        for key in mode.keys():
+            outdata[key] = temp.loc[key, mode[key]]
         raise NotImplementedError
     else:
         if not isinstance(mode, dict):
@@ -208,9 +214,27 @@ str_header_conversion = {'cam_bramleys_s': 'Cam  at Bramleys Rd',
                          'ohoka_island_s': 'Ohoka  at Island  at Rd'}
 
 
-def get_mode(scenario, current_from_mt3d=False): #todo add a from mt3d tag
+def get_mode(scenario, current_from_mt3d=False):
+    # note that with mt3d I can apply any mode from the following list:
+    # ['1%', '5%', '10%', '25%', '50%', '75%', '90%', '95%', '99%']
     if current_from_mt3d:
-        raise NotImplementedError
+        if scenario == 'least_pain':
+            mode = {}
+            for key in (wdc_wells | private_wells | streams):
+                mode[key] = '50%'
+        elif scenario == 'middle_option':
+            mode = {}
+            for key in (wdc_wells | private_wells):
+                mode[key] = '50%'
+            for key in streams:
+                mode[key] = '95%'
+            mode['cam_bramleys_s'] = '95%'
+        elif scenario == 'most_gain':
+            mode = {}
+            for key in (wdc_wells | private_wells | streams):
+                mode[key] = '95%'
+        else:
+            raise NotImplementedError('scenario: {} not implmented'.format(scenario))
     else:
         if scenario == 'least_pain':
             mode = '50th'
@@ -347,7 +371,7 @@ def gen_stream_targets(scenario, stream_none=False):
         outdata.update({'cam_bramleys_s': 1.5,
                         'courtenay_kaiapoi_s': 2.5,
                         'cust_skewbridge': 4.7,
-                        'kaiapoi_harpers_s': 6.9,  # current measured is 9.4, set to national bottom line
+                        'kaiapoi_harpers_s': 9.4,  # current measured is 9.4, set to national bottom line
                         'kaiapoi_island_s': 5.4,
                         'ohoka_island_s': 4.5})
 
@@ -395,7 +419,7 @@ def get_interzone_reduction(target_load=8, pc5pa=False):
                             "ts\ex_bd_va\capture_zones_particle_tracking\source_zone_polygon"
                             "s\interzone\conservative_interzone.shp")
     interzone_idx = np.isfinite(smt.shape_file_to_model_array(shp_file_path, 'Id', True))
-    if isinstance(target_load,str):
+    if isinstance(target_load, str):
         interzone_reductions = smt.get_empty_model_grid()
         interzone_reductions[interzone_idx] = float(target_load.strip('%'))
     gmp_load = get_gmp_load_raster()
