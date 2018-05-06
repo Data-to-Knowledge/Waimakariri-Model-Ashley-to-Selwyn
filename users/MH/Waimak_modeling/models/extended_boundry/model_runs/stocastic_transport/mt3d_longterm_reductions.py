@@ -11,6 +11,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_gmp_con_layer
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.percentage_reduction_maps_v5_from_mt3d import outdir as reduction_map_dir, scenarios as red_scens
 import os
+import numpy as np
 import gdal
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
             out_nc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\long_red_{}_ucn.nc".format(scen))
             print('#### starting long reduction {} ####'.format(scen))
             reduction_layer = 1 - gdal.Open(red_layer_path).ReadAsArray()/100
+            reduction_layer[np.isnan(reduction_layer)] = 1 #handle the nans which cannot be passed to mt3d
             rch_con = get_gmp_con_layer()
             rch_con *= reduction_layer
 
