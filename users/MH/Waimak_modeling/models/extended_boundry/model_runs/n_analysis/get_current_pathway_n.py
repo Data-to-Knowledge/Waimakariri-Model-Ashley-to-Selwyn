@@ -46,5 +46,5 @@ def get_mt3d_current_pathway_n():
 
 
 if __name__ == '__main__':
-    test = get_mt3d_current_pathway_n()
+    test = get_pc5pa_mults()
     print('done')
