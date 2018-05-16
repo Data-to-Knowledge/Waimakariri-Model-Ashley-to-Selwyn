@@ -292,13 +292,13 @@ def save_source_nc(outdir, forward_weak, forward_strong, backward_strong, backwa
 
         # location add the data
         for site in eval(name).keys():
-            temp_var = outfile.createVariable(site, 'u1',
+            temp_var = outfile.createVariable(site, 'u1',  # this is u1(np.uint8) because we are only running 165 sims?
                                               ('latitude', 'longitude'),
                                               fill_value=0)
             temp_var.setncatts({'units': 'bool or number of realisations',
                                 'long_name': site,
                                 'missing_value': 0,
-                                'comments': 'number of particles from a given cell'})
+                                'comments': 'number of realisations that show particles from a given cell'})
 
             t = eval(name)[site].astype(np.uint8)
             t[~np.isclose(no_flow, 1)] = 0

@@ -38,7 +38,9 @@ class LR(object):
         self.fitted = self.model.fittedvalues
         self.residuals = self.model.resid
         self.stand_res = self.residuals / self.stderr ** (1 / 2)
-        #todo add intercept and slope
+        self.slope = self.model.params[1]
+        self.intercept = self.model.params[0]
+        self.formula = 'y = {}*x + {}'.format(self.slope,self.intercept)
 
     def predict(self, x):
         if type(x) is int or type(x) is float or type(x) is long or type(x) is np.float64:
@@ -95,7 +97,8 @@ class LR(object):
 
         ax6.set_xlim(0,5)
         ax6.set_ylim(0,5)
-        ax6.text(0.5, 1, 'R2: {}'.format(self.rval))
+        ax6.text(0.5, 1, self.formula)
+        ax6.text(0.5, 1.5, 'R2: {}'.format(self.rval))
         ax6.text(0.5, 2, 'adj-R2: {}'.format(self.adj_rval))
         ax6.text(0.5, 3, 'P: int: {}, slope: {}'.format(*self.pval))
         ax6.text(0.5, 3.5, 'params: int: {}, slope: {}'.format(*self.model.params))
@@ -112,8 +115,8 @@ class LR(object):
 
 
 if __name__ == '__main__':
-    x = [1,2,3,4,5,6]
-    y = [1,2,4,1,3,4]
+    x = np.array([1,2,3,4,5,6]) + 10
+    y = np.array([1,2,3,4,5,6])
     lm = LR(x,y)
     lm.plot()
 

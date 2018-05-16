@@ -81,7 +81,7 @@ try:
     ### Read in site locations
     print('Read in site locations')
 
-    points = metconnect_id_loc(mc_server=server, mc_db=database, mc_site_table=mc_site_table, mc_cols=mc_cols, gis_server=server)
+    points = metconnect_id_loc(mc_server=server, mc_db=database, mc_site_table=mc_site_table, mc_cols=mc_cols, gis_server='SQL2012PROD04')
 
     ########################################
     ### Check the model of the day! And see if we already have a record.

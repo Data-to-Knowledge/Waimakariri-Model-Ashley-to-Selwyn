@@ -30,6 +30,11 @@ To install Python:
                 https://www.microsoft.com/en-us/download/details.aspx?id=44266
         pip install future # for code compatability packages such as builtins
         pip install patool
+        mike's packages:
+            https://github.com/mullenkamp/pdsql
+            https://github.com/mullenkamp/pyhydllp
+            https://github.com/mullenkamp/hilltop-py
+
 
         pykrige - another kriging module pip install pykrige
 
