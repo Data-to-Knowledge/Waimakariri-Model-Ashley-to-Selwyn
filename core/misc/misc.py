@@ -7,11 +7,12 @@ from pandas import DataFrame, read_csv, Series, Index, set_option, reset_option
 from numpy import ndarray, array, append, isnan, arange
 from geopandas import read_file
 from re import search, IGNORECASE, findall
-import patoolib, fnmatch, os
+import fnmatch, os
 from os.path import splitext
 from os import path, listdir
 from datetime import datetime
 import sys
+
 
 def df_first_valid(df):
     """Get the time index of the first non-na value"""
@@ -185,22 +186,22 @@ def time_switch(x):
     }.get(x, 'A')
 
 
-def unarchive_dir(folder, ext='zip', rem_original=False):
-    """
-    Function to unarchive files in all subfolders into those subfolders.
-
-    folder -- The base directory.\n
-    ext -- The archive file extension to be extracted.\n
-    rem_original -- Should the original archive files be removed after extraction?
-    """
-
-    for root, dirs, files in os.walk(folder):
-        for filename in fnmatch.filter(files, '*.' + ext):
-            print(os.path.join(root, filename))
-#            pyunpack.zipfile.ZipFile(os.path.join(root, filename)).extractall(root)
-            patoolib.extract_archive(os.path.join(root, filename), outdir=root, interactive=False)
-            if rem_original:
-                os.remove(os.path.join(root, filename))
+#def unarchive_dir(folder, ext='zip', rem_original=False):
+#    """
+#    Function to unarchive files in all subfolders into those subfolders.
+#
+#    folder -- The base directory.\n
+#    ext -- The archive file extension to be extracted.\n
+#    rem_original -- Should the original archive files be removed after extraction?
+#    """
+#
+#    for root, dirs, files in os.walk(folder):
+#        for filename in fnmatch.filter(files, '*.' + ext):
+#            print(os.path.join(root, filename))
+##            pyunpack.zipfile.ZipFile(os.path.join(root, filename)).extractall(root)
+#            patoolib.extract_archive(os.path.join(root, filename), outdir=root, interactive=False)
+#            if rem_original:
+#                os.remove(os.path.join(root, filename))
 
 
 def save_df(df, path_str, index=True, header=True):
