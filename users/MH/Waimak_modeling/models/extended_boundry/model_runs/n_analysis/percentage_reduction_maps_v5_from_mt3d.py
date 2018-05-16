@@ -15,6 +15,10 @@ scenarios = ['option5', 'option4', 'least_pain', 'middle_option',
              'most_gain']  # note that the mode is defined for each scenario
 
 if __name__ == '__main__':
+    # to add a new scenario I must update scenarios in get well targets, get stream targets, get waimak target and get mode
+    # to plot run plot_reduction_rasters
+    # to get area run amount_landuse_change
+
     include_interzone = False
     if include_interzone:
         interzone_target_load = 8  # I can also pass a '50%' str
