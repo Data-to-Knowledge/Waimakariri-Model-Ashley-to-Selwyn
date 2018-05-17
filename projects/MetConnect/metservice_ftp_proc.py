@@ -8,6 +8,7 @@ Script to process the metservice netcdf files.
 """
 import sys
 from os import path, getcwd
+import sqlalchemy
 
 try:
 
@@ -20,8 +21,8 @@ try:
 
     sys.path.append(py_path)
 
-    init1 = path.join(py_path, '__init__.py')
-    fh = open(init1,'a+')
+    #init1 = path.join(py_path, '__init__.py')
+    #fh = open(init1,'a+')
 
     #######################################
     ### Start the work
@@ -35,14 +36,79 @@ try:
     from core.misc import rd_dir, logging
     from core.ecan_io import write_sql, rd_sql
 
+
+    def create_engine(db_type, server, database, username=None, password=None):
+        """
+        Function to create an sqlalchemy engine.
+
+        Parameters
+        ----------
+        db_type : str
+            The type of database to connect to. Options include mssql, postgresql, oracle, mysql, and sqlite.
+        server : str
+            The server name. e.g.: 'SQL2012PROD03'
+        database : str
+            The specific database within the server. e.g.: 'LowFlows'
+        username : str or None
+            Either the username or None when not needed.
+        password : str or None
+            Either the password or None when not needed.
+
+        Returns
+        -------
+        sqlalchemy engine
+
+        Notes
+        -----
+        If pymssql is installed, create_eng will use the package instead of pyodbc.
+        """
+        if isinstance(username, str):
+            up = username
+            if isinstance(password, str):
+                up = up + ':' + password
+            up = up + '@'
+        else:
+            up = ''
+        if db_type == 'mssql':
+            try:
+                import pymssql
+                eng_str = 'mssql+pymssql://' + up + server + '/' + database
+                engine = sqlalchemy.create_engine(eng_str)
+            except:
+                driver1 = '?driver=ODBC+Driver+13+for+SQL+Server'
+                eng_str = 'mssql+pyodbc://' + up + server + '/' + database + driver1
+                engine = sqlalchemy.create_engine(eng_str)
+                try:
+                    engine.connect()
+                except:
+                    driver2 = '?driver=ODBC+Driver+11+for+SQL+Server'
+                    eng_str = 'mssql+pyodbc://' + up + server + '/' + database + driver2
+                    engine = sqlalchemy.create_engine(eng_str)
+                    try:
+                        engine.connect()
+                    except:
+                        driver2 = '?driver=SQL+Server+Native+Client+11.0'
+                        eng_str = 'mssql+pyodbc://' + up + server + '/' + database + driver2
+                        engine = sqlalchemy.create_engine(eng_str)
+                        try:
+                            engine.connect()
+                        except:
+                            print('Install a proper ODBC mssql driver')
+        elif db_type == 'postgresql':
+            eng_str = 'postgresql://' + up + server + '/' + database
+            engine = sqlalchemy.create_engine(eng_str)
+        elif db_type == 'oracle':
+            eng_str = 'oracle://' + up + server + '/' + database
+            engine = sqlalchemy.create_engine(eng_str)
+        elif db_type == 'mysql':
+            eng_str = 'mysql+mysqldb://' + up + server + '/' + database
+            engine = sqlalchemy.create_engine(eng_str)
+        elif db_type == 'sqlite':
+            engine = sqlalchemy.create_engine('sqlite:///:memory:')
+
+        return engine
+
     ##########################################
-
-    ## Testing parameters - comment out once finished!!!
-#    nc_dir = r'E:\ecan\shared\projects\metservice_processing\test\netcdf_combined'
-#    server = 'SQL2012DEV01'
-#    data_table = 'RainFallPredictionsGrid'
-#    nc_output_dir = r'E:\ecan\shared\projects\metservice_processing\test'
-
     ### Load in ini parameters
 
     py_dir = path.realpath(path.join(getcwd(), path.dirname(__file__)))
@@ -133,12 +199,17 @@ try:
     data2 = data1.rename(columns=rename_dict)
 
     ##Output
-    write_sql(data2, server, database, data_table, dtype_dict, ['MetConnectID', 'PredictionDateTime', 'ReadingDateTime'], 'MetConnectID', mc_site_table, create_table=create_table)
+    ### Prepare the engine
+    engine = create_engine('mssql', server, database)
+
+    ### Save to mssql table
+    data2.to_sql(name=data_table, con=engine, if_exists='append', chunksize=1000, index=False)
 
     print('Success!')
     logging(log_path, str(last_predict_date) + ' was the last model date in the database table. ' + str(model_date) + ' is the new model date. ' + str(len(points)) + ' sites were updated.')
 
 except Exception as err:
     err1 = err
+    print(err1)
     logging(log_path, 'Run failed with error: ' + str(err1))
     raise err1
