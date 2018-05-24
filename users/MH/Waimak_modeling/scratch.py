@@ -19,6 +19,6 @@ from core.spatial.vector import xy_to_gpd, points_grid_to_poly, spatial_overlays
 from osgeo import gdal
 
 if __name__ == '__main__':
-    test = pd.Series([1,2,4])
+    test = pd.Series([1,2,4]).unique()
     t = test.loc[10]
     print('done')
