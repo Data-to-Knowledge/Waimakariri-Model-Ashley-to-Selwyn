@@ -28,6 +28,7 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
     :param units: either string or dictionary variable name: units) to be passed to the netcdf variable attribute\
     :param description: a description (str) to pass to the netcdf attribute
     :param nc_path: the path to save the netcdf files
+    :param zlib: boolean, if True will compress data
     :param ucn_no_value: the no data value for the ucn file (will be convereted to np.nan)
     :param sobs dictionary {variable name:[ucn paths]} ucn paths same order as nsmc_nums or None if None don't add SFR obs
     :return:

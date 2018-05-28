@@ -18,13 +18,14 @@ above are also the unique identifiers for the shapefile's classes with name: n_c
 
 from __future__ import division
 import socket
-
-assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
 import sys
 
-repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
-if not repository_path in sys.path:
-    sys.path.append(repository_path)
+if __name__ == '__main__':
+    assert socket.gethostname() == 'RDSProd03', 'must be run on RDSProd03'
+    repository_path = 'D:/git_repositories/matth/Ecan.Science.Python.Base'
+    if not repository_path in sys.path:
+        sys.path.append(repository_path)
+
 from core import env
 import numpy as np
 import pandas as pd
@@ -34,6 +35,7 @@ import time
 import os
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_well_ids, get_str_ids
+from warnings import warn
 
 
 def _make_dummy_file(outpath):
@@ -76,7 +78,7 @@ def _make_dummy_shape_file():
     org_shape.to_file(r"C:\Users\MattH\Downloads\dummy_nload_w_nclass.shp")
 
 
-def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath):
+def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath, org_n_load_name='nload_cmp'):
     """
     generate n modifiers for stocastic n
     :param n_zone_shp: a geopandas object for the N zones
@@ -88,8 +90,6 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     zone = gpd.read_file(source_area_shp_path)
-    assert len(zone) == 1, 'must have only one zone per shapefile'
-    org_n_load_name = 'nload_cmp'
 
     # do intersection
     print('starting intersection')
@@ -110,7 +110,7 @@ def calc_n_for_zone(n_zone_shp, source_area_shp_path, sims, n_load_name, outpath
     return n_mods
 
 
-def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
+def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir, org_n_load_name='nload_cmp'):
     """
 
     :param sims_org: the simulation data (from Kate) (pd.DataFrame
@@ -141,8 +141,9 @@ def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
     expected_names = np.array(
         list((set(str_ids) | set(well_ids.Zone) | set(well_ids.Zone_1) | set(well_ids.zone_2)) - {np.nan}))
     exists = np.in1d(names, expected_names)
-    assert exists.all(), 'unexpected shapefile names: {} only the following allowed: {}'.format(
-        np.array(names)[~exists], expected_names)
+    if not exists.all():
+        warn('unexpected shapefile names: {} only the following allowed: {}'.format(
+        np.array(names)[~exists], expected_names))
     n_load_layer = gpd.read_file(n_load_path)
     assert 'n_class' in n_load_layer.keys(), 'n_class needed in the n load layer'
 
@@ -158,7 +159,7 @@ def calc_all_ns(sims_org, n_load_name, outdir, source_zone_dir):
     for path, name in zip(source_paths, names):
         print('calculating N modifiers for {}'.format(name))
         temp_n = calc_n_for_zone(n_load_layer, path, sims, n_load_name,
-                                 os.path.join(outdir, 'raw_data', '{}.txt'.format(name)))
+                                 os.path.join(outdir, 'raw_data', '{}.txt'.format(name)), org_n_load_name=org_n_load_name)
         # add the data to a summary sheet with u, sd, and some percentiles to make a quick overview of the PDF
         outdata.loc[name] = pd.Series(temp_n).describe(percentiles=percentiles)
     outdata.to_csv(os.path.join(outdir, 'n_modifier_summary_data.csv'))
@@ -299,7 +300,7 @@ def run_all_nload_stuffs():
         for e in f.readlines():
             if e.strip() != '':
                 n_names.append(e.strip())
-    for sim_end in ['without_trans', 'with_trans']:
+    for sim_end in ['without_trans', 'with_trans']: # with and without transition to CMP
         for sz_dir in szdirs:
             for n_name in n_names:
                 print('starting N analysis for {} load, {} sims, and {} polygons'.format(n_name, sim_end,

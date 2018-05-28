@@ -27,9 +27,9 @@ def concentration_at_wells(well_nums, con, mt3d_kskper = None):
         if well not in list(well_data.index):
             layer, row, col = get_well_postions(well)
         else:
-            layer = well_data.loc[well, 'layer']
-            row = well_data.loc[well, 'row']
-            col = well_data.loc[well, 'col']
+            layer = int(well_data.loc[well, 'layer'])
+            row = int(well_data.loc[well, 'row'])
+            col = int(well_data.loc[well, 'col'])
         outdata.loc[well] = gw_conc_data[layer, row, col]
 
     return outdata
@@ -58,7 +58,7 @@ def get_n_at_targets(con,m=None, mt3d_kskper=None, mf_kskper=None): #add multipe
 
 
 if __name__ == '__main__':
-    wells, drains = get_n_at_targets(r"D:\mattH\python_wm_runs\first_mt3d2\cmp_layer\MT3D001.UCN")
+    wells, drains = get_n_at_targets(r"C:\Users\MattH\Desktop\MT3D001.UCN")
     wells.to_csv(r"C:\Users\matth\Desktop\well_targets.csv")
     drains.to_csv(r"C:\Users\matth\Desktop\drain_targets.csv")
 

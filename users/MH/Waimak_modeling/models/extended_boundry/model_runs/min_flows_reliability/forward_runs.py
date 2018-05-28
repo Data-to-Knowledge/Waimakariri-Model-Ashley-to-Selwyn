@@ -63,6 +63,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     runs = []
     # base model run handled separately in base forward runs with identified by the name 'mod_period'
     mod_per_rm_car = {
+        # the model period without carpet drains
         'model_id': model_id,
         'name': 'mod_period',
         'base_dir': None,
@@ -77,6 +78,22 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     runs.append(mod_per_rm_car)
 
     super_gmp = {
+        # 40-60% reduction in irrigated area LSR (as previously been preposed as GMP regardless of our modeling)
+        # pumping is not reduced in this model;  this is effectivly the worst case scenario for GMP/
+        # super gmp vs gmp recharges:
+        # waimak
+        # super_gmp: 8.58651316838, m3 / s
+        # waimak
+        # gmp: 8.96331985699, m3 / s
+        # inland_waimak
+        # super_gmp: 6.84744877856, m3 / s
+        # inland_waimak
+        # gmp: 7.40284522769, m3 / s
+        # coastal_waimak
+        # super_gmp: 1.73906438982, m3 / s
+        # coastal_waimak
+        # gmp: 1.5604746293, m3 / s
+
         'model_id': model_id,
         'name': 'super_gmp',
         'base_dir': None,
@@ -92,6 +109,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     runs.append(super_gmp)
 
     mod_per = {
+        # the model period with carpet drains
         'model_id': model_id,
         'name': 'mod_period_w_ncar',
         'base_dir': None,
@@ -105,8 +123,8 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
         'rm_ncarpet': False
     }
     runs.append(mod_per)
-    # base model run with 2015-2016 pumping
     current = {
+        # base model run with 2015-2016 pumping and carpet drains
         'model_id': model_id,
         'name': 'current',
         'base_dir': None,
@@ -120,6 +138,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     runs.append(current)
 
     current_w_ncar = {
+        # base model run with 2015-2016 pumping and carpet drains
         'model_id': model_id,
         'name': 'current_w_ncar',
         'base_dir': None,
@@ -135,6 +154,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # naturalised
     nat = {
+        # a naturalised model run, no abstraction or pumping in waimakariri
         'model_id': model_id,
         'name': 'naturalised',
         'base_dir': None,
@@ -149,6 +169,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # full abstration
     full_abs = {
+        # full consented volumes taken in the waimakariri
         'model_id': model_id,
         'name': 'full_abs',
         'base_dir': None,
@@ -163,6 +184,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # full allocation (full abstraction)
     full_abs_allo = {
+        # full consented volumes taken also scaled up to full alocation (simple multiplier)
         'model_id': model_id,
         'name': 'full_abs_allo',
         'base_dir': None,
@@ -178,6 +200,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # full allocation current usage
     full_allo = {
+        # current usage scaled up to full allocation (simple multiplier)
         'model_id': model_id,
         'name': 'full_allo_cur_use',
         'base_dir': None,
@@ -193,6 +216,8 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # full allocation current usage pc5
     pc5_80_full_allo = {
+        # pc5 (100% efficency via LSR model irrigation, and reduced pumping (25% less to irrigation wells)
+        # pumping scaled for full alocation only in the waimakariri
         'model_id': model_id,
         'name': 'pc5_80_full_allo_cur_usage',
         'base_dir': None,
@@ -212,6 +237,8 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # pc5
     pc5_80 = {
+        # pc5 (100% efficency via LSR model irrigation, and reduced pumping (25% less to irrigation wells)
+        # only in the waimakariri
         'model_id': model_id,
         'name': 'pc5_80',
         'base_dir': None,
@@ -229,6 +256,7 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # WIL efficiency
     will_eff = {
+        # model run without the injection wells to simulate the WIL scheme
         'model_id': model_id,
         'name': 'wil_eff',
         'base_dir': None,
@@ -243,6 +271,9 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # pc5 + will efficency
     pc5_80_will_eff = {
+        # pc5 (100% efficency via LSR model irrigation, and reduced pumping (25% less to irrigation wells)
+        # only in the waimakariri
+        # model run without the injection wells to simulate the WIL scheme
         'model_id': model_id,
         'name': 'pc5_80_wil_eff',
         'base_dir': None,
@@ -260,6 +291,8 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # pc5
     pc5_no_pump_red = {
+        # pc5 (100% efficency via LSR model irrigation, without reduced pumping
+        # only in the waimakariri
         'model_id': model_id,
         'name': 'pc5_no_pump_reduc',
         'base_dir': None,
@@ -277,6 +310,9 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
 
     # pc5 + will efficency
     pc5_no_pump_red_will_eff = {
+        # pc5 (100% efficency via LSR model irrigation, without reduced pumping
+        # only in the waimakariri
+        # model run without the injection wells to simulate the WIL scheme
         'model_id': model_id,
         'name': 'pc5_no_pump_reduc_wil_eff',
         'base_dir': None,
@@ -341,8 +377,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
                                 )
     results = pool.map_async(setup_run_forward_run_mp, runs)
     while not results.ready():
-        print('{} runs left of {}'.format(results._number_left, len(runs)))
-        time.sleep(60 * 5)  # sleep 5 min between printing
+        time.sleep(20)  # sleep 5 min between printing
     pool_outputs = results.get()
     pool.close()  # no more tasks
     pool.join()
@@ -356,6 +391,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
         wr = ['{}: {}\n'.format(e[0], e[1]) for e in pool_outputs]
         f.writelines(wr)
     print('{} runs completed in {} minutes'.format(len(runs), ((time.time() - t) / 60)))
+    return pool_outputs
 
 
 if __name__ == '__main__':

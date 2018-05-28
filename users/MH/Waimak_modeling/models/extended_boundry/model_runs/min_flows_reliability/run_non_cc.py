@@ -26,8 +26,8 @@ if __name__ == '__main__':
     #### inputs to define for each run####
     safemode = True
     run_modelses = [True]
-    model_ids = ['NsmcBase']
-    date = '2018-01-29'
+    model_ids = ['NsmcReal{:06d}'.format(491)]
+    date = '2018-03-23'
     base_dir = r"D:\mh_waimak_models"
     remove_carpet = True
 

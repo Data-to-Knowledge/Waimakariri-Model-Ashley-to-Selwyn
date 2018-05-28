@@ -43,7 +43,7 @@ def run_full_non_grid_sd(model_id, model_base_path, data_outdir, ss_sy_version, 
     with open(os.path.join(data_outdir, 'READ_ME.txt'), 'w') as f:
         f.write(sd7_notes)
 
-    well_list = get_sd_well_list(model_id)
+    well_list = ['M35/10410','M35/0335', 'M35/4238'] #get_sd_well_list(model_id) # note I'm re-running some wells that missed because of bug
 
     #### run the models, extract data, delete model files ####
     sd7_base_path = os.path.join(model_base_path, 'sd7')
@@ -100,10 +100,13 @@ if __name__ == '__main__':
     elif socket.gethostname() == 'GWATER02':
         sd_sy_versions = [3] #4] # see below
         sd_sy_v_names = ['med_s'] # 'high_s'] # high was also run on gw02, but they also killed RDS prod03
+        sd_sy_versions = [2,3,4] #re-run a couple missed
+        sd_sy_v_names = ['low_s','med_s', 'high_s'] #re-run a couple missed
+
     else:
         raise ValueError('not set up for {}'.format(socket.gethostname()))
 
-    base_dir = "D:/mh_waimak_models/sd_multi_s"
+    base_dir = "D:/mh_waimak_models/sd_multi_s_re-run"
     base_notes = 'a test of a couple of wells through the for loop'
 
     today = str(datetime.date.today()).replace('-', '_')

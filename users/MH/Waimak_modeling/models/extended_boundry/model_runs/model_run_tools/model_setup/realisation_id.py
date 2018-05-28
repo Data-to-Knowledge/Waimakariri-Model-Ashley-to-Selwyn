@@ -172,9 +172,15 @@ def get_model_name_path(model_id):
     if '_' in model_id:
         raise ValueError(
             '_ in model id: {}, model_id cannot include an "_" as this is a splitting character'.format(model_id))
-    if model_id not in model_dict.keys():
+    if model_id not in model_dict.keys() and not 'NsmcReal' in model_id:
         raise NotImplementedError('model {} has not yet been defined'.format(model_id))
-    return model_dict[model_id]
+
+    if 'NsmcReal' in model_id:
+        m = get_model(model_id, save_to_dir=True)
+        name_path = m.namefile
+    else:
+        name_path = model_dict[model_id]
+    return name_path
 
 
 def _get_nsmc_realisation(model_id, save_to_dir=False):
@@ -329,9 +335,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         print('saving model to holding dir'.format(dir_path))
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)  # remove old files to prevent file mix ups
-        os.makedirs(dir_path)
         m._set_name(name)
-        m.change_model_ws(dir_path)
         m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp)
         units = deepcopy(m.output_units)
         for u in units:
@@ -347,12 +351,15 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         m.write_name_file()
         m.write_input()
         success, buff = m.run_model()
-        con = modflow_converged(os.path.join(dir_path, m.lst.file_name[0]))
+        con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
+        m.change_model_ws(dir_path) #todo flopy update add an update that changes teh namefile when the directory changes
+        m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
-            os.remove(os.path.join(dir_path, '{}.hds'.format(m.name)))
+            os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))
+            shutil.rmtree(converter_dir)
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
-
+        shutil.copytree(converter_dir, dir_path)
     shutil.rmtree(converter_dir)
     return m
 
@@ -423,5 +430,6 @@ def get_stocastic_set(return_model_ids=True):
         return nsmc_nums
 if __name__ == '__main__':
     # tests
-    m = get_model('NsmcBase')
+    m=get_model('NsmcBase')
+    print(m)
     print('done')

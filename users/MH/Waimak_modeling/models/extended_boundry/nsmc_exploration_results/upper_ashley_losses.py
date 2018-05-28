@@ -42,6 +42,6 @@ if __name__ == '__main__':
 
     out = pd.merge(outdata.to_frame('ash'), out_chch_n_average.to_frame('con'),right_index=True,left_index=True)
     out = pd.merge(out,outdata_cust.to_frame('cust'),right_index=True,left_index=True)
-    out.to_csv(r"C:\Users\matth\Downloads\ashley_and_chch.csv")
+    out.to_csv(r"C:\Users\matth\Downloads\ashley_losses_and_chch_con.csv")
 
 

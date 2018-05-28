@@ -399,11 +399,11 @@ class AGWQL_survey(object):
 if __name__ == '__main__':
     #input
     #well_list
-    well_list_path = r"P:\Groundwater\Annual groundwater quality survey 2016\Well_list_2017-03-17.txt"
+    well_list_path = r"P:\Groundwater\Annual groundwater quality survey 2016_true_copy\Well_list_2017-03-17.txt"
 
     #squalarc csvs
-    trend_path = r"P:\Groundwater\Annual groundwater quality survey 2016\qual_data_trend_2004-2017_3.csv"
-    yearly_path = r"P:\Groundwater\Annual groundwater quality survey 2016\qual_data2016-2017_unselected_3.csv"
+    trend_path = r"P:\Groundwater\Annual groundwater quality survey 2016_true_copy\qual_data_trend_2004-2017_3.csv"
+    yearly_path = r"P:\Groundwater\Annual groundwater quality survey 2016_true_copy\qual_data2016-2017_unselected_3.csv"
 
 
     with open(well_list_path) as f:

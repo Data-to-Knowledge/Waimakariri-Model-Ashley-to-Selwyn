@@ -8,6 +8,7 @@ import numpy as np
 from copy import deepcopy
 import flopy
 import os
+import pandas as pd
 import sys
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools import mod_gns_model, get_max_rate, \
@@ -87,10 +88,10 @@ def setup_and_run_stream_dep(model_id, name, base_dir, stress_vals, wells_to_tur
         for well in wells_to_turn_on[sp]:
             if sd_7_150 == 'sd150':
                 add_well = full_consent.loc[well]
-                input_wells.loc[well] = add_well
+                input_wells = pd.concat((input_wells, add_well))  # previously duplicates would crash teh program
             elif sd_7_150 == 'sd7':
                 add_well = sd7_flux.loc[well]
-                input_wells.loc[well] = add_well
+                input_wells = pd.concat((input_wells, add_well))  # previously duplicates would crash teh program
             else:
                 raise ValueError('unexpected argument for sd_7_150: {}'.format(sd_7_150))
 

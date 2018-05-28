@@ -109,7 +109,7 @@ def extract_and_save_all_cc_mult_missing_w(forward_run_dir, outpath):
 
 
 
-def extract_and_save_all_forward_runs(forward_run_dir, outpath):
+def extract_and_save_all_forward_runs(forward_run_dir, outpath, readme_txt=None):
     """
     extract and save all of the forward run data as absolute flow and hds
     :param forward_run_dir: directory with the forward run
@@ -130,8 +130,14 @@ def extract_and_save_all_forward_runs(forward_run_dir, outpath):
             temp = temp.drop(['depth', 'i', 'j', 'k', 'mid_screen_elv', 'nztmx', 'nztmy'], 1)
             outdata = pd.merge(outdata, temp, right_index=True, left_index=True)
     with open(outpath, 'w') as f:
-        f.write('flow and flux values from model {}. all flow values in m3/day; all hd; z in m; x; y in nztm, '
-                'i;j;k are unit less; made {}\n'.format(model_id, datetime.datetime.now().isoformat()))
+        if readme_txt is not None:
+            f.write('flow and flux values from model {}. all flow values in m3/day; all hd; z in m; x; y in nztm, '
+                    'i;j;k are unit less; made {} {}\n'.format(model_id, datetime.datetime.now().isoformat(),readme_txt))
+
+        else:
+            f.write('flow and flux values from model {}. all flow values in m3/day; all hd; z in m; x; y in nztm, '
+                    'i;j;k are unit less; made {}\n'.format(model_id, datetime.datetime.now().isoformat()))
+
     outdata.index.name = 'site'
     outdata.to_csv(outpath, mode='a')
     return outpath

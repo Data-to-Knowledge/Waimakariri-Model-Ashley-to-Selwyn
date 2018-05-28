@@ -13,6 +13,7 @@ import os
 import glob
 from polygon_to_model_array import shape_file_to_model_array
 from users.MH.Waimak_modeling.supporting_data_path import sdp
+from warnings import warn
 
 def get_drn_concentration(location, m, con, mt3d_kskper = None,
                           mf_kskper = None, recalc=False):
@@ -50,7 +51,7 @@ def get_drn_concentration(location, m, con, mt3d_kskper = None,
         mask_array = drn_points[loc]
 
         if drn_recharge_data[mask_array].mask.sum() != 0:
-            raise ValueError('masked values returned for {}'.format(loc))
+            warn(('masked values returned for {}'.format(loc)))
 
         water_volume = drn_recharge_data[mask_array].data.sum()
         load = (gw_conc_data[mask_array] * drn_recharge_data[mask_array].data).sum()

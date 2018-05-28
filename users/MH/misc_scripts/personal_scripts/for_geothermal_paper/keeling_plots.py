@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     for lr, nm, c, y in zip([bio_lr,geo_lr],['Biogenic Signature', 'Geothermal Signature'],['k','grey'],[-20,-2.5]):
         ax.scatter(lr.x,lr.y, label=nm, color=c)
-        temp_x = [0,0.0026]
+        temp_x = [0,0.001]
         ax.plot(temp_x,lr.predict(temp_x), color=c)
         ax.set_ylabel(u'$\delta^{13}C-CO_{2}$ (‰)')
         ax.set_xlabel(u'$1/[CO^{2}]$ $(ppmv^{-1})$')

@@ -217,7 +217,7 @@ def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
         paths.write_shapefile(particle_data=pathdata, shpname=shape_file, sr=spatial_ref)
 
 def pathline_file_to_hdf():
-    # todo this would cut the stored size in half with no compression...  plus you can query data within the store
+    # tod this would cut the stored size in half with no compression...  plus you can query data within the store
     raise NotImplementedError
 
 
