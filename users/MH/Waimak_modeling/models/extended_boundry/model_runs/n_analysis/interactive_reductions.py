@@ -11,7 +11,8 @@ from glob import glob
 import os
 
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import ColumnDataSource, CustomJS
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, ColorBar
+from bokeh.models.mappers import LinearColorMapper
 from bokeh.models.widgets import Select
 from bokeh.layouts import column, widgetbox, layout
 
@@ -58,22 +59,22 @@ def get_base_data(recalc=False):
         for like in likelihoods:
             outdata['k_harpers_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['k_harpers'], 'Id', True))) * current_pathway.loc[
-                                                              'kaiapoi_harpers_s', like]]
+                                                               'kaiapoi_harpers_s', like]]
             outdata['k_islands_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['k_islands'], 'Id', True))) * current_pathway.loc[
-                                                              'kaiapoi_island_s', like]]
+                                                               'kaiapoi_island_s', like]]
             outdata['ohoka_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['ohoka'], 'Id', True))) * current_pathway.loc[
-                                                          'ohoka_island_s', like]]
+                                                           'ohoka_island_s', like]]
             outdata['court_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['court'], 'Id', True))) * current_pathway.loc[
-                                                          'courtenay_kaiapoi_s', like]]
+                                                           'courtenay_kaiapoi_s', like]]
             outdata['cust_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['cust'], 'Id', True))) * current_pathway.loc[
-                                                         'cust_skewbridge', like]]
+                                                          'cust_skewbridge', like]]
             outdata['cam_{}_{}'.format(like, pa)] = [np.flipud(np.isfinite(
                 smt.shape_file_to_model_array(paths_to_shp['cam'], 'Id', True))) * current_pathway.loc[
-                                                        'cam_bramleys_s', like]]
+                                                         'cam_bramleys_s', like]]
 
             # add private_wells
             private_dir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\private_wells_90_named_right"
@@ -154,26 +155,29 @@ if __name__ == '__main__':
 
     x_range = (1516000, 1576500)
     y_range = [5186000, 5214500]
-    p = figure(tools=["pan,wheel_zoom,reset,save"], active_scroll='wheel_zoom',
+    p = figure(tools=["pan,wheel_zoom,hover, reset,save"], active_scroll='wheel_zoom',
                match_aspect=True)
-    # todo add hover?
+
+    # add hover
+    hover1 = p.select_one(HoverTool)
+    hover1.point_policy = "follow_mouse"
+    hover1.tooltips = [("Reduction", "@image{0,0}")]
+
     # must give a vector of image data for image parameter
-    # plot basemap
-    p.image(image=[image], x=minx, y=miny, dw=maxx - minx, dh=maxy - miny, palette="Greys256")
 
     targets = {
         # targets
-        'tar_k_harpers': [np.full((364, 365),6.9).flatten()],
-        'tar_k_islands': [np.full((364, 365),6.9).flatten()],
-        'tar_ohoka': [np.full((364, 365),6.9).flatten()],
-        'tar_court': [np.full((364, 365),6.9).flatten()],
-        'tar_cust': [np.full((364, 365),6.9).flatten()],
-        'tar_cam': [np.full((364, 365),2.4).flatten()],
-        'tar_public': [np.full((364, 365),999).flatten()],
-        'tar_private': [np.full((364, 365),999).flatten()],
-        'tar_waimak': [np.full((364, 365),0).flatten()],
+        'tar_k_harpers': [np.full((364, 365), 6.9).flatten()],
+        'tar_k_islands': [np.full((364, 365), 6.9).flatten()],
+        'tar_ohoka': [np.full((364, 365), 6.9).flatten()],
+        'tar_court': [np.full((364, 365), 6.9).flatten()],
+        'tar_cust': [np.full((364, 365), 6.9).flatten()],
+        'tar_cam': [np.full((364, 365), 2.4).flatten()],
+        'tar_public': [np.full((364, 365), 999).flatten()],
+        'tar_private': [np.full((364, 365), 999).flatten()],
+        'tar_waimak': [np.full((364, 365), 0).flatten()],
         # pc5pa
-        'pc5pa': [np.full((364, 365),1).flatten()],
+        'pc5pa': [np.full((364, 365), 1).flatten()],
 
         # liklyhoods
         'lik_k_harpers': [np.full((364, 365), '50%').flatten()],
@@ -189,6 +193,7 @@ if __name__ == '__main__':
 
     targets.update(get_base_data())
     targets['image'] = [create_reduction_reason(targets, version='reduction')]
+    targets['topo'] = [image]
     data_source = ColumnDataSource(targets)
 
     # I will need to have a use prediction souce which has keys (ohoka ect) and values (2d numpy array)
@@ -234,20 +239,23 @@ if __name__ == '__main__':
                                options=['5%', '50%', '95%'])
     sel_likely_private = Select(name='lik_private', title='Private Wells Likelyhood', value='50%',
                                 options=['5%', '50%', '95%'])
+    # plot basemap
+    p.image(image='topo', x=minx, y=miny, dw=maxx - minx, dh=maxy - miny, palette="Greys256", source=data_source)
 
     # plot reduction
     y = smt.uly - smt.grid_space * smt.rows
+    mapper = LinearColorMapper(palette="Plasma10", low=0, high=100)
     img = p.image(image='image', x=smt.ulx, y=y, dw=smt.cols * smt.grid_space, dh=smt.rows * smt.grid_space,
-                  palette="Plasma256", source=data_source,
+                  color_mapper=mapper, source=data_source,
                   alpha=0.5)  # todo try to figure out different plotting levels
+    color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
+    p.add_layout(color_bar, 'right')
 
 
     def callback_tar(source=data_source, window=None):
         # update the target data source with the new target
         new_tar = cb_obj.value
         name = cb_obj.name
-        print(name)
-        print(new_tar)
         if 'lik' in name:  # pass the likelihoods straight across
             val = new_tar
         elif name == 'tar_waimak':
@@ -271,15 +279,10 @@ if __name__ == '__main__':
         new_val = []
         for i in range(364 * 365):
             new_val.append(val)
-        print('old')
-        print(source.data[name])
 
         source.data[name] = [new_val]
-        print('new')
-        print(source.data[name])
 
         source.change.emit()
-        print('passes the change.emit')
         areas = ['k_harpers',
                  'k_islands',
                  'ohoka',
@@ -292,15 +295,10 @@ if __name__ == '__main__':
         outdata = []
         for area in areas:
             likelihood = source.data['lik_{}'.format(area)][0][0]
-            print('likelihood: {}'.format(area))
-            print(likelihood)
-            print(source.data['lik_{}']) # harpers and islands seem to have different structure...
             pa = 'pc5' if source.data['pc5pa'.format(area)][0][0] == 1 else 'wopc5'
             target = source.data['tar_{}'.format(area)][0][0]
             temp = '{}_{}_{}'.format(area, likelihood, pa)
-            print(temp)
             org = source.data['{}_{}_{}'.format(area, likelihood, pa)]
-            print(org)
             org = org[0]
             new_map = []
             for i in range(364 * 365):
@@ -310,15 +308,15 @@ if __name__ == '__main__':
                 new_map.append(temp)
             outdata.append(new_map)
         org = source.data['waimak'][0]
+        # print(org) # print allows debugging in the chrome inspection
         new_map = []
+        target = source.data['tar_waimak'][0]
         for i in range(364 * 365):
-            temp = org[i]
-            if temp < 0:
+            temp = org[i] * target[i]
+            if temp <= 0:
                 temp = 0
             new_map.append(temp)
         outdata.append(new_map)
-        print('outdata')
-        print(outdata)
         new_image = []
         for i in range(364 * 365):
             temp = max(outdata[0][i], outdata[1][i], outdata[2][i], outdata[3][i], outdata[4][i],
@@ -327,13 +325,9 @@ if __name__ == '__main__':
                 temp = float('nan')
             new_image.append(temp)
 
-        print('old image')
-        print(source.data.image)
 
         source.data['image'] = [new_image]  # the format for souce.data.org is: [smt.get_empty_model_grid().flatten()]
 
-        print('new image')
-        print(source.data.image)
         source.change.emit()
 
 
@@ -376,6 +370,7 @@ if __name__ == '__main__':
 
     # save
     # todo need legend
-    output_file(r"C:\Users\MattH\Downloads\test_bokeh.html", title="image.py example")
+    output_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_target_reductions.html",
+                title="Northern Waimakariri Tribs Reductions")
 
     show(layout2)  # open a browser
