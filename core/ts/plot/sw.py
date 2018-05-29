@@ -141,8 +141,8 @@ def dual_mon_boxplot(ts1, ts2, col='all', dtype='flow', fun='mean', min_yrs=10, 
     from pandas import concat, melt, DatetimeIndex
     import seaborn as sns
     import matplotlib.pyplot as plt
-    from core.ts import w_resample
-    from core.ts.sw import flow_stats
+    from core.ts.ts import w_resample
+    from core.ts.sw.stats import flow_stats
 
     ### Set base parameters
     ylabel_dict = {'flow': 'Mean Flow $(m^{3}/s)$', 'precip': 'Precipitation $(mm/month)$', 'ET': 'Evapotranspiration $(mm/month)$'}
@@ -302,7 +302,7 @@ def reg_plot(x, y, freq='day', n_periods=1, fun='mean', min_ratio=0.75, digits=3
     from numpy import nan, log
     from core.stats.reg import lin_reg
     import seaborn as sns
-    from core.ts import w_resample
+    from core.ts.ts import w_resample
     from pandas import concat
     import matplotlib.pyplot as plt
 
