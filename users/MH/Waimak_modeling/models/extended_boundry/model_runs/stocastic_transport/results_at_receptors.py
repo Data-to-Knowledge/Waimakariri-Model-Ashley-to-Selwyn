@@ -8,7 +8,7 @@ from __future__ import division
 from core import env
 from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.n_load_layers import \
-    get_gmp_plus_con_layer
+    get_gmp_plus_con_layer_by_landuse
 import datetime
 
 if __name__ == '__main__':
