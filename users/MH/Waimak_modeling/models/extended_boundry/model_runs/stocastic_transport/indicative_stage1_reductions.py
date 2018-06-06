@@ -18,10 +18,10 @@ if __name__ == '__main__':
     run_mt3d=True
     if run_mt3d:
         for red in reductions:
-            # all land #todo this does not make any sense, perhaps all n load above 5kg/ha?
+            # all land greater than 5 kg/ha
             out_nc_25 = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_{}per_on_5kgha_ucn.nc".format(red))
             print('#### starting gmp plus {}% reduction on all land with a gmp nload >= 5kg/ha ####'.format(red))
-            rch_con = get_gmp_plus_con_layer_by_load_limit(n_load_limit=5, n_reduction=red) #todo talk to zeb about this
+            rch_con = get_gmp_plus_con_layer_by_load_limit(n_load_limit=5, n_reduction=red)
             nc_description = 'a {} percent reduction on  all land with a gmp nload >= 5kg/ha in the waimakariri zone'.format(red)
             base_mt3d_dir = r"D:\mh_waimak_models\base_for_GMP_plus_{}per_on_5kgha".format(red)
             setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc_25, nc_description, dt0=1e4, ttsmax=1e5)
