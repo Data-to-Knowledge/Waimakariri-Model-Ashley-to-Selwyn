@@ -5,21 +5,24 @@ Date Created: 19/03/2018 3:15 PM
 """
 
 from __future__ import division
-from core import env
-from hydraulics_cleaned import hunt2003, theis_jenkins
-import pandas as pd
-import numpy as np
-from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
+
 import itertools
-from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
-    get_all_well_row_col
-from glob import glob
 import os
-import geopandas as gpd
+from glob import glob
+
 import flopy
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletion_assesment.stream_depletion_numerical_model_runs.starting_hds_ss_sy import \
     get_sd_well_list
-import matplotlib.pyplot as plt
+from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+    get_all_well_row_col
+from users.MH.analytical_solutions.stream_depletion import hunt2003, theis_jenkins
+
 
 #this was a dead end... the two models are very difficulat to match
 
