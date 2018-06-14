@@ -9,7 +9,7 @@ from core import env
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.modpath_wrapper import \
     create_mp_slf
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
-import flopy
+import flopy_mh as flopy
 import pandas as pd
 import itertools
 import numpy as np

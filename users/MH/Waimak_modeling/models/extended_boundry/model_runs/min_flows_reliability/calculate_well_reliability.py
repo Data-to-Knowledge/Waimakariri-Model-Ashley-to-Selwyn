@@ -16,7 +16,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.a
     get_all_well_row_col
 from core.ecan_io import sql_db, rd_sql
 import os
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import \
     get_max_rate, get_full_consent
 from copy import deepcopy

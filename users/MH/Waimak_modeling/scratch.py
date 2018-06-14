@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
-import flopy
+import flopy_mh as flopy
 import glob
 import matplotlib.pyplot as plt
 import os

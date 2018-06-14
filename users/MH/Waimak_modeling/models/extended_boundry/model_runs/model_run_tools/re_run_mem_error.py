@@ -6,7 +6,7 @@ Date Created: 29/10/2017 12:02 PM
 from __future__ import division
 from core import env
 import os
-import flopy
+import flopy_mh as flopy
 from glob import glob
 import multiprocessing
 import logging

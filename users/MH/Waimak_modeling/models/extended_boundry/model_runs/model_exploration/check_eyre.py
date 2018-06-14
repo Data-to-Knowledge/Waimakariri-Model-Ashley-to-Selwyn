@@ -14,7 +14,7 @@ import pandas as pd
 from glob import glob
 import os
 import numpy as np
-import flopy
+import flopy_mh as flopy
 
 if __name__ == '__main__':
     temp = smt.get_empty_model_grid(True)

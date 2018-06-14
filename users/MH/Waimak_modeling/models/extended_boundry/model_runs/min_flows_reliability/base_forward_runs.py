@@ -11,7 +11,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools import get_forward_wells, \
     get_forward_rch
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
-import flopy
+import flopy_mh as flopy
 import os
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import modflow_converged
 from traceback import format_exc

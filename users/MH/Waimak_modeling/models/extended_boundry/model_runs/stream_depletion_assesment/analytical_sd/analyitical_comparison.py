@@ -10,7 +10,7 @@ import itertools
 import os
 from glob import glob
 
-import flopy
+import flopy_mh as flopy
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np

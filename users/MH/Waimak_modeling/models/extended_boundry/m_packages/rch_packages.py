@@ -10,7 +10,7 @@ import os
 import pickle
 from copy import deepcopy
 
-import flopy
+import flopy_mh as flopy
 import numpy as np
 
 from users.MH.Waimak_modeling.model_tools import get_base_rch, no_flow as old_no_flow
