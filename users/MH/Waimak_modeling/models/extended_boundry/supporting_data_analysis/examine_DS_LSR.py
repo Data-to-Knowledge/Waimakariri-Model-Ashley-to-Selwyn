@@ -6,7 +6,7 @@ Date Created: 2/08/2017 4:11 PM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.model_tools import get_base_rch, no_flow as old_no_flow

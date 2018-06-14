@@ -7,7 +7,7 @@ Date Created: 11/11/2017 8:54 AM
 from __future__ import division
 from core import env
 import netCDF4 as nc
-import flopy
+import flopy_mh as flopy
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.data_extraction.data_at_wells import \
     _get_kstkpers, hds_no_data

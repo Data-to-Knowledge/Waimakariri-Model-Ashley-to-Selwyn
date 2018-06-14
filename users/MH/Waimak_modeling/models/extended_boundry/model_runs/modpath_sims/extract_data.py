@@ -8,7 +8,7 @@ from __future__ import division
 import pandas as pd
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import numpy as np
-import flopy
+import flopy_mh as flopy
 
 
 # particle id moves to 0 indexed

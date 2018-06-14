@@ -5,7 +5,7 @@ Date Created: 20/06/2017 11:58 AM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 import pandas as pd
 from users.MH.Waimak_modeling.model_tools import get_drn_samp_pts_dict, get_base_drn_cells

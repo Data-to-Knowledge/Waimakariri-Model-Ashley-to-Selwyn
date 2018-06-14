@@ -8,7 +8,7 @@ from __future__ import division
 from core import env
 import numpy as np
 from copy import deepcopy
-import flopy
+import flopy_mh as flopy
 import os
 import sys
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt

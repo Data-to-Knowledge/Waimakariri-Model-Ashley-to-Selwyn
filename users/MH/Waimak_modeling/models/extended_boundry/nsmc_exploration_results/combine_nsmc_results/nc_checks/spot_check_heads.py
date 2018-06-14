@@ -8,7 +8,7 @@ from __future__ import division
 from core import env
 import numpy as np
 import netCDF4 as nc
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.data_extraction.data_at_wells import \
     hds_no_data
 

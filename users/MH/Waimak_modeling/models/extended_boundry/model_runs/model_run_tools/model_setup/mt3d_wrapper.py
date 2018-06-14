@@ -7,7 +7,7 @@ Date Created: 9/01/2018 3:36 PM
 from __future__ import division
 from core import env
 from future.builtins import input
-import flopy
+import flopy_mh as flopy
 import os
 import shutil
 import numpy as np

@@ -7,7 +7,7 @@ Date Created: 12/09/2017 6:26 PM
 from __future__ import division
 import numpy as np
 import pandas as pd
-import flopy
+import flopy_mh as flopy
 import pickle
 import os
 import glob

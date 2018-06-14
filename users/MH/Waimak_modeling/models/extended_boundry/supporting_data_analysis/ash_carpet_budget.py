@@ -2,7 +2,7 @@ from __future__ import division
 import pandas as pd
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.m_packages.drn_packages import _get_drn_spd
-import flopy
+import flopy_mh as flopy
 
 
 def ash_carpet_budget(path):

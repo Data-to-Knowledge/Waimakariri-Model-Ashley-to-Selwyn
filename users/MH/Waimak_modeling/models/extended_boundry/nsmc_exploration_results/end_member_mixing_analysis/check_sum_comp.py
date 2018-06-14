@@ -6,7 +6,7 @@ Date Created: 17/11/2017 7:09 PM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import matplotlib.pyplot as plt

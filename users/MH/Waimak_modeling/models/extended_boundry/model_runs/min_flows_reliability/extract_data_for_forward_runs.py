@@ -14,7 +14,7 @@ from glob import glob
 import os
 import datetime
 from copy import deepcopy
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.convergance_check import \
     zipped_modflow_converged
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt

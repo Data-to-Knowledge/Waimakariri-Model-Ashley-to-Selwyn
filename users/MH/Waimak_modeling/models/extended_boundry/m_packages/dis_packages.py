@@ -4,7 +4,7 @@ Date Created: 20/06/2017 11:59 AM
 """
 
 from __future__ import division
-import flopy
+import flopy_mh as flopy
 
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 

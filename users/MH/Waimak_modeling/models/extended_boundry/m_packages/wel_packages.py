@@ -5,7 +5,7 @@ Date Created: 20/06/2017 11:57 AM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.model_tools.well_values import get_race_data, get_nwai_wells
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import pandas as pd

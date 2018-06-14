@@ -6,7 +6,7 @@ Date Created: 25/07/2017 11:13 AM
 
 import pandas as pd
 import numpy as np
-import flopy
+import flopy_mh as flopy
 
 #this script was passed to brioch for inclusion in the pest optimisation process
 # the influx wells are presently set to 1 m3/s so the muliplier can range between 0 and 5
