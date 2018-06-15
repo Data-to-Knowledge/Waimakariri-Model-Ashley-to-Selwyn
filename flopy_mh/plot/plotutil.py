@@ -290,7 +290,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
             ' in order to plot LayerFile data.'
         raise Exception(s)
 
-    import flopy.plot.map as map
+    import flopy_mh.plot.map as map
     
 
     # reshape 2d arrays to 3d for convenience
@@ -472,7 +472,7 @@ def _plot_bc_helper(package, kper,
             ' in order to plot boundary condition data.'
         raise Exception(s)
 
-    import flopy.plot.map as map
+    import flopy_mh.plot.map as map
 
     # reshape 2d arrays to 3d for convenience
     ftype = package.name[0]

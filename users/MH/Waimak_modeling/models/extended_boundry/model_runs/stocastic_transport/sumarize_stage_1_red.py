@@ -77,7 +77,7 @@ if __name__ == '__main__':
         temp = get_counts(lim, wdc_wells, well_counts=all_well_counts, datakey='gmp', all_data=gmp_data)
         outdata.loc['gmp', ('No of WDC wells', limid)] = temp
 
-    for red, redid in zip(['red10','red30'],['10% reduction', '30% reduction']):
+    for red, redid in zip(['red10', 'red20', 'red30'],['10% reduction', '20% reduction', '30% reduction']):
         for scen, scen_id in zip(['kgha_5_','dairy_'],['all land', 'dariy only']):
             for lim, limid in zip([11.3, 7.1, 5.65], ['> MAV', '>7.1 mg/l', '> 1/2 MAV']):
                 temp = get_counts(lim,private,well_counts=all_well_counts,datakey=scen + red,all_data=data)

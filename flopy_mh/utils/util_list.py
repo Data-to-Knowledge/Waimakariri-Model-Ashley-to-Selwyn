@@ -710,7 +710,7 @@ class MfList(object):
 
         """
 
-        import flopy.plot.plotutil as pu
+        import flopy_mh.plot.plotutil as pu
 
         if file_extension is not None:
             fext = file_extension
