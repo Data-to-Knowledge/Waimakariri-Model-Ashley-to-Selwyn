@@ -6,7 +6,7 @@ Date Created: 4/12/2017 3:06 PM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 import os

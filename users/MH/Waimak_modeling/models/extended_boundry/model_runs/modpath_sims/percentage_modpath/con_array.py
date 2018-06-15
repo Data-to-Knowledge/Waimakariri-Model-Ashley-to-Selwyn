@@ -8,7 +8,7 @@ from __future__ import division
 import geopandas as gpd
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import pandas as pd
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages import _get_wel_spd_v3
 
 def make_con_layer(bnd_type, rch_con_array, well_data, sfr_data):

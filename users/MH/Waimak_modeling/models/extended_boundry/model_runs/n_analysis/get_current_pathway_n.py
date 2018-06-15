@@ -34,17 +34,21 @@ def get_pc5pa_mults():
     return outdata
 
 
-def get_mt3d_current_pathway_n():
+def get_mt3d_current_pathway_n(add_pc5=True):
     pa_mults = get_pc5pa_mults()
     gmp_results = pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
                                       r"d results\ex_bd_va\zc_n_sols\all_scens\waimakariri_zone\corrected_model_data\a"
                                       r"ll_n_waimak_zone.csv"), index_col=0, header=[0, 1])['gmp']
+
     test = (1 + pa_mults.loc[gmp_results.index])
+    if not add_pc5:
+        test.loc[:] = 1
+
     out = (gmp_results.transpose() * test).transpose()
     return out
 
 
 
 if __name__ == '__main__':
-    test = get_pc5pa_mults()
+    test = get_mt3d_current_pathway_n()
     print('done')

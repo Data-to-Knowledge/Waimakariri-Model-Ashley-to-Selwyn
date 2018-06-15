@@ -6,7 +6,6 @@ Date Created: 21/12/2017 2:36 PM
 
 from __future__ import division
 from core import env
-import flopy
 from realisation_id import get_model
 import numpy as np
 import pandas as pd

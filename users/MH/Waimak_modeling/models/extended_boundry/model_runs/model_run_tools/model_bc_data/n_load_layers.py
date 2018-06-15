@@ -9,7 +9,7 @@ from core import env
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import numpy as np
 import os
-import flopy
+import flopy_mh as flopy
 import geopandas as gpd
 import shutil
 
@@ -110,7 +110,7 @@ def get_orginal_cmp_layer():
     return flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)')
 
 
-def get_gmp_plus_con_layer(
+def get_gmp_plus_con_layer_by_landuse(
         add_half_pc5pa=False,
         exclude_ashley=False,
         Arable=None,
@@ -192,14 +192,68 @@ def get_gmp_plus_con_layer(
 
     return outdata
 
+def get_gmp_plus_con_layer_by_load_limit(
+        n_load_limit,
+        n_reduction,
+        add_half_pc5pa=False,
+        exclude_ashley=False,):
+    """
+    get the concentration layer for reductions beyond gmp applied to landuse above a n load limit
+
+    :param n_load_limit: array the lower inclusive limit which determines whether or not a parcel will be included
+                         in the reductions if nload_limt is longer than 1 the reduction will apply to [lower, next lower)
+                         set
+    :param n_reduction: percentage (e.g 5 = 5%) array of the amount of reduction to apply limit and reduction are
+                        applied positionally
+    :param add_half_pc5pa: bool if True, add half (to assume reasonable uptake) of teh additional PA N
+    :param exclude_ashley: boolean, if True exlcude the ashley zone area for reductions (see internal shapefile for zone)
+    :return:
+    """
+    # this takes about 1 minute to run... I'm not pickling because there are too many options, but this
+    # could be re-assessed if need to load it lots... better to calculate it once and then make copies...
+    n_load_limit = np.atleast_1d(n_load_limit)
+    n_reduction = np.atleast_1d(n_reduction) #todo sort these togeather
+    idx = np.argsort(n_load_limit)
+    n_load_limit = n_load_limit[idx]
+    n_reduction = n_reduction[idx]
+
+    assert n_load_limit.shape == n_reduction.shape, 'n_load_limit and n_reduction must have the same shape'
+
+    base_nload_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
+                              'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+
+    base_data = gpd.read_file(base_nload_path)
+    base_data.loc[:, 'use_n'] = base_data.loc[:, 'nconc_gmp']
+    if exclude_ashley:  # for now I'll not worry about it
+        raise NotImplementedError
+    else:
+        for i in range(len(n_load_limit)):
+            lower = n_load_limit[i]
+            if i != len(n_load_limit) - 1: # not the last entry
+                upper = n_load_limit[i+1]
+            else:
+                upper = 999999999999999999999999 # everything is included in the upper
+            base_data.loc[(base_data.nload_gmp >= lower) & (base_data.nload_gmp < upper), 'use_n'] *= (1. - n_reduction[i] / 100.)
+    temp_shp_path = os.path.join(smt.temp_file_dir, 'temp_ncon_shp', 'temp_ncon_shp.shp')
+    if not os.path.exists(os.path.dirname(temp_shp_path)):
+        os.makedirs(os.path.dirname(temp_shp_path))
+    base_data.to_file(temp_shp_path)
+
+    outdata = smt.shape_file_to_model_array(temp_shp_path, attribute='use_n', alltouched=True,
+                                            area_statistics=True, fine_spacing=10, resample_method='average')
+    outdata[np.isnan(outdata)] = 0
+
+    if add_half_pc5pa:
+        pa = get_pc5pa_additonal_con()
+        pa = (outdata * pa - outdata) / 2
+        outdata += pa
+    shutil.rmtree(os.path.dirname(temp_shp_path))
+
+    return outdata
+
 
 if __name__ == '__main__':
     org = get_gmp_con_layer()
-    test = get_gmp_plus_con_layer(False,False,DairyFarm=25,DairySupport=25)
-    if True:
-        gmp = get_gmp_con_layer()
-        cmp = get_new_cmp_con()
-        temp = gmp / cmp
-        smt.array_to_raster(
-            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\gmpcon_over_cmpcon.tif",
-            temp, no_flow_layer=0)
+    new = get_gmp_plus_con_layer_by_load_limit(n_load_limit = [10,15,25],
+                                                n_reduction = [5,10,20])
+    print ('done')

@@ -14,7 +14,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
     get_hds_file_path, hds_no_data
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import \
     get_race_data, get_full_consent
-import flopy
+import flopy_mh as flopy
 import numpy as np
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import get_drn_no_ncarpet_spd
 

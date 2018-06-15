@@ -7,7 +7,7 @@ from __future__ import division
 
 import timeit
 
-import flopy
+import flopy_mh as flopy
 import numpy as np
 import matplotlib.pyplot as plt
 import users.MH.Waimak_modeling.model_tools as mt

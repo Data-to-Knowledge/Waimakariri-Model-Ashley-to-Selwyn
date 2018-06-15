@@ -8,7 +8,7 @@ from core import env
 import numpy as np
 import pandas as pd
 from supporting_data_path import sdp
-import flopy
+import flopy_mh as flopy
 import os
 
 model_ws = r"C:\Users\MattH\Downloads\test_box_model"

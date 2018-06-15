@@ -5,7 +5,7 @@ Date Created: 22/06/2017 10:59 AM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import m_packages
 import os
 import shutil

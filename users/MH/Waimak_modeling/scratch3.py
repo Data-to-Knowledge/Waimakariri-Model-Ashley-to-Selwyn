@@ -6,7 +6,7 @@ Date Created: 22/05/2017 1:47 PM
 from __future__ import division
 from core import env
 import model_tools as mt
-import flopy
+import flopy_mh as flopy
 import numpy as np
 import matplotlib as mpl
 from pykrige.ok import OrdinaryKriging

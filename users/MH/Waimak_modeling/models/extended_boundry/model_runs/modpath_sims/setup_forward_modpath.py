@@ -7,7 +7,7 @@ Date Created: 6/12/2017 1:47 PM
 from __future__ import division
 from core import env
 import numpy as np
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_setup.modpath_wrapper import \
     create_mp_slf, get_cbc

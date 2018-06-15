@@ -62,8 +62,6 @@ def Stehcoef(i, n):
     Stehcoef = Stehcoef * (-1)**(i + M)
     return Stehcoef
 
-
-
 def Erfc1(x):
     """
     To compute the complimentary error function for 0<=Abs(x)<infinity.
@@ -87,7 +85,7 @@ def Erfc1(x):
 
 def theis_jenkins(discharge, time, trans, s, l, return_rate=True):
     """
-
+    theis and jenkins stream depletion assesment
     :param discharge: pumping rate (l/s)
     :param time: days
     :param trans: transmissivity of the pumped aquifer m2/day

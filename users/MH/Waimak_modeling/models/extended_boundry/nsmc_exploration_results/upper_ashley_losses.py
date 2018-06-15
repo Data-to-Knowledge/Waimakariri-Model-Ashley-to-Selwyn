@@ -11,7 +11,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import flopy
+import flopy_mh as flopy
 
 if __name__ == '__main__':
     mask = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\raw_sw_samp_points\sfr\other\ashley_garry.shp".format(smt.sdp),'k',True)

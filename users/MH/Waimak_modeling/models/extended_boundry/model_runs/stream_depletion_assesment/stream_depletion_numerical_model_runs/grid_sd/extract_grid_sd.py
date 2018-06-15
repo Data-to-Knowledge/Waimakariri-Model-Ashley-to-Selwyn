@@ -6,7 +6,7 @@ Date Created: 17/10/2017 10:20 AM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import pandas as pd
 import glob
 import itertools

@@ -16,7 +16,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-
+#todo try to get rid of flopy here
 # todo set up exceptions is required varibles are needed
 # todo look though new modeling and add any useful tools to this class e.g convergence check or something around bc overlap
 # todo document the shit out of this

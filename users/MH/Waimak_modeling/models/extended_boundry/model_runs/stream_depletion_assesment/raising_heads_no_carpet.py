@@ -15,7 +15,7 @@ import pandas as pd
 from copy import deepcopy
 import os
 import pickle
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import get_race_data
 
 def get_drn_no_ncarpet_spd(model_id,recalc=False):

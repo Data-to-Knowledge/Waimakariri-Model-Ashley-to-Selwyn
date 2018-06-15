@@ -11,20 +11,21 @@ import rasterio as rast
 import matplotlib.image as mpimg
 import matplotlib.patches as patches
 from users.MH.Well_classes import mav, gv
+import os
 
 
 # plot background
 def plot_background(gis_dir):
-    background = rast.open(gis_dir + "background.tif")
+    background = rast.open(os.path.join(gis_dir, "background.tif"))
     ll = background.transform * (0, background.height)
     ur = background.transform * (background.width, 0)
 
     fig, ax = plt.subplots(1, figsize=(10,12.25))
-    image = mpimg.imread(gis_dir + "background.tif")
+    image = mpimg.imread(os.path.join(gis_dir,"background.tif"))
     ax.imshow(image, extent=[ll[0], ur[0], ll[1], ur[1]])  # make this a function at somepoint
-    lakes = gpd.read_file(gis_dir + "lakes.shp")
-    seds = gpd.read_file(gis_dir + "cen_seds.shp")
-    cwms = gpd.read_file(gis_dir + "cwms_zones.shp")
+    lakes = gpd.read_file(os.path.join(gis_dir,"lakes.shp"))
+    seds = gpd.read_file(os.path.join(gis_dir,"cen_seds.shp"))
+    cwms = gpd.read_file(os.path.join(gis_dir,"cwms_zones.shp"))
 
     seds_plot = seds.plot(ax=ax, alpha=1, color='khaki', edgecolor='none')
     lakes_plot = lakes.plot(ax=ax, alpha=0.25, color='navy', edgecolor='none')
@@ -72,7 +73,7 @@ def plot_background(gis_dir):
 
 if __name__ == '__main__':
     plotdir = "P:/Groundwater/Annual groundwater quality survey 2016/figures/"
-    gis_dir = "P:/Groundwater/Annual groundwater quality survey 2016/GIS_data/"
+    gis_dir = "P:/Groundwater/Annual groundwater quality survey 2016/GIS_data"
     # plotting for the AGWQL survey
     data = pd.read_csv("P:/Groundwater/Annual groundwater quality survey 2016/data/all_output.csv")
     data = data[pd.notnull(data['NO3_N_trend'])]
