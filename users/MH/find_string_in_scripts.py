@@ -32,5 +32,5 @@ def find_str_in_scripts(directory, string):
 
 
 if __name__ == '__main__':
-    find_str_in_scripts(r'C:\Users\MattH\OneDrive - Environment Canterbury\Ecan_code4\Ecan.Science.Python.Base\users\MH',
-                        'import')
+    find_str_in_scripts(r'C:\Users\MattH\PycharmProjects\Ecan.Science.Python.Base',
+                        'interzone_summary')

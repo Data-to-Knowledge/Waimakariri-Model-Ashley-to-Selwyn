@@ -101,6 +101,13 @@ def output_future_scenarios_table_without(scenarios, data_path, outdir, prefix='
 
 
 def output_interzone_table(scenarios, data_path, outpath):
+    """
+    CREATE INTERZONE TABLE AND ADD CHCH 8 TO THE DATA
+    :param scenarios:
+    :param data_path:
+    :param outpath:
+    :return:
+    """
     data = pd.read_csv(data_path, index_col=[0, 1], header=[0, 1])
     if isinstance(scenarios, str):
         if scenarios == 'all':
