@@ -256,9 +256,17 @@ def get_well_nums_for_group():
     return outdata
 
 
-def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=pc5_ftl_repo, dt0=1e4, ttsmax=1e5):
-    ssm = get_ssm_stress_period_data()
-    sft = get_sft_stress_period_data()
+def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=pc5_ftl_repo, dt0=1e4, ttsmax=1e5,
+                       ssm_kwargs=None, sft_kwargs=None):
+    if ssm_kwargs is None:
+        ssm = get_ssm_stress_period_data()
+    else:
+        ssm = get_ssm_stress_period_data(**ssm_kwargs)
+
+    if sft_kwargs is None:
+        sft = get_sft_stress_period_data()
+    else:
+        sft = get_sft_stress_period_data(**sft_kwargs)
 
     # get scon from a single run to try and speed up mt3d runs
     scon = None
@@ -287,11 +295,15 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 
     # raw data
     corrected_dir = os.path.join(intrazone_dir, 'corrected_model_data')
+    raw_outdir = os.path.join(intrazone_dir, 'raw_model_data')
     if not os.path.exists(corrected_dir):
         os.makedirs(corrected_dir)
     scenarios = scenario_paths.keys()
     pers_names = _np_describe(smt.get_empty_model_grid()).index.values
     outdata = pd.DataFrame(index=sites,
+                           columns=pd.MultiIndex.from_product((scenarios, pers_names),
+                                                              names=['scenario', 'stat']), dtype=float)
+    outdata_raw= pd.DataFrame(index=sites,
                            columns=pd.MultiIndex.from_product((scenarios, pers_names),
                                                               names=['scenario', 'stat']), dtype=float)
     well_sites = get_well_nums_for_group()
@@ -335,12 +347,16 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 
             if site in alpine_fractions.keys():
                 # correct the data for EMMA concerns
-                raw_data = correct_alpine_river(site, cmp_waimak_data, raw_data, well_sites, plot_dir)
-
+                corrected_raw_data = correct_alpine_river(site, cmp_waimak_data, raw_data, well_sites, plot_dir)
+            else:
+                corrected_raw_data = raw_data.copy()
+            
             # add the stocastic N load
-            stocastic_data = add_stocastic_load(site, raw_data)
+            stocastic_data = add_stocastic_load(site, corrected_raw_data)
+            all_raw_data = _np_describe(raw_data)
             for per in pers_names:
                 outdata.loc[site, (scen, per)] = stocastic_data[per]
+                outdata_raw.loc[site, (scen, per)] = all_raw_data[per]
 
     outdata.to_csv(os.path.join(corrected_dir, 'all_n_waimak_zone.csv'))
     outdata = outdata.reorder_levels(['stat', 'scenario'], axis=1)
@@ -354,6 +370,19 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     outdata['99%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_99ths.csv'))
     outdata['mean'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_mean.csv'))
     outdata['std'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_std.csv'))
+    
+    outdata_raw.to_csv(os.path.join(raw_outdir, 'all_n_waimak_zone.csv'))
+    outdata_raw = outdata_raw.reorder_levels(['stat', 'scenario'], axis=1)
+    outdata_raw['1%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_1ths.csv'))
+    outdata_raw['5%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_5ths.csv'))
+    outdata_raw['10%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_10ths.csv'))
+    outdata_raw['25%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_25ths.csv'))
+    outdata_raw['50%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_50ths.csv'))
+    outdata_raw['75%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_75ths.csv'))
+    outdata_raw['95%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_95ths.csv'))
+    outdata_raw['99%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_99ths.csv'))
+    outdata_raw['mean'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_mean.csv'))
+    outdata_raw['std'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_std.csv'))
 
 
 

@@ -18,12 +18,12 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from get_current_pathway_n import get_mt3d_current_pathway_n
 
 
-def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False):
+def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False, mt3d_add_pa=True):
     if from_mt3d_runs:
         if not isinstance(mode, dict):
             raise NotImplementedError('mode must be dict if using mt3d')
         outdata = {}
-        temp = get_mt3d_current_pathway_n()
+        temp = get_mt3d_current_pathway_n(mt3d_add_pa)
         for key in mode.keys():
             outdata[key] = temp.loc[key, mode[key]]
     else:
@@ -508,7 +508,8 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
     # include waimak target of 0.1 as given.
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    current_paths = get_current_pathway_n(mode, conservative_shp, from_mt3d_runs=current_pathway_from_mt3d)
+    current_paths = get_current_pathway_n(mode, conservative_shp, from_mt3d_runs=current_pathway_from_mt3d,
+                                          mt3d_add_pa=not pc5_pa_rules)
     base_shp_path = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results"
                             r"\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons")
 
@@ -535,7 +536,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         temp = smt.shape_file_to_model_array(os.path.join(wdc_dir, well.replace('wdc_', '') + '.shp'),
                                              'Id', True)
         temp[np.isfinite(temp)] = (1 - well_targets[well] / current_paths[well]) * 100
-        if pc5_pa_rules:
+        if pc5_pa_rules and not current_pathway_from_mt3d:
             temp[np.isfinite(temp)] += - pa_reductions[well]
 
         wdc_reductions.append(temp[np.newaxis])
@@ -556,7 +557,7 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         temp = smt.shape_file_to_model_array(os.path.join(private_dir, well + '.shp'),
                                              'Id', True)
         temp[np.isfinite(temp)] = (1 - well_targets[well] / current_paths[well]) * 100
-        if pc5_pa_rules:
+        if pc5_pa_rules and not current_pathway_from_mt3d:
             temp[np.isfinite(temp)] += - pa_reductions[well]
         private_reductions.append(temp[np.newaxis])
     private_reductions = np.nanmax(np.concatenate(private_reductions, axis=0), axis=0)
@@ -570,8 +571,8 @@ def calc_per_reduction_rasters(outdir, name, mode, well_targets, stream_targets,
         temp[np.isfinite(temp)] = (1 - stream_targets[stream] / current_paths[stream]) * 100 - (mar_percentage *
                                                                                                 stream_apply_mar[
                                                                                                     stream])
-        if pc5_pa_rules:
-            temp[np.isfinite(temp)] += - pa_reductions[well]
+        if pc5_pa_rules and not current_pathway_from_mt3d:
+            temp[np.isfinite(temp)] += - pa_reductions[stream]
         stream_reductions.append(temp[np.newaxis])
     stream_reductions = np.nanmax(np.concatenate(stream_reductions, axis=0), axis=0)
 
