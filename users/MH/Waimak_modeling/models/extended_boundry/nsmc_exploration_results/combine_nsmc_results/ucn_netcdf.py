@@ -190,6 +190,7 @@ def grouper(n, iterable, fillvalue=None):
 
 def _get_sfr_con_map(path):
     data = pd.read_table(path,delim_whitespace=True)
+    data.loc[:, 'SFR-CONCENTRATION'] = pd.to_numeric(data['SFR-CONCENTRATION'], 'coerce')
     data.loc[:,'row'] = data.loc[:,'SFR-NODE'] + 1000
     data.loc[:,'col'] = data.loc[:,'SFR-NODE'] + 1000
 
