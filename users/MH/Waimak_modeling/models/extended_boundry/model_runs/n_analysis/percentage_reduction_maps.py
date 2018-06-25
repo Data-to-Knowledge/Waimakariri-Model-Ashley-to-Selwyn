@@ -217,7 +217,7 @@ def get_mode(scenario, current_from_mt3d=False):
     # note that with mt3d I can apply any mode from the following list:
     # ['1%', '5%', '10%', '25%', '50%', '75%', '90%', '95%', '99%']
     if current_from_mt3d:
-        if scenario == 'least_pain':
+        if scenario in ['least_pain', 'preferred', 'alternate']:
             mode = {}
             for key in (wdc_wells | private_wells | streams):
                 mode[key] = '50%'
@@ -275,7 +275,7 @@ def gen_waimak_targets(scenario):
         out = 0
     elif scenario in ['least_pain', 'option4', 'option5']:
         out = 0
-    elif scenario == 'middle_option':
+    elif scenario in ['middle_option', 'preferred', 'alternate']:
         out = 28
     elif scenario == 'most_gain':
         out = 28
@@ -298,7 +298,7 @@ def gen_well_targets(scenario, wdc_none=False, private_none=False):
     # half MAV
     # current 'measured'
     outdata = {}
-    if scenario == 'half_mav':
+    if scenario in ['half_mav', 'preferred', 'alternate']:
         for key in (wdc_wells | private_wells):
             outdata[key] = 5.65
 
@@ -428,6 +428,20 @@ def gen_stream_targets(scenario, stream_none=False):
                         'kaiapoi_harpers_s': 6.9,  # aim for national bottom line
                         'kaiapoi_island_s': 6.9,  # aim for top C band
                         'ohoka_island_s': 6.9})  # aim for top C band
+    elif scenario == 'preferred':  # zc preferred option following 18/06/2018 meeting
+        outdata.update({'cam_bramleys_s': 1,
+                        'courtenay_kaiapoi_s': 3.8,
+                        'cust_skewbridge': 3.8,
+                        'kaiapoi_harpers_s': 3.8,
+                        'kaiapoi_island_s': 3.8,
+                        'ohoka_island_s': 3.8})
+    elif scenario == 'alternate':  # zc alternate option following 18/06/2018 meeting
+        outdata.update({'cam_bramleys_s': 1,
+                        'courtenay_kaiapoi_s': 1,
+                        'cust_skewbridge': 1,
+                        'kaiapoi_harpers_s': 1,
+                        'kaiapoi_island_s': 1,
+                        'ohoka_island_s': 1})
 
     else:
         raise NotImplementedError('scenario: {} is not implemented'.format(scenario))
