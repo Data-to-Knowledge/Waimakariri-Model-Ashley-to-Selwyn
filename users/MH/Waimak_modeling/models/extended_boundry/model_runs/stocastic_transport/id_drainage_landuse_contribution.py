@@ -105,8 +105,8 @@ if __name__ == '__main__':
         rch_con = input_layers[scen]
         nc_description = 'all dairy on poorly drained soils (denoted as pd soils) were set to a concentration of 1 everything else was set to zero'
         base_mt3d_dir = r"D:\mh_waimak_models\{}".format(scen)
-        setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, dt0=1e4, ttsmax=1e5,
-                           ssm_kwargs=ssm_kwargs, sft_kwargs=sft_kwargs)
+        # this has run and takes time# setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, dt0=1e4, ttsmax=1e5,
+        # this has run and takes time#                    ssm_kwargs=ssm_kwargs, sft_kwargs=sft_kwargs)
 
         # dairy high drainage
         scen = 'dairy_highdrain'
