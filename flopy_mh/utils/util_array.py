@@ -684,7 +684,7 @@ class Util3d(object):
         >>> ml.lpf.hk.plot()
 
         """
-        import flopy.plot.plotutil as pu
+        import flopy_mh.plot.plotutil as pu
 
         if file_extension is not None:
             fext = file_extension
@@ -1374,7 +1374,7 @@ class Transient2d(object):
         >>> ml.rch.rech.plot()
 
         """
-        import flopy.plot.plotutil as pu
+        import flopy_mh.plot.plotutil as pu
 
         if file_extension is not None:
             fext = file_extension
@@ -1779,7 +1779,7 @@ class Util2d(object):
         >>> ml.dis.top.plot()
         
         """
-        import flopy.plot.plotutil as pu
+        import flopy_mh.plot.plotutil as pu
 
         if title is None:
             title = self.name
@@ -2396,7 +2396,7 @@ class Util2d(object):
 
     @staticmethod
     def load_bin(shape, file_in, dtype, bintype=None):
-        import flopy.utils.binaryfile as bf
+        import flopy_mh.utils.binaryfile as bf
         nrow, ncol = shape
         if bintype is not None:
             if dtype not in [np.int]:

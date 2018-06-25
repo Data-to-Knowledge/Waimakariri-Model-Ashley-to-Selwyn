@@ -7,7 +7,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 import os
 import sys
 import inspect
-import flopy
+import flopy_mh as flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam, SpatialReference
@@ -95,7 +95,7 @@ class Modflow(BaseModel):
     Examples
     --------
 
-    >>> import flopy
+    >>> import flopy_mh as flopy
     >>> m = flopy.modflow.Modflow()
 
     """
@@ -449,7 +449,7 @@ class Modflow(BaseModel):
         Examples
         --------
 
-        >>> import flopy
+        >>> import flopy_mh as flopy
         >>> ml = flopy.modflow.Modflow.load(f)
 
         """

@@ -22,16 +22,16 @@ contribute.
 
 __name__ = 'flopy'
 __author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Jeff Starn, Mike Fienen, and Alain Frances'
-from .version import __version__, __build__
+from flopy_mh.version import __version__, __build__
 
 #imports
-from . import modflow
-from . import mt3d
-from . import seawat
-from . import modpath
-from . import modflowlgr
-from . import utils
-from . import plot
-from . import export
-from . import pest
-from .mbase import run_model, which, is_exe
+from flopy_mh import modflow
+from flopy_mh import mt3d
+from flopy_mh import seawat
+from flopy_mh import modpath
+from flopy_mh import modflowlgr
+from flopy_mh import utils
+from flopy_mh import plot
+from flopy_mh import export
+from flopy_mh import pest
+from flopy_mh.mbase import run_model, which, is_exe

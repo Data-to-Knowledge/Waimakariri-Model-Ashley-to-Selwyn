@@ -513,7 +513,7 @@ def mflist_helper(f, mfl, **kwargs):
         sparse = kwargs.get("sparse", False)
         if mfl.sr is None:
             raise Exception("MfList.to_shapefile: SpatialReference not set")
-        import flopy.utils.flopy_io as fio
+        import flopy_mh.utils.flopy_io as fio
         if kper is None:
             keys = mfl.data.keys()
             keys.sort()

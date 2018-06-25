@@ -9,8 +9,6 @@ import os
 import tempfile
 import numpy as np
 import pandas as pd
-from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.percentage_reduction_maps import get_pa_reductions
-from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import flopy_mh as flopy
 
 
