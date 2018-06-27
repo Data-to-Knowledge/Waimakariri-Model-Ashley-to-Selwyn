@@ -13,7 +13,7 @@ from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 
 if __name__ == '__main__':
-    run_mt3d = True
+    run_mt3d = False
 
     base_nload_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
                               'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
@@ -105,8 +105,8 @@ if __name__ == '__main__':
         rch_con = input_layers[scen]
         nc_description = 'all dairy on poorly drained soils (denoted as pd soils) were set to a concentration of 1 everything else was set to zero'
         base_mt3d_dir = r"D:\mh_waimak_models\{}".format(scen)
-        # this has run and takes time# setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, dt0=1e4, ttsmax=1e5,
-        # this has run and takes time#                    ssm_kwargs=ssm_kwargs, sft_kwargs=sft_kwargs)
+        setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, dt0=1e4, ttsmax=1e5,
+                           ssm_kwargs=ssm_kwargs, sft_kwargs=sft_kwargs)
 
         # dairy high drainage
         scen = 'dairy_highdrain'
@@ -152,6 +152,7 @@ if __name__ == '__main__':
     # extract all data
     extract_data = True
     if extract_data:
+        print('extracting data')
         gmp_cbc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc")
         extract_receptor_data(scenario_paths=scen_paths,
                               cbc_paths=gmp_cbc,
