@@ -35,6 +35,11 @@ def get_pc5pa_mults():
 
 
 def get_mt3d_current_pathway_n(add_pc5=True):
+    """
+
+    :param add_pc5: boolean if True add the additional concentration associated with the pc5 pa rules
+    :return:
+    """
     pa_mults = get_pc5pa_mults()
     gmp_results = pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
                                       r"d results\ex_bd_va\zc_n_sols\all_scens\waimakariri_zone\corrected_model_data\a"

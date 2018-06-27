@@ -397,6 +397,7 @@ class ModelTools(object):
         :param kwargs: other kwargs passed to matplotlib.pcolor alpha is the only kwarg that is also passed to the background
         :return: fig, ax
         """
+        #todo interactive option?
         alpha = 1
         array = deepcopy(array.astype(float))
         if vmax is None:

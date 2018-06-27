@@ -19,6 +19,14 @@ from get_current_pathway_n import get_mt3d_current_pathway_n
 
 
 def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False, mt3d_add_pa=True):
+    """
+
+    :param mode: what percentile to use
+    :param conservative_zones: simpley use 'use_mix'
+    :param from_mt3d_runs: boolean if true get the current pathway N from mt3d runs (this updates a courser approximation)
+    :param mt3d_add_pa: boolean if True add the additional concentration associated with the pc5 pa rules
+    :return:
+    """
     if from_mt3d_runs:
         if not isinstance(mode, dict):
             raise NotImplementedError('mode must be dict if using mt3d')

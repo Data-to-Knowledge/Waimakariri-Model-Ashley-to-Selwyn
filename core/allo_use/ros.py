@@ -10,7 +10,7 @@ from datetime import date, datetime
 from core.misc.misc import printf, select_sites, save_df
 from core.spatial.vector import sel_sites_poly
 from core.ecan_io.SQL_databases import sql_arg
-from core.ecan_io import rd_ts, rd_hydrotel, rd_sql, rd_sql_ts
+from core.ecan_io import rd_sql, rd_sql_ts # , rd_ts, rd_hydrotel
 
 ### ROS and min flow restrictions
 

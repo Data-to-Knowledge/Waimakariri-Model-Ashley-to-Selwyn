@@ -10,7 +10,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.nsmc_exploration_results.c
 import os
 
 if __name__ == '__main__':
-    paths = glob(r"T:\Temp\temp_gw_files\sobs_check\NsmcReal000005_pc5_80.sobs")
+    paths = glob(r"T:\Temp\temp_gw_files\sobs_check\*.sobs")
     for path in paths:
         print os.path.basename(path)
         _get_sfr_con_map(path)
