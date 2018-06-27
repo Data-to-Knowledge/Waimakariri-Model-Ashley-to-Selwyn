@@ -12,19 +12,22 @@ from glob import glob
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.run_source_uncertainty import \
     spatial_overlays
 from percentage_reduction_maps import gen_stream_targets, gen_well_targets, get_current_pathway_n
-
+import pickle
+import os
+from copy import deepcopy
+import itertools
 
 use_soil_mapper = {
-            'dairy_lowdrain':1,
-            'sbda_lowdrain':1,
-            'dairy_highdrain':0,
-            'sbda_highdrain':0,
+    'dairy_lowdrain': 1,
+    'sbda_lowdrain': 1,
+    'dairy_highdrain': 0,
+    'sbda_highdrain': 0,
 }
 use_luse_mapper = {
-            'dairy_lowdrain':1,
-            'sbda_lowdrain':2,
-            'dairy_highdrain':1,
-            'sbda_highdrain':2,
+    'dairy_lowdrain': 1,
+    'sbda_lowdrain': 2,
+    'dairy_highdrain': 1,
+    'sbda_highdrain': 2,
 }
 
 lclasses = {'dairy_lowdrain',
@@ -33,8 +36,8 @@ lclasses = {'dairy_lowdrain',
             'sbda_highdrain',
             'lifestyle'}
 
-def gen_site_shape_dict():
 
+def gen_site_shape_dict():
     sites = gen_well_targets('preferred')
     sites.update(gen_stream_targets('preferred'))
     sites = sites.keys()
@@ -43,16 +46,16 @@ def gen_site_shape_dict():
                  r"_va\capture_zones_particle_tracking\source_zone_"
                  r"polygons\private_wells_90_named_right\*.shp")
     paths.extend(glob(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd"
-                 r"_va\capture_zones_particle_tracking\source_zone_"
-                 r"polygons\wdc_use_mix\*.shp"))
+                      r"_va\capture_zones_particle_tracking\source_zone_"
+                      r"polygons\wdc_use_mix\*.shp"))
     paths.extend(glob(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd"
-                 r"_va\capture_zones_particle_tracking\source_zone_"
-                 r"polygons\second_tranche\*.shp"))
+                      r"_va\capture_zones_particle_tracking\source_zone_"
+                      r"polygons\second_tranche\*.shp"))
     paths = pd.Series(paths)
 
     for site in sites:
         if 'wdc' in site:
-            idx = paths.str.contains(site.replace('wdc_','')) & paths.str.contains('wdc_use_mix')
+            idx = paths.str.contains(site.replace('wdc_', '')) & paths.str.contains('wdc_use_mix')
         else:
             idx = paths.str.contains(site) & ~paths.str.contains('wdc_use_mix')
 
@@ -62,6 +65,11 @@ def gen_site_shape_dict():
 
 
 def get_average_n(recalc=False):
+    pickle_path = r"T:\Temp\temp_gw_files\average_n.p"
+    if (os.path.exists(pickle_path)) and (not recalc):
+        outdata = pickle.load(open(pickle_path))
+        return outdata
+
     base_nload_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
                               'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
 
@@ -120,38 +128,47 @@ def get_average_n(recalc=False):
             if lclass == 'lifestyle':
                 idx = temp_n.use_ltype == 3
             else:
-                idx = (temp_n.use_ltype==use_luse_mapper[lclass]) & (temp_n.use_soil == use_soil_mapper[lclass])
+                idx = (temp_n.use_ltype == use_luse_mapper[lclass]) & (temp_n.use_soil == use_soil_mapper[lclass])
             total_area = temp_n.loc[idx, 'use_area'].sum()
-            if total_area ==0:
+            if total_area == 0:
                 n = 0
             else:
                 n = (temp_n.loc[idx, 'use_area'] * temp_n.loc[idx, 'nconc_gmp']).sum() / total_area
             temp_out[lclass] = n
         outdata[site] = temp_out
+    pickle.dump(outdata, open(pickle_path, 'w'))
     return outdata
 
 
 def get_fractions():
-    # todo get the fraction for each component for each site and landuse
-    # missing fraction denoted as other
-    raise NotImplementedError
+    # this comes from a series of mt3d runs
+    base_path = env.sci(
+        r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\landuse_drainage_fractions\waimakariri_zone\corrected_model_data\n_data_waimak_zone_50ths.csv")
+
+    basedata = pd.read_csv(base_path, index_col=0)
+    basedata.loc[:, 'other'] = 1 - basedata.sum(axis=1)
+    return basedata.transpose().to_dict()
 
 
 def number_of_steps(step_reductions, pa_00, target_scheme):
     """
     calculate the number of steps to reach a selected target scheme
-    :param step_reductions: a dictionary of the percentage reduction to apply at each step
-                            keys: 'dairy_lowdrain',
-                            'sbda_lowdrain',
-                            'dairy_highdrain',
-                            'sbda_highdrain',
-                            'lifestyle'
+    :param step_reductions: a dictionary of the percentage reduction to apply at each step e.g.
+                            {'dairy_lowdrain' :20,
+                            'sbda_lowdrain':10,
+                            'dairy_highdrain':20,
+                            'sbda_highdrain':5,
+                            'lifestyle':0}
     :param pa_00: boolean if True, set teh pa rules to 0,0
     :param target_scheme: one of: ['preferred', 'alternate']
     :return:
     """
     assert isinstance(step_reductions, dict)
     assert set(step_reductions.keys()) == lclasses
+    use_step_reductions = {}
+
+    for k, v in step_reductions.items():
+        use_step_reductions[k] = 1 - v / 100
 
     targets = gen_well_targets(target_scheme)
     targets.update(gen_stream_targets(target_scheme))
@@ -164,27 +181,79 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
     outdata = pd.DataFrame(index=targets.keys())
     for site in targets.keys():
         # calculate the average n concentration for the missing components (check this)
-        n_proj = current_paths.loc[site]
-        n_proj_temp = current_paths.loc[site]
+        n_proj = deepcopy(current_paths[site])
+        if n_proj < targets[site]:
+            continue
+        n_proj_temp = deepcopy(current_paths[site])
         for lclass in lclasses:
             n_proj_temp += - average_n[site][lclass] * fractions[site][lclass]
 
-        other_n_con = n_proj_temp/fractions[site]['other']
-        outdata.loc[site,'other_n_conc'] = other_n_con
+        other_n_con = n_proj_temp / fractions[site]['other']
+        outdata.loc[site, 'other_n_conc'] = other_n_con
 
         # apply reduction, calculate new concentration
         new_n = other_n_con * fractions[site]['other']
         for lclass in lclasses:
-            new_n += average_n[site][lclass] * step_reductions[lclass] * fractions[site][lclass]
+            new_n += average_n[site][lclass] * use_step_reductions[lclass] * fractions[site][lclass]
         outdata.loc[site, 'step_1_con'] = new_n
 
         # from new concentration calculate the number of steps to the target
         dif = n_proj - new_n
-        num_steps = (n_proj - targets[site])/dif
+        num_steps = (n_proj - targets[site]) / dif
         outdata.loc[site, 'nsteps'] = num_steps
 
-    return outdata #todo check this
+    return outdata  # todo check this
+
+
+def run_scenarios(outdir):
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outdata = {}
+    target_options = ['preferred', 'alternate']
+    pas = [True, False]
+
+    # make reduction options
+    dairy_options = [10, 20]
+    sheep_options = [0, 5]
+    lifestyle_options = [0, 2]
+    include_ld = [True, False]
+
+    reduction_options = {}
+    for d, s, ly, ld in itertools.product(dairy_options, sheep_options, lifestyle_options, include_ld):
+        ld_name = 'exc'
+        if ld:
+            ld_name = 'inc'
+
+        name = 'd{}_s{}_L{}_{}ld'.format(d, s, ly, ld_name)
+        temp = {}
+        temp['dairy_highdrain'] = d
+        temp['sbda_highdrain'] = s
+        temp['lifestyle'] = ly
+
+        if ld:
+            temp['dairy_lowdrain'] = d
+            temp['sbda_lowdrain'] = s
+        else:
+            temp['dairy_lowdrain'] = 0
+            temp['sbda_lowdrain'] = 0
+
+        reduction_options[name] = temp
+
+    for red, pc5pa00, tar in itertools.product(reduction_options.keys(), pas, target_options):
+        pa_name = 'without'
+        if pc5pa00:
+            pa_name = 'with'
+        outname = '{}_{}_pc5pa00_{}_tar'.format(red, pa_name, tar)
+
+        temp_data = number_of_steps(step_reductions=reduction_options[red],
+                                    pa_00=pc5pa00,
+                                    target_scheme=tar)
+        temp_data.to_csv(os.path.join(outdir,'{}.csv'.format(outname)))
+        outdata[outname] = temp_data.nsteps.round(1)
+    outdata = pd.DataFrame(outdata)
+    outdata.to_csv(os.path.join(outdir,'all_nsteps_summary.csv'))
+
 
 if __name__ == '__main__':
-    test = get_average_n()
+    run_scenarios(r"C:\Users\MattH\Downloads\num_steps")
     print('done')
