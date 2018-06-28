@@ -1,7 +1,7 @@
-name: waimak_model
+name: base
 channels:
-  - conda-forge
   - anaconda
+  - conda-forge
   - defaults
 dependencies:
   - bzip2=1.0.6=vc9_3
@@ -25,14 +25,14 @@ dependencies:
   - curl=7.55.1=vc9_0
   - cyordereddict=1.0.0=py27_1
   - descartes=1.1.0=py27_0
-  - expat
-  - fiona=1.7.9
+  - expat=2.1.0=vc9_2
+  - fiona=1.7.8=np112py27_0
   - freexl=1.0.2=vc9_1
   - future=0.16.0=py27_0
-  - gdal=2.1
+  - gdal=2.2.3=py27_vc9_0
   - geopandas=0.3.0=py27_0
-  - geos=3.6.2
-  - geotiff=1.4.2
+  - geos=3.6.2=vc9_1
+  - geotiff=1.4.2=vc9_0
   - h5netcdf=0.3.1=py27_0
   - h5py=2.7.1=py27_2
   - hdf4=4.2.12=vc9_0
@@ -40,20 +40,20 @@ dependencies:
   - jmespath=0.9.3=py27_0
   - kealib=1.4.7=vc9_4
   - krb5=1.14.2=vc9_0
-  - libgdal
+  - libgdal=2.2.3=vc9_1
   - libiconv=1.14=vc9_4
   - libnetcdf=4.4.1.1=vc9_10
   - libpng=1.6.28=vc9_0
   - libpq=9.5.4=vc9_4
   - libspatialindex=1.8.5=vc9_1
-  - libspatialite
+  - libspatialite=4.3.0a=vc9_18
   - libssh2=1.8.0=vc9_2
-  - libtiff=4.0.8
+  - libtiff=4.0.7=vc9_1
   - libxml2=2.9.4=vc9_4
   - munch=2.1.1=py27_0
   - netcdf4=1.3.1=py27_2
   - networkx=1.11=py27_0
-  - openjpeg
+  - openjpeg=2.3.0=vc9_1
   - proj4=4.9.3=vc9_4
   - psycopg2=2.7.1=py27_0
   - pycosat=0.6.3=py27_0
@@ -61,10 +61,11 @@ dependencies:
   - pyproj=1.9.5.1=py27_0
   - pysal=1.13.0=py27_0
   - pytables=3.4.2=py27_7
+  - rasterio=1.0a9=np112py27_0
   - rtree=0.8.3=py27_0
   - s3transfer=0.1.10=py27_1
   - seaborn=0.7.1=py27_0
-  - shapely
+  - shapely=1.6.2=py27_1
   - snuggs=1.4.1=py27_0
   - sqlite=3.13.0=vc9_1
   - vc=9=0
@@ -212,7 +213,7 @@ dependencies:
   - scikit-image=0.13.0=np112py27_0
   - scikit-learn=0.18.1=np112py27_1
   - scipy=0.19.0=np112py27_0
-  - setuptools
+  - setuptools=27.2.0=py27_1
   - simplegeneric=0.8.1=py27_1
   - singledispatch=3.4.0.3=py27_0
   - sip=4.18=py27_0
@@ -270,6 +271,5 @@ dependencies:
     - traits==4.6.0
     - traitsui==5.1.0
     - update==0.4.4
-    - rasterio=1.0
-
+prefix: C:\Anaconda_64_v3
 

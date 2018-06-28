@@ -16,6 +16,7 @@ import pickle
 import os
 from copy import deepcopy
 import itertools
+import numpy as np
 
 use_soil_mapper = {
     'dairy_lowdrain': 1,
@@ -29,6 +30,16 @@ use_luse_mapper = {
     'dairy_highdrain': 1,
     'sbda_highdrain': 2,
 }
+
+order = ['Streams', 'cam_bramleys_s', 'courtenay_kaiapoi_s', 'kaiapoi_harpers_s', 'kaiapoi_island_s',
+         'ohoka_island_s', 'Private Wells', 'Clarkville', 'Cust', 'cust_skewbridge', 'Eyreton_deep',
+         'Eyreton_shallow', 'Fernside', 'Flaxton', 'Horellville', 'Mandeville', 'North East Eyrewell_deep',
+         'North East Eyrewell_shallow', 'North West Eyrewell_deep', 'North West Eyrewell_shallow', 'Ohoka_deep',
+         'Ohoka_shallow', 'Rangiora', 'Springbank', 'Summerhill', 'Swannanoa_deep', 'Swannanoa_shallow', 'Waikuku',
+         'West Eyreton_deep', 'West Eyreton_shallow', 'Woodend - Tuahiwi', 'Wdc Wells', 'wdc_Cust', 'wdc_Fernside',
+         'wdc_Kaiapoi', 'wdc_Kairaki', 'wdc_Mandeville', 'wdc_Ohoka', 'wdc_Oxford Urban', 'wdc_Pegasus',
+         'wdc_Poyntzs Road', 'wdc_Rangiora', 'wdc_Waikuku', 'wdc_West Eyreton', ]
+
 
 lclasses = {'dairy_lowdrain',
             'sbda_lowdrain',
@@ -200,6 +211,9 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
         # from new concentration calculate the number of steps to the target
         dif = n_proj - new_n
         num_steps = (n_proj - targets[site]) / dif
+        if num_steps * max(step_reductions.values()) > 100:
+            num_steps = 999 # more steps than possible
+
         outdata.loc[site, 'nsteps'] = num_steps
 
     return outdata  # todo check this
@@ -248,12 +262,44 @@ def run_scenarios(outdir):
         temp_data = number_of_steps(step_reductions=reduction_options[red],
                                     pa_00=pc5pa00,
                                     target_scheme=tar)
-        temp_data.to_csv(os.path.join(outdir,'{}.csv'.format(outname)))
+        temp_data.to_csv(os.path.join(outdir, '{}.csv'.format(outname)))
         outdata[outname] = temp_data.nsteps.round(1)
     outdata = pd.DataFrame(outdata)
-    outdata.to_csv(os.path.join(outdir,'all_nsteps_summary.csv'))
+    outdata.loc['Streams', :] = np.nan
+    outdata.loc['Wdc Wells', :] = np.nan
+    outdata.loc['Private Wells', :] = np.nan
+    outdata = outdata.loc[order]
+    outdata.to_csv(os.path.join(outdir, 'all_nsteps_summary.csv'))
+    return outdata
 
 
 if __name__ == '__main__':
-    run_scenarios(r"C:\Users\MattH\Downloads\num_steps")
+    outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps"
+    if False: # just a way to stop this from running
+        summary = run_scenarios(outdir)
+    else:
+        summary = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps\all_nsteps_summary.csv", index_col=0)
+
+    # generate subset
+    keep_cols = [
+        'd10_s0_L0_excld_without_pc5pa00_preferred_tar',
+        'd10_s5_L0_excld_without_pc5pa00_preferred_tar',
+        'd10_s5_L2_excld_without_pc5pa00_preferred_tar',
+        'd20_s5_L2_excld_without_pc5pa00_preferred_tar',
+        'd20_s5_L2_incld_without_pc5pa00_preferred_tar',
+        'd10_s0_L0_incld_with_pc5pa00_preferred_tar',
+        'd10_s5_L0_excld_with_pc5pa00_preferred_tar',
+        'd10_s0_L0_incld_without_pc5pa00_alternate_tar',
+        'd10_s5_L2_incld_without_pc5pa00_alternate_tar',
+        'd10_s5_L2_incld_with_pc5pa00_alternate_tar',
+    ]
+    cols = deepcopy(summary.columns)
+    summary.loc['dairy_red',:] = [e.split('_')[0].replace('d','') for e in cols]
+    summary.loc['sbda_red',:] = [e.split('_')[1].replace('s','') for e in cols]
+    summary.loc['lifestyle_red',:] = [e.split('_')[2].replace('L','') for e in cols]
+    summary.loc['pa',:] = [e.split('_')[4].replace('without','pc5pa').replace('with','Pc5pa00') for e in cols]
+    summary.loc['low drain',:] = [e.split('_')[3] for e in cols]
+    summary.loc['target',:] = [e.split('_')[-2] for e in cols]
+    newrows = ['dairy_red','sbda_red','lifestyle_red','pa','target', 'low drain']
+    summary.loc[newrows+order,keep_cols].to_csv(os.path.join(outdir, 'a_select_scenarios.csv'))
     print('done')

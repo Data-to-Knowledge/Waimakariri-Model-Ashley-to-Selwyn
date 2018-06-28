@@ -347,6 +347,8 @@ def get_full_allo_multipler(org_pumping_wells, recalc=False):
 
 
 if __name__ == '__main__':
-    wells_fc = get_full_consent('NsmcBase', missing_sd_wells=True,recalc=False)
-    wells_mr = get_max_rate('NsmcBase', missing_sd_wells=True,recalc=False)
-    print('done')
+    # ran this to look at changes between current and abstraction
+    wells, n,m = get_forward_wells('NsmcBase',True)
+    temp,n,m = get_forward_wells('NsmcBase')
+    wells.loc[:,'dif'] = wells.flux - temp.flux
+    wells.to_csv(r"T:\Temp\temp_gw_files\test_dds\to_full_abs.csv")
