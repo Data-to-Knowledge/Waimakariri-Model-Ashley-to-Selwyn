@@ -170,6 +170,13 @@ def get_fractions():
     basedata.loc[:, 'other'] = 1 - basedata.sum(axis=1)
     return basedata.transpose().to_dict()
 
+def get_step_targets(target_scheme):
+    targets = gen_well_targets(target_scheme)
+    targets.update(gen_stream_targets(target_scheme))
+    targets.update(gen_interzone_targets(target_scheme))
+
+    return targets
+
 
 def number_of_steps(step_reductions, pa_00, target_scheme):
     """
@@ -191,9 +198,7 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
     for k, v in step_reductions.items():
         use_step_reductions[k] = 1 - v / 100
 
-    targets = gen_well_targets(target_scheme)
-    targets.update(gen_stream_targets(target_scheme))
-    targets.update(gen_interzone_targets(target_scheme))
+    targets = get_step_targets(target_scheme)
     mode = {k: '50%' for k in targets.keys()}
     current_paths = get_current_pathway_n(mode=mode, conservative_zones='use_mix', from_mt3d_runs=True,
                                           mt3d_add_pa=not pa_00, inc_interzone=True)
