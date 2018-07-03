@@ -11,7 +11,7 @@ import pandas as pd
 from glob import glob
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.run_source_uncertainty import \
     spatial_overlays
-from percentage_reduction_maps import gen_stream_targets, gen_well_targets, get_current_pathway_n
+from percentage_reduction_maps import gen_stream_targets, gen_well_targets, get_current_pathway_n, gen_interzone_targets
 import pickle
 import os
 from copy import deepcopy
@@ -38,7 +38,8 @@ order = ['Streams', 'cam_bramleys_s', 'courtenay_kaiapoi_s', 'kaiapoi_harpers_s'
          'Ohoka_shallow', 'Rangiora', 'Springbank', 'Summerhill', 'Swannanoa_deep', 'Swannanoa_shallow', 'Waikuku',
          'West Eyreton_deep', 'West Eyreton_shallow', 'Woodend - Tuahiwi', 'Wdc Wells', 'wdc_Cust', 'wdc_Fernside',
          'wdc_Kaiapoi', 'wdc_Kairaki', 'wdc_Mandeville', 'wdc_Ohoka', 'wdc_Oxford Urban', 'wdc_Pegasus',
-         'wdc_Poyntzs Road', 'wdc_Rangiora', 'wdc_Waikuku', 'wdc_West Eyreton', ]
+         'wdc_Poyntzs Road', 'wdc_Rangiora', 'wdc_Waikuku', 'wdc_West Eyreton', 'Interzone', 'conservative_interzone',
+         'highly_likely_interzone']
 
 
 lclasses = {'dairy_lowdrain',
@@ -71,6 +72,9 @@ def gen_site_shape_dict():
             idx = paths.str.contains(site) & ~paths.str.contains('wdc_use_mix')
 
         outdata[site] = paths.loc[idx].iloc[0]
+
+    outdata['conservative_interzone'] = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\interzone\conservative_interzone.shp"
+    outdata['highly_likely_interzone'] = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\interzone\highly_likely_interzone.shp"
 
     return outdata
 
@@ -157,6 +161,12 @@ def get_fractions():
         r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\landuse_drainage_fractions\waimakariri_zone\corrected_model_data\n_data_waimak_zone_50ths.csv")
 
     basedata = pd.read_csv(base_path, index_col=0)
+    interzone_data = pd.read_csv(r'P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and resu'
+                                 r'lts\ex_bd_va\zc_n_sols\landuse_drainage_fractions\interzone\n_'
+                                 r'data_interzone_50ths.csv',
+                                 index_col=[0,1])
+    basedata.loc['conservative_interzone'] = interzone_data.loc[('deep unnamed', 'full_city')]
+    basedata.loc['highly_likely_interzone'] = interzone_data.loc[('deep unnamed', 'full_city')]
     basedata.loc[:, 'other'] = 1 - basedata.sum(axis=1)
     return basedata.transpose().to_dict()
 
@@ -183,9 +193,10 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
 
     targets = gen_well_targets(target_scheme)
     targets.update(gen_stream_targets(target_scheme))
+    targets.update(gen_interzone_targets(target_scheme))
     mode = {k: '50%' for k in targets.keys()}
     current_paths = get_current_pathway_n(mode=mode, conservative_zones='use_mix', from_mt3d_runs=True,
-                                          mt3d_add_pa=not pa_00)
+                                          mt3d_add_pa=not pa_00, inc_interzone=True)
 
     average_n = get_average_n()
     fractions = get_fractions()
@@ -216,10 +227,9 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
 
         outdata.loc[site, 'nsteps'] = num_steps
 
-    return outdata  # todo check this
+    return outdata
 
-
-def run_scenarios(outdir):
+def run_scenarios(outdir): #todo run scenarios and make timelines # set max threshold to 100%
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     outdata = {}
@@ -227,9 +237,9 @@ def run_scenarios(outdir):
     pas = [True, False]
 
     # make reduction options
-    dairy_options = [10, 20]
+    dairy_options = [10, 25]
     sheep_options = [0, 5]
-    lifestyle_options = [0, 2]
+    lifestyle_options = [0,2]
     include_ld = [True, False]
 
     reduction_options = {}
@@ -274,8 +284,9 @@ def run_scenarios(outdir):
 
 
 if __name__ == '__main__':
+    #todo interzone not there...
     outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps"
-    if False: # just a way to stop this from running
+    if True: # just a way to stop this from running
         summary = run_scenarios(outdir)
     else:
         summary = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps\all_nsteps_summary.csv", index_col=0)
@@ -285,8 +296,8 @@ if __name__ == '__main__':
         'd10_s0_L0_excld_without_pc5pa00_preferred_tar',
         'd10_s5_L0_excld_without_pc5pa00_preferred_tar',
         'd10_s5_L2_excld_without_pc5pa00_preferred_tar',
-        'd20_s5_L2_excld_without_pc5pa00_preferred_tar',
-        'd20_s5_L2_incld_without_pc5pa00_preferred_tar',
+        'd25_s5_L2_excld_without_pc5pa00_preferred_tar',
+        'd25_s5_L2_incld_without_pc5pa00_preferred_tar',
         'd10_s0_L0_incld_with_pc5pa00_preferred_tar',
         'd10_s5_L0_excld_with_pc5pa00_preferred_tar',
         'd10_s0_L0_incld_without_pc5pa00_alternate_tar',

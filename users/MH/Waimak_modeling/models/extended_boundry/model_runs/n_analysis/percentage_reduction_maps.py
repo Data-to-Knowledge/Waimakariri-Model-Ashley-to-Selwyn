@@ -18,20 +18,21 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 from get_current_pathway_n import get_mt3d_current_pathway_n
 
 
-def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False, mt3d_add_pa=True):
+def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False, mt3d_add_pa=True, inc_interzone=False):
     """
 
     :param mode: what percentile to use
     :param conservative_zones: simpley use 'use_mix'
     :param from_mt3d_runs: boolean if true get the current pathway N from mt3d runs (this updates a courser approximation)
     :param mt3d_add_pa: boolean if True add the additional concentration associated with the pc5 pa rules
+    :param inc_interzone: boolean if True also load the interzone receptors (which ones?)
     :return:
     """
     if from_mt3d_runs:
         if not isinstance(mode, dict):
             raise NotImplementedError('mode must be dict if using mt3d')
         outdata = {}
-        temp = get_mt3d_current_pathway_n(mt3d_add_pa)
+        temp = get_mt3d_current_pathway_n(mt3d_add_pa, inc_interzone=inc_interzone)
         for key in mode.keys():
             outdata[key] = temp.loc[key, mode[key]]
     else:
@@ -83,11 +84,12 @@ def get_current_pathway_n(mode, conservative_zones, from_mt3d_runs=False, mt3d_a
         pa_n = get_pa_reductions(conservative_zones)
         for key in set(outdata.keys()) - streams:  # streams are not included as they don't change size
             outdata[key] += outdata[key] * pa_n[key] / 100
-
+        if inc_interzone:
+            raise NotImplementedError('interzone not implemented for old n option')
     return outdata
 
 
-def get_pa_reductions(conservative_zones):
+def get_pa_reductions(conservative_zones, inc_interzone=False):
     # get teh pa reductions to apply to the below script. need to integrate the conservative and non conservitive zones
     # pull from my PA load scripts
     outdata = {}
@@ -140,6 +142,9 @@ def get_pa_reductions(conservative_zones):
     data.loc[:, 'pa_increase'] = data.loc[:, 'total_pa_N_kg'] / data.loc[:, 'gmp_nload_kg'] * 100
     for key in private_wells:
         outdata[key] = data.loc[key, 'pa_increase']
+
+    if inc_interzone:
+        raise NotImplementedError #todo
 
     for key in outdata.keys():
         outdata[key] *= 0.5  # current pathways estmates a rough uptake of 50%
@@ -289,6 +294,21 @@ def gen_waimak_targets(scenario):
         out = 28
     else:
         raise NotImplementedError('scenario not implemented: {}'.format(scenario))
+    return out
+
+def gen_interzone_targets(scenario):
+    if scenario == 'preferred':
+        out = {
+            'conservative_interzone': 3.8,
+            'highly_likely_interzone': 3.8
+        }
+    elif scenario == 'alternate':
+        out = {
+            'conservative_interzone': 1,
+            'highly_likely_interzone': 1
+        }
+    else:
+        raise NotImplementedError()
     return out
 
 
