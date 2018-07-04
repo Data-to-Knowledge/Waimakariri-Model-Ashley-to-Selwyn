@@ -1,0 +1,159 @@
+Tag,description,|,paths
+indata,data given to us by gns (big data),|,K:\mh_modeling\data_from_gns
+N,the model run for the median n scen on ashopt,|,K:\mh_modeling\data_from_gns\AshOpt_medianN
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_coast_lstrepo
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_coast_masrepo
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_coast_ucnrepo
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_inland_lstrepo
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_inland_masrepo
+EMMA,Endmember mixing output repositories,|,K:\mh_modeling\data_from_gns\EM_inland_ucnrepo
+Ashley,a model run setting upper ashly gorge losses lower,|,K:\mh_modeling\data_from_gns\Phiupper_ashtest
+readme,readme,|,K:\mh_modeling\data_from_gns\READ_ME.txt
+reporting,"some reporting stuff, nothing final",|,K:\mh_modeling\data_from_gns\Reporting
+flow,stocasitc model repository,|,K:\mh_modeling\data_from_gns\cbcrepo
+flow,stocasitc model repository,|,K:\mh_modeling\data_from_gns\hdsrepo
+n,stocasitc N run for median load,|,K:\mh_modeling\data_from_gns\median_n
+EMMA,alpine river phi low model results,|,K:\mh_modeling\data_from_gns\mt_aw_ex_alpine_philow
+n,phi low median N results,|,K:\mh_modeling\data_from_gns\mt_aw_ex_mednload_philow_tvd
+optimisation,optimisation parameters,|,K:\mh_modeling\data_from_gns\recrepo
+optimisation,optimisation parameters,|,K:\mh_modeling\data_from_gns\reirepo
+model run,run file for the mt3d median N ,|,K:\mh_modeling\data_from_gns\run_files
+flow,stocastic observations,|,K:\mh_modeling\data_from_gns\sforepo
+originals,"a zipped version of originals, may not be complete",|,K:\mh_modeling\data_from_gns\zipped_originals
+flow ,the data I provided to mark in oct around flows projections also contains gridded stream depletion,|,K:\mh_modeling\data_to_mark
+source area,particle tracking for interzone,|,K:\mh_modeling\interzone_source_zones
+model run,flow model runs to support particle tranport,|,K:\mh_modeling\modflow_dir_for_source
+Datasets,sinthisised netcdf data,|,K:\mh_modeling\netcdfs_of_key_modeling_data
+flow,the cbc for the gmp flow simulation (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc
+N,the n concentration for the gmp load on a gmp flow simulation with an additional 1 m3/s added to the eyre near oxford (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc
+N,the n concentration for the gmp load on a gmp flow simulation (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc
+N,the n concentration for the gmp load and a 50% reduction of load on interzone on a gmp flow simulation (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_50_reduc_interzone.nc
+N,the n concentration for the gmp load and a 8kg/ha load on the christchurch westmelton zone on a gmp flow simulation (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc
+N,the n concentration for the gmp load and a 8kg/ha load on interzone on a gmp flow simulation (see pc5_80),|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc
+N,a 15 percent reduction on all dairy and dairy support in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus15per_dairy_ucn.nc
+N,a 25 percent reduction on all dairy and dairy support in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus25per_dairy_ucn.nc
+N,a 10 percent reduction on all dairy and dairy support in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_10per_dairy_ucn.nc
+N,a 10 percent reduction on  all land with a gmp nload >= 15kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_10per_on_15kgha_ucn.nc
+N,a 10 percent reduction on  all land with a gmp nload >= 5kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_10per_on_5kgha_ucn.nc
+N,a 20 percent reduction on all dairy and dairy support in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_20per_dairy_ucn.nc
+N,a 20 percent reduction on  all land with a gmp nload >= 15kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_20per_on_15kgha_ucn.nc
+N,a 20 percent reduction on  all land with a gmp nload >= 5kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_20per_on_5kgha_ucn.nc
+N,a 30 percent reduction on all dairy and dairy support in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_30per_dairy_ucn.nc
+N,a 30 percent reduction on  all land with a gmp nload >= 15kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_30per_on_15kgha_ucn.nc
+N,a 30 percent reduction on  all land with a gmp nload >= 5kg/ha in the waimakariri zone,|,K:\mh_modeling\netcdfs_of_key_modeling_data\GMP_plus_30per_on_5kgha_ucn.nc
+,?,|,K:\mh_modeling\netcdfs_of_key_modeling_data\check_nan_emma_unc.csv
+,?,|,K:\mh_modeling\netcdfs_of_key_modeling_data\check_nan_post_filter1_cell_budgets.csv
+,?,|,K:\mh_modeling\netcdfs_of_key_modeling_data\check_nan_post_filter1_hds.csv
+landuse fraction,all dairy on well drained soils (denoted as not pd soils) were set to a concentration of 1 everything else was set to zero,|,K:\mh_modeling\netcdfs_of_key_modeling_data\dairy_highdrain_fraction.nc
+landuse fraction,all dairy on poorly drained soils (denoted as pd soils) were set to a concentration of 1 everything else was set to zero,|,K:\mh_modeling\netcdfs_of_key_modeling_data\dairy_lowdrain_fraction.nc
+EMMA," endmember mixing analysis results for inland and coastal endmembers.  
+    initial concentrations for each endmember was 1.  
+    the coastal endmember is defined as the LSR from a line approximately drawn through 
+    [Greendale, 2km south of Charing Cross, Noalan House, Kirwee, corner of worlingham rd, Arcadia] to the coast
+    the inland endmember is defined as the LSR inland of the coastal member, as well as the influxes for the eyre river,
+     Ashley tributaries, and cust inflow. we intended to set the selwyn streams and northern boundary flux (lowburn) to 
+     inland, but a bug in the mt3d run meant that they were not interpreted as inland.  we did not re-run due to 
+     programme time constraints LSR on both sides of the Waimakariri river were set
+     we envisage a third endmember (i.e. alpine river water), but due to time constraints we are assuming that the sum 
+     of all of these endmembers is 1 for each observation point and did not run the alpine river endmember",|,K:\mh_modeling\netcdfs_of_key_modeling_data\emma_unc.nc
+EMMA," endmember mixing analysis results for inland and coastal endmembers.  
+    initial concentrations for each endmember was 1.  
+    the coastal endmember is defined as the LSR from a line approximately drawn through 
+    [Greendale, 2km south of Charing Cross, Noalan House, Kirwee, corner of worlingham rd, Arcadia] to the coast
+    the inland endmember is defined as the LSR inland of the coastal member, as well as the influxes for the eyre river,
+     Ashley tributaries, and cust inflow. we intended to set the selwyn streams and northern boundary flux (lowburn) to 
+     inland, but a bug in the mt3d run meant that they were not interpreted as inland.  we did not re-run due to 
+     programme time constraints LSR on both sides of the Waimakariri river were set
+     we envisage a third endmember (i.e. alpine river water), but due to time constraints we are assuming that the sum 
+     of all of these endmembers is 1 for each observation point and did not run the alpine river endmember",|,K:\mh_modeling\netcdfs_of_key_modeling_data\emma_unc_riv.nc
+landuse fraction,lifestyle set to 1,|,K:\mh_modeling\netcdfs_of_key_modeling_data\lifestyle_fraction.nc
+N,reductions applied to meet long scenario least_pain,|,K:\mh_modeling\netcdfs_of_key_modeling_data\long_red_least_pain_ucn.nc
+N,reductions applied to meet long scenario middle_option,|,K:\mh_modeling\netcdfs_of_key_modeling_data\long_red_middle_option_ucn.nc
+N,reductions applied to meet long scenario most_gain,|,K:\mh_modeling\netcdfs_of_key_modeling_data\long_red_most_gain_ucn.nc
+N,reductions applied to meet long scenario option4,|,K:\mh_modeling\netcdfs_of_key_modeling_data\long_red_option4_ucn.nc
+N, best estimate nitrate loads at steady state,|,K:\mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc
+optimisation,"parameters, observations, and filters and metadata for the waimakariri Null Space Monte Carlo.The nsmc_num are unique ids.  -1 correspons to the lower phi optimisation(NsmcBase) and -2 corresponds to the upper phi optimisation (NsmcBaseB)",|,K:\mh_modeling\netcdfs_of_key_modeling_data\nsmc_params_obs_metadata.nc
+,?,|,K:\mh_modeling\netcdfs_of_key_modeling_data\param_obs_variables.txt
+,?,|,K:\mh_modeling\netcdfs_of_key_modeling_data\param_oobs_att_check.txt
+optimisation,"
+    The heads, or cell budget file values for all models which passed filter one (phi filter).  These were recalculated
+    for filters 2-4
+    ",|,K:\mh_modeling\netcdfs_of_key_modeling_data\post_filter1_cell_budgets.nc
+optimisation,"
+    The heads, or cell budget file values for all models which passed filter one (phi filter).  These were recalculated
+    for filters 2-4
+    ",|,K:\mh_modeling\netcdfs_of_key_modeling_data\post_filter1_hds.nc
+landuse fraction,"all sheep beef deer arable, pig, horticolteral on well drained soils (denoted as not pd soils) were set to a concentration of 1 everything else was set to zero",|,K:\mh_modeling\netcdfs_of_key_modeling_data\sbda_highdrain_fraction.nc
+landuse fraction,"all sheep beef deer arable, pig on poorly drained soils (denoted as pd soils) were set to a concentration of 1 everything else was set to zero",|,K:\mh_modeling\netcdfs_of_key_modeling_data\sbda_lowdrain_fraction.nc
+model run,hold realsiations created from the parameter set,|,K:\mh_modeling\nsmc_loaded_realisations_TEMP
+interzone,plots for the interzone meeting and understanding model,|,K:\mh_modeling\nsmc_plots
+interzone,as above but zipped,|,K:\mh_modeling\nsmc_plots.7z
+model run,hold ftls for transport modeling.  Set eyre to higher,|,K:\mh_modeling\pc580_eyre_mar_ftls
+model run,GMP ftls fro forward transport modeling,|,K:\mh_modeling\pc580_ftls
+flow,stocastic forward flow modelling results,|,K:\mh_modeling\stocastic_forward
+N,"old, but used to create the first estimate of the transport modelling",|,K:\mh_modeling\stocastic_n_load_results
+LSR,lsr estimates for the waimakariri model,,K:\niwa_netcdf\lsrm
+LSR,pe and rain data corrected for stepchanges and lack of calibration,,K:\niwa_netcdf\rain_waimak_corrected_pe_data
+capture zone,top directory for all capture zone data,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking
+capture zone,maps of the data,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\mxds
+capture zone,maps of the population served by each area,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\population_served
+capture zone,netcdfs of the capture zones for the private supply wells,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\private_domestic_supply
+capture zone,holds the wdc and private well shapefiles,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\shp
+capture zone,simple particle tracking on a zonal basis,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\simple_modpath
+capture zone,stream and wdc well capture zone netcdfs,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\single_source_zones
+capture zone,the polygons we have drawn for the capture zones,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons
+capture zone,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\Ashley.gdb
+capture zone,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\Data for Ogi
+capture zone,capture zones for the interzone area,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\interzone
+capture zone,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\likely
+capture zone,capture zones for the private wells (conservative shapes),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\private_wells
+capture zone,capture zones for the private wells (highly likely shapes) these were used in further analyisis,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\private_wells_90_named_right
+capture zone,capture zones for the N waimak Tribs,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\second_tranche
+capture zone,capture zones for the waimakariri river,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\waimakariri_river
+capture zone,capture zones for the wdc wells a mix of the conservative and highly likely.  This was used for further analysisi,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\wdc_use_mix
+capture zone,capture zones for the wdc wells (conservative),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\wdc_wells
+capture zone, capture zones for the wdc wells(highly likely),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons\wdc_wells_90_named_right
+flow,non stocasitc forward flow models,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\forward_sw_gw
+flow,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\forward_sw_gw\mappers
+flow,non stocasitc forward flow models results,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\forward_sw_gw\results
+flow,holds inputs for grid spacing for the gridded stream depltion,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\grid_sd
+climate change,the lsr projections for climate change (course working examples),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\lsr_checks
+n,the header for N results,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results
+n,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\N results for northern tribs ZC workshop
+n,Ashley tributary Nload data,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\ashley_trib_nload_stuffs
+n,uncorrected N load for GMP (superceeded by mt3d run),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\gmp_n_results_at_points
+n,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\info
+n,Pa and stocastic N load for interzone (largely superceended),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone
+n,interzone N predictions for heaps of different sites (partially superseeded),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results
+n,N reductions needed for the preferred and alternate targets for consultation,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_red_for_consult
+n,N reductions from mt3d for various options (superceeded),|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_red_mt3d
+n,superceeded n reductions for options we no longer care for,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_excl_interzone
+n,superceeded n reductions for options we no longer care for,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_excl_interzone_3scen
+n,superceeded n reductions for options we no longer care for,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_use_zones_excl_interzone_3scen
+n,superceeded n reductions for options we no longer care for,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_use_zones_use_scens
+n,superceeded n reductions for options we no longer care for,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_reductions_use_zones_use_scens_inc_interzone
+n,superceeded ,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_results_at_points
+n,an interactive tool to plot reductions based on targets and certainty,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_target_reductions.html
+n,first pass of correcting n results for waimak percentages (included in zc_n_sols) (superseeded,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_vs_wai_regressions
+n,PA and superceeded N concentration projections ,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\nwaimak_springfeds
+n,PA and superceeded N concentration projections ,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\private_wells
+n,PA and superceeded N concentration projections ,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\private_wells_90
+n,PA and superceeded N concentration projections for the ashley,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\stocastic_n_load_results
+n,cl and o18 data,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\support_shp
+n,?,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\test
+n,waimakariri fraction results,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\waimak_per_results_at_points
+n,waimakariri pa rules and projected increase,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\waimakariri_river
+n,PA and superceeded N concentration projections for the ashley,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\wdc_use_mix
+n,PA and superceeded N concentration projections for the ashley,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\wdc_wells
+n,PA and superceeded N concentration projections for the ashley,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\wdc_wells_90
+LSR,checks around the problems I had with uncorrected PET data from niwa,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\niwa_data_explore
+particle tracking,particle traces for simple modpath analysis,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\simple_modpath
+stream depletion,everything stream depletion,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\stream_depletion
+n,"second set of N results, these are more uptodate",|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols
+n,"forward mt3d based n predictions for: CMP, GMP, 15%red on GMP, 25% reduction on GMP, GMP with addional 2 m3/s in the eyre, interzone set to 8 kg/ha, interzone 50% reduction",|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\all_scens
+n,"drainage fractions from sbda, dairy and dairy support, and lifestyle (deferentiates low drainage)",|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\landuse_drainage_fractions
+n,mt3d runs on the package n reduction options,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\long_scens
+n,estimates for the number of steps to reach a given target,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps
+n,mt3d projections of stage 1 reduction values,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\stage_1_red
+n,projections of n concentrations at various reduction steps,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\step_projections
+n,summaries of reduction scenarios and all scens to make reporting quicker,|,P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\summary_info
