@@ -270,5 +270,6 @@ dependencies:
     - tables==3.4.2
     - traits==4.6.0
     - traitsui==5.1.0
+    - fpdf==1.7.2
 
 

@@ -124,7 +124,7 @@ def run_scenarios(num_steps=10):
     return outdata
 
 
-def plot_scen(data, site, keys_to_include, title=None):
+def plot_scen(data, site, keys_to_include, title=None, include_reduction_plots=True):
     """
 
     :param data: the data produced by run_scenarios
@@ -138,7 +138,10 @@ def plot_scen(data, site, keys_to_include, title=None):
     :return: fig, axes
     """
     assert isinstance(keys_to_include, dict), 'keys_to_include must be dict... see docstring'
-    fig, axes = plt.subplots(4, figsize=(8.27, 11.69), sharex=True)
+    if include_reduction_plots:
+        fig, axes = plt.subplots(4, figsize=(8.27, 11.69), sharex=True)
+    else:
+        fig, axes = plt.subplots(2, figsize=(8.27, 5), sharex=True)
     pref_tar = get_step_targets('preferred')[site]
     alt_tar = get_step_targets('alternate')[site]
     maxes = [pref_tar, alt_tar]
@@ -156,16 +159,17 @@ def plot_scen(data, site, keys_to_include, title=None):
         # ax2 No PA
         axes[1].plot(steps, nopa_data.n_con, marker='.', **kwargs)
 
-        # ax3 dairy reduction
-        axes[2].plot(steps, nopa_data.dairy_highdrain_reduction * 100, marker='.', **kwargs)
+        if include_reduction_plots:
+            # ax3 dairy reduction
+            axes[2].plot(steps, nopa_data.dairy_highdrain_reduction * 100, marker='.', **kwargs)
 
-        # ax4 spda reduction
-        axes[3].plot(steps, nopa_data.sbda_highdrain_reduction * 100, marker='.', **kwargs)
+            # ax4 spda reduction
+            axes[3].plot(steps, nopa_data.sbda_highdrain_reduction * 100, marker='.', **kwargs)
 
     # make plot pretty
     # xaxis
-    axes[3].set_xlabel('reduction steps')
-    axes[3].set_xticks(steps)
+    axes[-1].set_xlabel('reduction steps')
+    axes[-1].set_xticks(steps)
     if max(maxes) > 5:
         spacer = 1
     elif max(maxes) > 2:
@@ -181,13 +185,14 @@ def plot_scen(data, site, keys_to_include, title=None):
     axes[1].set_ylim([0, max(maxes) * 1.2])
     axes[1].set_yticks(np.arange(0, max(maxes)*1.2, spacer))
 
-    axes[2].set_ylabel('Dairy & dairy support reduction')
-    axes[2].set_ylim([-5, 110])
+    if include_reduction_plots:
+        axes[2].set_ylabel('Dairy & dairy support reduction')
+        axes[2].set_ylim([-5, 110])
 
-    axes[3].set_ylabel('Other agricultural reduction')
-    axes[3].set_ylim([-5, 110])
+        axes[3].set_ylabel('Other agricultural reduction')
+        axes[3].set_ylim([-5, 110])
 
-    handles, labels = axes[3].get_legend_handles_labels()
+    handles, labels = axes[-1].get_legend_handles_labels()
 
     # sort legend them by labels
 
@@ -195,7 +200,7 @@ def plot_scen(data, site, keys_to_include, title=None):
                 key=operator.itemgetter(1))
     handles2, labels2 = zip(*hl)
 
-    axes[3].legend(handles2, labels2)
+    axes[-1].legend(handles2, labels2)
 
     # add limit lines (prefered and other)
 
@@ -218,7 +223,7 @@ def plot_scen(data, site, keys_to_include, title=None):
     return fig, axes
 
 
-def plot_sites(data, outdir, sites=None, keys_to_include=None):
+def plot_sites(data, outdir, sites=None, keys_to_include=None, include_reduciotn_plots=True):
     """
     plot the data for a select number of sites
     :param data: data from con_at_steps
@@ -266,7 +271,8 @@ def plot_sites(data, outdir, sites=None, keys_to_include=None):
         else:
             title = 'Private wells near {}'.format(site.replace('_', ', ')).title()
 
-        fig, axes = plot_scen(data, site, keys_to_include, title=title)
+        fig, axes = plot_scen(data, site, keys_to_include, title=title,
+                              include_reduction_plots=include_reduciotn_plots)
         fig.savefig(os.path.join(outdir, '{}.png'.format(site)))
         plt.close(fig)
 
@@ -275,5 +281,6 @@ if __name__ == '__main__':
     outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\step_projections"
     test = run_scenarios()
     plot_sites(test, outdir=outdir)
+    plot_sites(test, outdir=os.path.join(outdir,'slimmed_plots'),include_reduciotn_plots=False)
     test.to_csv(os.path.join(outdir,'all_step_data.csv'))
     print('done')
