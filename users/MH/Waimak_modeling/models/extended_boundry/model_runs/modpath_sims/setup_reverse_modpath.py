@@ -18,7 +18,7 @@ import os
 
 def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     """
-    create particles (np.recarray)
+    create evenly spaced particles in cells defined by gridlocs (np.recarray)
     :param grid_locs: a list of tuples(k,i,j) or tuple (k,i,j)
     :param group: a list of groups of same length gridlocs
     :param root3_num_part: the cubed root of the number of particles to put in each cell

@@ -189,6 +189,7 @@ sites = {
     'northbrook_marshes_s',
     'ohoka_island_s',
     'southbrook_marshes_s',
+    # todo to add ashley output I simply need to add the sites here.
 
     # wdc_wells
     'wdc_Kairaki',
@@ -307,7 +308,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
                            columns=pd.MultiIndex.from_product((scenarios, pers_names),
                                                               names=['scenario', 'stat']), dtype=float)
     well_sites = get_well_nums_for_group()
-    cmp_waimak_data = {
+    cmp_waimak_data = {  # the alpine river fractions
         'stream': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
                                       r"d results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set"
                                       r"_str_data.csv"), index_col=0).transpose(),
@@ -328,6 +329,8 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
             use_cbc_path = cbc_paths[scen]
         else:
             raise ValueError('unexpected types for cbc_paths: {}'.format(type(cbc_paths)))
+
+        # exctract data from the ucn netcdf and the cbc nettcdf
         get_n_at_points_nc(raw_dir, nsmc_nums=get_stocastic_set(False), ucn_var_name='mednload',
                            ucn_nc_path=path,
                            cbc_nc_path=use_cbc_path,

@@ -12,6 +12,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools
 import datetime
 
 if __name__ == '__main__':
+    # run on Gwater-02
     gmp_cbc = env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_cbc.nc")
     gmp_eyre_cbc = r"C:\mh_waimak_model_data\GMP_eyre_mar_cbc.nc"
     cmp_cbc = r"C:\mh_waimak_model_data\post_filter1_budget.nc"
