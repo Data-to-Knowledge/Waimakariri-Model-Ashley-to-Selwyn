@@ -61,7 +61,7 @@ def get_mt3d_current_pathway_n(add_pc5=True, inc_interzone=False):
         gmp_results.loc['conservative_interzone'] = interzone_results.loc[('deep unnamed', 'full_city')]
         gmp_results.loc['highly_likely_interzone'] = interzone_results.loc[('deep unnamed', 'full_city')]
 
-    test = (1 + pa_mults.loc[gmp_results.index])
+    test = (1 + pa_mults.loc[gmp_results.index]) #todo should this pamult be divided by 2?
     if not add_pc5:
         test.loc[:] = 1
 
@@ -71,5 +71,6 @@ def get_mt3d_current_pathway_n(add_pc5=True, inc_interzone=False):
 
 
 if __name__ == '__main__':
+    test = get_pc5pa_mults()
     test = get_mt3d_current_pathway_n(inc_interzone=True)
     print('done')
