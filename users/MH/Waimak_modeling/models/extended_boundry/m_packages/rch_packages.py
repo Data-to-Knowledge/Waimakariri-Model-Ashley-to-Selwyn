@@ -32,7 +32,7 @@ def create_rch_package(m):
     rch = flopy.modflow.mfrch.ModflowRch(m,
                                          nrchop=3,
                                          ipakcb=740,
-                                         rech=_get_rch(),
+                                         rech=_get_rch(2),
                                          irch=0,
                                          unitnumber=716)
 
@@ -213,9 +213,25 @@ def _get_rch_comparison():
     print('done')
     return outdata
 
+def get_rch_summary(rch_version):
+    new_no_flow = smt.get_no_flow()
+    zones = smt.shape_file_to_model_array("{}/m_ex_bd_inputs/shp/cwms_zones.shp".format(smt.sdp), 'ZONE_CODE')
+    zones[~new_no_flow[0].astype(bool)] = np.nan
+    # waimak = 4, chch_wm = 7, selwyn=8 , chch_wm chch_formation = 9
+    w_idx = np.isclose(zones, 4)
+    c_idx = np.isclose(zones, 7)
+    s_idx = np.isclose(zones, 8)
+    all_idx = np.isfinite(zones)
+    outdata = pd.DataFrame(columns=['waimak', 'selwyn', 'chch_wm', 'total'])
+    dat = _get_rch(rch_version) * 200 * 200
+    for idx, zone in zip([w_idx, c_idx, s_idx, all_idx], ['waimak', 'chch_wm', 'selwyn', 'total']):
+            outdata.loc['rch', zone] = np.nansum(dat[idx])
+    print(outdata / 86400)
 
 
 if __name__ == '__main__':
+    get_rch_summary(2)
+    raise
     # tests
     test_type = 1
 
@@ -241,7 +257,6 @@ if __name__ == '__main__':
         outdata = pd.DataFrame({'x':x[idx],'y':y[idx],'rch_mm_yr':rch[idx]*1000*365,'rch_m3_s':rch[idx]*200*200/86400})
         outdata.to_csv(os.path.join(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va",'rch_points.csv'))
         raise
-        _get_rch_comparison()
         rchold=_get_rch(version=1,recalc=False)
 
         smt.plt_matrix(rch)

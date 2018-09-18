@@ -19,17 +19,16 @@ def get_well_budget(well_data):
     c_idx = np.isclose(zones,7)
     s_idx = np.isclose(zones,8)
     all_idx = np.isfinite(zones)
-
     outdata = pd.DataFrame(columns=['waimak','selwyn','chch_wm', 'total'])
-    well_data = well_data.rename(columns={'row':'i','col':'j', 'layer':'k'})
+    #well_data = well_data.rename(columns={'row':'i','col':'j', 'layer':'k'})
     well_data['bc_type'] = 'well'
 
-    races = smt.df_to_array(well_data.loc[well_data.type=='race'],'flux')
-    wells = smt.df_to_array(well_data.loc[well_data.type=='well'],'flux')
-    wells_irr = smt.df_to_array(well_data.loc[(well_data.type=='well') & (well_data.use_type=='irrigation-sw')],'flux')
-    wells_oth = smt.df_to_array(well_data.loc[(well_data.type=='well') & (well_data.use_type=='other')],'flux')
-    rivers = smt.df_to_array(well_data.loc[well_data.type=='river'],'flux')
-    bflux = smt.df_to_array(well_data.loc[well_data.type.str.contains('boundry_flux')],'flux')
+    races = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[well_data.type=='race'])),'flux')
+    wells = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[well_data.type=='well'])),'flux')
+    wells_irr = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[(well_data.type=='well') & (well_data.use_type=='irrigation-sw')])),'flux')
+    wells_oth = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[(well_data.type=='well') & (well_data.use_type=='other')])),'flux')
+    rivers = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[well_data.type=='river'])),'flux')
+    bflux = smt.df_to_array(pd.DataFrame(smt.convert_well_data_to_stresspd(well_data.loc[well_data.type.str.contains('boundry_flux')])),'flux')
 
     for dat, name in zip([races,wells,wells_irr,wells_oth,rivers, bflux],['races','wells','wells_irr','wells_other','wrivers', 'bflux']):
         for idx, zone in zip([w_idx,c_idx,s_idx,all_idx],['waimak','chch_wm', 'selwyn', 'total']):

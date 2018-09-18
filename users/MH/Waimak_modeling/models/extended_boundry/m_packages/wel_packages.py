@@ -828,24 +828,28 @@ def add_use_type(data):
 
 
 if __name__ == '__main__':
+    #wells = get_wel_spd(3)
+    # wells.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\figs_for_report\wells.csv")
+
     # tests
     from users.MH.Waimak_modeling.models.extended_boundry.supporting_data_analysis.well_budget import get_well_budget
     from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.model_bc_data.wells import get_max_rate, get_full_consent
     new = _get_wel_spd_v2()
 
-    print('NEW')
+    print('version 2 (2014/15)')
     print(get_well_budget(new) / 86400)
     old = _get_wel_spd_v3()
-    print('OLD')
-    print(get_well_budget(old) / 86400)
-
+    print('version 3 (2008 - 2015)')
+    temp = get_well_budget(old) / 86400
+    print(temp)
+    temp.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\figs_for_report\well_budget.csv")
     print('max_rate')
     max_rate = get_max_rate('opt')
     print(get_well_budget(max_rate)/86400)
     print('full CAV')
     full_cav = get_full_consent('opt')
     print(get_well_budget(full_cav)/86400)
-
+    raise
     well_data = new
     well_data = well_data.loc[:, ['layer', 'row', 'col', 'flux', 'type']]
     well_data.to_csv(r"C:\Users\MattH\Desktop\to_brioch_2017_10_4/well_data.csv")

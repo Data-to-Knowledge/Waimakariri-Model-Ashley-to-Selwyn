@@ -158,10 +158,12 @@ def get_model_name_path(model_id):
 
         # optimisation recieved on 24/10/2017 which is more stable and better hits the targets than either of the
         # VertUnstab models.  if the jacobian runs fine then this will be the base for the NSMC this ended up the base for the NSMC
+        # also termed the acceptatble limit model in brioch's reports
         'NsmcBase': "{}/from_gns/NsmcBase/AW20171024_2_i2_optver/i2/mf_aw_ex.nam".format(smt.sdp),
 
         # optimisation revieved on 25/10/2017 which is the previous iteration to NsmcBase.  NsmcBase was quite unstable,
         # which is why we are considering the previous optimisation
+        # considered the calibrated model in brioch's reports
         'NsmcBaseB': "{}/from_gns/NsmcBaseB/AW20171024_2_i1_optver/i1/mf_aw_ex.nam".format(smt.sdp),
 
         # optimisation recieved on 8/01/2018 which was run over xmas to address concerns over the amount of flow lost
