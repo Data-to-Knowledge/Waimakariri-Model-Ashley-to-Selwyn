@@ -347,7 +347,9 @@ if __name__ == '__main__':
     reach = pd.DataFrame(_reach_data_v1(False))
     if save:
         reach = smt.add_mxmy_to_df(reach)
-        reach.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\all_sfr.csv")
+        # this has been switched around reach.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\all_sfr.csv")
+        seg.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\seg_data.csv")
+
     else:
         elv = smt.calc_elv_db()
         g=reach.groupby(['iseg'])

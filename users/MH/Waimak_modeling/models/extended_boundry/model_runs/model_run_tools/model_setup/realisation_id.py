@@ -431,7 +431,13 @@ def get_stocastic_set(return_model_ids=True):
     else:
         return nsmc_nums
 if __name__ == '__main__':
+    import pandas as pd
     # tests
     m=get_model('NsmcBase')
+    reach = pd.DataFrame(m.sfr.reach_data)
+    reach = smt.add_mxmy_to_df(reach)
+    reach.to_csv(
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\all_sfr.csv")
+
     print(m)
     print('done')
