@@ -199,7 +199,7 @@ def _seg_data_v1(recalc=False):
     seg_dict = get_stream_seg_dict()
 
     # the aqualinc report suggests that the eyre and ashley are relativly constant width so set all width to the value
-    # provided
+    # provided # this did not work for some reason... and instead teh widths were set to 1
     seg_data['width1'][np.in1d(seg_data['nseg'],seg_dict['str_ashley_swaz'])] = 20  # set ashley width to 20 m from aqualinc
     seg_data['width2'][np.in1d(seg_data['nseg'],seg_dict['str_ashley_swaz'])] = 20  # set ashley width to 20 m from aqualinc
     seg_data['width1'][np.in1d(seg_data['nseg'],seg_dict['str_eyre_swaz'])] = 5.5  # set eyre width to 5.5 m from aqualinc
