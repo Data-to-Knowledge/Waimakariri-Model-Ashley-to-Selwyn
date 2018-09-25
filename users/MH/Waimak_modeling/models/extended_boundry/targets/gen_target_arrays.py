@@ -390,6 +390,8 @@ def check_non_head_targets():
 
 
 if __name__ == '__main__':
+    test = get_vertical_gradient_targets()
+
     import matplotlib.pyplot as plt
     temp = gen_sfr_flux_target_array()
     outdata = get_head_targets()
