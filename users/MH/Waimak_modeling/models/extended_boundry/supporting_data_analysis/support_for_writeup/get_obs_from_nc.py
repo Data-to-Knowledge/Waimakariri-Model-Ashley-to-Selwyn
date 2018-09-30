@@ -9,6 +9,7 @@ from core import env
 import netCDF4 as nc
 import pandas as pd
 
+
 def get_obs_from_nc(data):
     all_vars = data.variables.keys()
 
@@ -24,20 +25,60 @@ def get_obs_from_nc(data):
             continue
         print(var)
         if data.variables[var].units == 'm3/day':
-            mult = 1/86400
+            mult = 1 / 86400
         else:
             mult = 1
 
-        if hasattr(data.variables[var],'sd_type'):
+        if hasattr(data.variables[var], 'sd_type'):
             outdata['sd_type'][var] = data.variables[var].sd_type
         outdata['long_name'][var] = data.variables[var].long_name
-        outdata['std'][var] = 1/data.variables[var].nsmc_weight*mult  # switch back to sd the weights are 1/sd
+        outdata['std'][var] = 1 / data.variables[var].nsmc_weight * mult  # switch back to sd the weights are 1/sd
         outdata['target'][var] = data.variables[var].target * mult
 
     outdata = pd.DataFrame(outdata)
     return outdata
 
+
+def get_param_from_nc(data):
+    all_vars = data.variables.keys()
+
+    data_to_collect = ['long_name', 'sd_type', 'initial', 'upper', 'lower', 'p_sd', 'j_sd', ]
+
+    outdata = {}
+    for key in data_to_collect:
+        outdata[key] = {}
+    for var in all_vars:
+        if data.variables[var].vtype != 'param':
+            continue
+        print(var)
+        if hasattr(data.variables[var],'units'):
+            if data.variables[var].units == 'm3/day':
+                mult = 1 / 86400
+            else:
+                mult = 1
+
+        for dtc in data_to_collect:
+            if hasattr(data.variables[var], dtc):
+                outdata[dtc][var] = data.variables[var].__getattribute__(dtc)
+
+    outdata = pd.DataFrame(outdata)
+
+
+    # additional values #todo get the values
+    long_vars = ['drn_cond',
+                 'rch_mult',
+                 'sfr_cond_val',
+                 'kv',
+                 'kh',]
+
+    return outdata
+
+
 if __name__ == '__main__':
     dataset = nc.Dataset(r"K:\mh_modeling\netcdfs_of_key_modeling_data\nsmc_params_obs_metadata.nc")
     out = get_obs_from_nc(dataset)
-    out.to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\params_netcdf_obs.csv")
+    out.to_csv(
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\params_netcdf_obs.csv")
+    out2 = get_param_from_nc(dataset)
+    out2.to_csv(
+        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\params_netcdf_params.csv")
