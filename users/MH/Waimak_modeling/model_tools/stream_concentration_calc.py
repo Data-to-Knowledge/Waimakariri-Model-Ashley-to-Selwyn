@@ -7,7 +7,7 @@ from __future__ import division
 from core import env
 import pandas as pd
 import numpy as np
-import flopy
+import flopy_mh as flopy
 # where segments overlap cell by cell flow is likely doubled look at further.
 str_seg_trib_dict = { # dictionary to link stream segments to tributaries
     1: None,

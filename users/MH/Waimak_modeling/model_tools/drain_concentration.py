@@ -7,7 +7,7 @@ from __future__ import division
 from core import env
 import numpy as np
 import pandas as pd
-import flopy
+import flopy_mh as flopy
 import pickle
 import os
 import glob

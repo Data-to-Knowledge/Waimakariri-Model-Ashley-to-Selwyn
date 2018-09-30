@@ -5,7 +5,7 @@ Date Created: 26/05/2017 1:57 PM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 from base_modflow_wrapper import get_base_mf_ss
 from copy import deepcopy

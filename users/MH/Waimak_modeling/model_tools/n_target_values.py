@@ -5,7 +5,7 @@ Date Created: 12/05/2017 2:13 PM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 import pandas as pd
 from well_values import get_all_well_data,get_well_postions

@@ -7,7 +7,7 @@ from __future__ import division
 from core import env
 import numpy as np
 from future.builtins import input
-import flopy
+import flopy_mh as flopy
 import os
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 from base_modflow_wrapper import import_gns_model

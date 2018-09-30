@@ -17,8 +17,8 @@ if __name__ == '__main__':
     outpath = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\model_checks\pumpin_problem"
     if not os.path.exists(outpath):
         os.makedirs(outpath)
-    n_dataset = nc.Dataset(r"K:\mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc")
-    param_dataset = nc.Dataset(r"K:\mh_modeling\netcdfs_of_key_modeling_data\nsmc_params_obs_metadata.nc")
+    n_dataset = nc.Dataset(env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"))
+    param_dataset = nc.Dataset(env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\nsmc_params_obs_metadata.nc"))
 
     nsmc_nums = n_dataset.variables['nsmc_num']
 
@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     for layer in range(10):
         for zoneid, zone in chch_zones.items():
-            temp = all_n[:,layer,zone] #todo check my indexing is rusty
-            ns['zone {} layer {}'.format(zoneid,zone)] = temp.mean(axis=1).mean(axis=1)
+            temp = all_n[:,layer,zone]
+            ns['layer_{:02d}_zone_{}'.format(layer, zoneid)] = temp.mean(axis=1)
 
 
     for id, val in ns.items():

@@ -7,7 +7,7 @@ from __future__ import division
 from future.builtins import input
 from core import env
 import numpy as np
-import flopy
+import flopy_mh as flopy
 import os
 import shutil
 import warnings

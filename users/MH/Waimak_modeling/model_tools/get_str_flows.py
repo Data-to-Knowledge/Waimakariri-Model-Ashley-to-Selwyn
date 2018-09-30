@@ -4,7 +4,7 @@ Date Created: 29/05/2017 11:52 AM
 """
 
 from __future__ import division
-import flopy
+import flopy_mh as flopy
 from drain_concentration import get_drn_samp_pts_dict, get_drn_samp_pts
 import glob
 import pandas as pd

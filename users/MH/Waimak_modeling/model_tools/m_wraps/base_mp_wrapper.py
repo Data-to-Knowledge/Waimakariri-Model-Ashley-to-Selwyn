@@ -7,7 +7,7 @@ from __future__ import division
 from core import env
 import numpy as np
 import itertools
-import flopy
+import flopy_mh as flopy
 from warnings import warn
 from users.MH.Waimak_modeling.supporting_data_path import sdp
 from users.MH.Waimak_modeling.model_tools.basic_tools import calc_elv_db, convert_coords_to_matix, calc_z_loc

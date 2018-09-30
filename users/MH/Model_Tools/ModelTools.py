@@ -10,7 +10,7 @@ import pandas as pd
 import os
 from warnings import warn
 import pickle
-import flopy
+import flopy_mh as flopy
 from matplotlib.colors import from_levels_and_colors
 from copy import deepcopy
 import matplotlib.pyplot as plt

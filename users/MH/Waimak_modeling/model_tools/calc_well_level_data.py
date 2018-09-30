@@ -5,7 +5,7 @@ Date Created: 9/06/2017 10:52 AM
 
 from __future__ import division
 from core import env
-import flopy
+import flopy_mh as flopy
 import numpy as np
 import pandas as pd
 

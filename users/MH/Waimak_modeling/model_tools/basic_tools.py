@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from core.ecan_io import rd_sql, sql_db
 import pickle
 import os
-import flopy
+import flopy_mh as flopy
 from warnings import warn
 from users.MH.Waimak_modeling.supporting_data_path import sdp, get_org_mod_path
 

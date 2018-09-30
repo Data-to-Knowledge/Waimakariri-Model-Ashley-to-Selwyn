@@ -19,7 +19,7 @@ else:
 from datetime import datetime
 import copy
 import numpy as np
-from flopy import utils
+from flopy_mh import utils
 from .version import __version__
 
 # Global variables
