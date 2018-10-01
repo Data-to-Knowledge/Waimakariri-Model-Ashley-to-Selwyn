@@ -8,8 +8,10 @@ from __future__ import division
 from core import env
 import netCDF4 as nc
 import numpy as np
+import pandas as pd
 from core.stats.LR_class import LR
 import os
+from scipy.stats import spearmanr, pearsonr
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.n_analysis.interzone_n import get_chch_area_zones
 
@@ -29,7 +31,7 @@ if __name__ == '__main__':
     all_n = np.array(n_dataset.variables['mednload'])
 
     ns = {}
-
+    outdata = pd.DataFrame(columns=['pearsonr','pearsonp','spearmanr', 'spearmanp'])
     for layer in range(10):
         for zoneid, zone in chch_zones.items():
             temp = all_n[:,layer,zone]
@@ -37,6 +39,12 @@ if __name__ == '__main__':
 
     for id, val in ns.items():
         idx = np.isfinite(val)
-        temp_lr = LR(params[idx],val[idx])
-        temp_lr.plot(False,os.path.join(outpath,'{}.png'.format(id)))
+        outdata.loc[id,'pearsonr'], outdata.loc[id,'pearsonp'] = pearsonr(params[idx],val[idx])
+        temp = spearmanr(params[idx],val[idx])
+        outdata.loc[id,'spearmanr'] = temp.correlation
+        outdata.loc[id,'spearmanp'] = temp.pvalue
+        if False:
+            temp_lr = LR(params[idx],val[idx])
+            temp_lr.plot(False,os.path.join(outpath,'{}.png'.format(id)))
+    outdata.to_csv(os.path.join(outpath,'correlations.csv'))
     print('done')
