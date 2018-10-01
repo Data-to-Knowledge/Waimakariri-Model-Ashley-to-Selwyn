@@ -26,17 +26,17 @@ if __name__ == '__main__':
 
     chch_zones = get_chch_area_zones()
 
-    all_n = n_dataset.variables['mednload'][:]
+    all_n = np.array(n_dataset.variables['mednload'])
 
     ns = {}
 
     for layer in range(10):
         for zoneid, zone in chch_zones.items():
             temp = all_n[:,layer,zone]
-            ns['layer_{:02d}_zone_{}'.format(layer, zoneid)] = temp.mean(axis=1)
-
+            ns['layer_{:02d}_zone_{}'.format(layer, zoneid)] = np.nanmean(temp, axis=1)
 
     for id, val in ns.items():
-        temp_lr = LR(params,val)
+        idx = np.isfinite(val)
+        temp_lr = LR(params[idx],val[idx])
         temp_lr.plot(False,os.path.join(outpath,'{}.png'.format(id)))
     print('done')
