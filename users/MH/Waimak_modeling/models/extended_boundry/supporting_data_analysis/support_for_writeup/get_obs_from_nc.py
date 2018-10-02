@@ -8,6 +8,7 @@ from __future__ import division
 from core import env
 import netCDF4 as nc
 import pandas as pd
+import numpy as np
 
 
 def get_obs_from_nc(data):
@@ -64,12 +65,54 @@ def get_param_from_nc(data):
     outdata = pd.DataFrame(outdata)
 
 
-    # additional values #todo get the values
+    # additional values
     long_vars = ['drn_cond',
                  'rch_mult',
                  'sfr_cond_val',
-                 'kv',
-                 'kh',]
+                 'kv', # decided against
+                 'kh',] #decided against
+
+    ids = np.array(data.variables['rch_ppt'])
+    for id in ids:
+        outdata.loc[id,'j_sd'] = np.nan
+    mapper = {key:val for key, val in zip(data.variables['rch_ppt_group'].flag_values,
+                                          data.variables['rch_ppt_group'].flag_meanings.split(' '))}
+    outdata.loc[ids, 'group'] = np.array([mapper[e] for e in data.variables['rch_ppt_group'][:]])
+
+    group_name = 'rch_ppt'
+    outdata.loc[ids, 'initial']= np.array(data.variables['{}_initial'.format(group_name)])
+    outdata.loc[ids, 'j_sd']= np.array(data.variables['{}_j_sd'.format(group_name)])
+    outdata.loc[ids, 'long_name']= np.array(data.variables['{}'.format(group_name)].long_name)
+    outdata.loc[ids, 'lower']= np.array(data.variables['{}_lower'.format(group_name)])
+    outdata.loc[ids, 'p_sd']= np.array(data.variables['{}_p_sd'.format(group_name)])
+    outdata.loc[ids, 'sd_type']= np.array(data.variables['{}_p_sd'.format(group_name)].sd_type)
+    outdata.loc[ids, 'upper']= np.array(data.variables['{}_upper'.format(group_name)])
+
+    group_name = 'drn'
+    ids = np.array(data.variables['drns'])
+    for id in ids:
+        outdata.loc[id,'j_sd'] = np.nan
+
+    outdata.loc[ids, 'initial']= np.array(data.variables['{}_initial'.format(group_name)])
+    outdata.loc[ids, 'j_sd']= np.array(data.variables['{}_j_sd'.format(group_name)])
+    outdata.loc[ids, 'long_name']= np.array(data.variables['{}_cond'.format(group_name)].long_name)
+    outdata.loc[ids, 'lower']= np.array(data.variables['{}_lower'.format(group_name)])
+    outdata.loc[ids, 'p_sd']= np.array(data.variables['{}_p_sd'.format(group_name)])
+    outdata.loc[ids, 'sd_type']= np.array(data.variables['{}_p_sd'.format(group_name)].sd_type)
+    outdata.loc[ids, 'upper']= np.array(data.variables['{}_upper'.format(group_name)])
+
+    group_name = 'sfr'
+    ids = np.array(data.variables['sfr_cond'])
+    for id in ids:
+        outdata.loc[id,'j_sd'] = np.nan
+
+    outdata.loc[ids, 'initial']= np.array(data.variables['{}_initial'.format(group_name)])
+    outdata.loc[ids, 'j_sd']= np.array(data.variables['{}_j_sd'.format(group_name)])
+    outdata.loc[ids, 'long_name']= np.array(data.variables['{}_cond_val'.format(group_name)].long_name)
+    outdata.loc[ids, 'lower']= np.array(data.variables['{}_lower'.format(group_name)])
+    outdata.loc[ids, 'p_sd']= np.array(data.variables['{}_p_sd'.format(group_name)])
+    outdata.loc[ids, 'sd_type']= np.array(data.variables['{}_p_sd'.format(group_name)].sd_type)
+    outdata.loc[ids, 'upper']= np.array(data.variables['{}_upper'.format(group_name)])
 
     return outdata
 
