@@ -32,6 +32,7 @@ def run_nload_pa_stuffs(shp_dir, outdir, name, output_act_n=True):
 
 
 if __name__ == '__main__':
+    #todo I could depreciate the N results folder (and change it's name) making it so all of the new data is avalible and clean...
     base_outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results"
     base_shp_dir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\capture_zones_particle_tracking\source_zone_polygons"
     if False:  # quick thing to record, but not re-run

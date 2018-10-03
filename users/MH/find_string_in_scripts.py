@@ -33,4 +33,4 @@ def find_str_in_scripts(directory, string):
 
 if __name__ == '__main__':
     find_str_in_scripts(r'C:\Users\MattH\PycharmProjects\Ecan.Science.Python.Base',
-                        'import')
+                        "zc_n_sols\summary_info")
