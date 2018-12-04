@@ -20,7 +20,7 @@ contribute.
 
 """
 
-__name__ = 'flopy'
+__name__ = 'flopy_mh'
 __author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Jeff Starn, Mike Fienen, and Alain Frances'
 from flopy_mh.version import __version__, __build__
 
