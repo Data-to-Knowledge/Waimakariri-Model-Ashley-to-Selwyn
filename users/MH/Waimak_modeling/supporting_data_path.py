@@ -8,7 +8,7 @@ from core import env
 import os
 import socket
 
-sdp = env.sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts")
+sdp = env.sci("D:/ecan_data/Waimakariri/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts")
 
 results_dir = env.sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/Model simulations and results")
 

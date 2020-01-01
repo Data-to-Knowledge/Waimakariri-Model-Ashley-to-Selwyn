@@ -9,7 +9,7 @@ def gisdata(path):
     return '{}/{}'.format('//GISDataFS/GISData',path)
 
 def sci(path):
-    return '{}/{}'.format('//gisdata/Projects/SCI',path)
+    return '{}/{}'.format(r'D:\ecan_data',path)
 
 def data(path):
     return '{}/{}'.format('//fileservices02/managedshares/data', path)
@@ -18,8 +18,8 @@ def transfers(path):
     return '{}/{}'.format('//FileServices02/ManagedShares/Transfers',path)
 
 def temp(path):
-    return transfers('Temp/{}'.format(path))
+    return transfers(r"C:\matt_modelling_unbackedup\temp/{}".format(path))
 
 def gw_met_data(path):
-    return '//fs02/GroundWaterMetData$/{}'.format(path)
+    return r'D:\ecan_data/{}'.format(path)
 

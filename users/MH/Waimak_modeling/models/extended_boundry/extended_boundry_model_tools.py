@@ -223,7 +223,7 @@ smt = ModelTools(
     'ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers, rows=rows,
     cols=cols, grid_space=200, no_flow_calc=_no_flow_calc, temp_file_dir=temp_file_dir, elv_calculator=_elvdb_calc,
     base_mod_path=None,
-    base_map_path=env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\topo250small.tif")
+    base_map_path=env.sci(r"D:\ecan_data\Waimakariri\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\topo250small.tif")
 )
 
 # quick versioning
