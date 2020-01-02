@@ -12,7 +12,7 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from core.ecan_io import rd_sql, sql_db
+#from core.ecan_io import rd_sql, sql_db
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 from users.MH.Waimak_modeling.models.extended_boundry.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
 from users.MH.Waimak_modeling.models.extended_boundry.model_runs.model_run_tools.cwms_index import get_zone_array_index

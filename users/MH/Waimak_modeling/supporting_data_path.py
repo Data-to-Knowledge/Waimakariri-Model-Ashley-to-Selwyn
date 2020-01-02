@@ -8,7 +8,7 @@ from core import env
 import os
 import socket
 
-sdp = env.sci("D:/ecan_data/Waimakariri/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts")
+sdp = env.sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts")
 
 results_dir = env.sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/Model simulations and results")
 
@@ -30,6 +30,9 @@ elif _comp == 'GWATER02':
     base_mod_dir2 = base_mod_dir
 elif _comp == 'RDSProd03':
     base_mod_dir = r"C:\Users\matth\Desktop\base_mod"
+    base_mod_dir2 = base_mod_dir
+elif _comp == 'Desktop':
+    base_mod_dir = r"C:\matt_modelling_unbackedup"
     base_mod_dir2 = base_mod_dir
 else:
     raise ValueError('unidentified machine {} no default path for models'.format(_comp))

@@ -11,7 +11,7 @@ from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_too
 import pandas as pd
 import numpy as np
 from users.MH.Waimak_modeling.supporting_data_path import sdp
-from core.ecan_io import rd_sql, sql_db
+#from core.ecan_io import rd_sql, sql_db
 import os
 import pickle
 import geopandas as gpd
@@ -849,13 +849,11 @@ if __name__ == '__main__':
     print('full CAV')
     full_cav = get_full_consent('opt')
     print(get_well_budget(full_cav)/86400)
-    raise
     well_data = new
     well_data = well_data.loc[:, ['layer', 'row', 'col', 'flux', 'type']]
     well_data.to_csv(r"C:\Users\MattH\Desktop\to_brioch_2017_10_4/well_data.csv")
 
     new_nwai = _get_2014_2015_waimak_usage()
-    raise
     nwai = get_nwai_wells()
     s_wells = _get_s_wai_wells()
 

@@ -197,13 +197,13 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
     assert len(model_id) == 14, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
     base_converter_dir = "{}/base_for_nsmc_real".format(smt.sdp)
     # check if the model has previously been saved to the save dir, and if so, load from there
-    save_dir = env.gw_met_data("mh_modeling/nsmc_loaded_realisations_TEMP")
+    save_dir = env.gw_met_data("mh_modeling/nsmc_loaded_realisations_TEMP2") #changed for time approximation
     converter_dir = os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     if os.path.exists(os.path.join(save_dir, '{}_base'.format(model_id),'{}_base.hds'.format(model_id))):
         name_file_path = os.path.join(save_dir, '{}_base'.format(model_id), '{m}_base.nam'.format(m=model_id))
-        m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False)
+        m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False, check=False)
         return m
 
     # copy the orginal converter dir to the temporary working dir

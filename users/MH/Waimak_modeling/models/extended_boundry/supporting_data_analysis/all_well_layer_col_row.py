@@ -8,10 +8,10 @@ from __future__ import division
 from core import env
 import pandas as pd
 import numpy as np
-from core.ecan_io import rd_sql, sql_db
+#from core.ecan_io import rd_sql, sql_db
 from users.MH.Waimak_modeling.models.extended_boundry.extended_boundry_model_tools import smt
 import geopandas as gpd
-import rasterio
+#import rasterio
 import os
 from future.builtins import input
 

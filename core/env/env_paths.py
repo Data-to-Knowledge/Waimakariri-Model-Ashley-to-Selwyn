@@ -15,10 +15,10 @@ def data(path):
     return '{}/{}'.format('//fileservices02/managedshares/data', path)
 
 def transfers(path):
-    return '{}/{}'.format('//FileServices02/ManagedShares/Transfers',path)
+    return '{}/{}'.format(r'C:\matt_modelling_unbackedup',path)
 
 def temp(path):
-    return transfers(r"C:\matt_modelling_unbackedup\temp/{}".format(path))
+    return transfers(r"temp/{}".format(path))
 
 def gw_met_data(path):
     return r'D:\ecan_data/{}'.format(path)

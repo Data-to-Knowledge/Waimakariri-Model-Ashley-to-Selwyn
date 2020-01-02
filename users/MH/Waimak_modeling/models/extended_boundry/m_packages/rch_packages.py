@@ -231,7 +231,6 @@ def get_rch_summary(rch_version):
 
 if __name__ == '__main__':
     get_rch_summary(2)
-    raise
     # tests
     test_type = 1
 
@@ -256,7 +255,6 @@ if __name__ == '__main__':
         idx = np.isfinite(rch)
         outdata = pd.DataFrame({'x':x[idx],'y':y[idx],'rch_mm_yr':rch[idx]*1000*365,'rch_m3_s':rch[idx]*200*200/86400})
         outdata.to_csv(os.path.join(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va",'rch_points.csv'))
-        raise
         rchold=_get_rch(version=1,recalc=False)
 
         smt.plt_matrix(rch)

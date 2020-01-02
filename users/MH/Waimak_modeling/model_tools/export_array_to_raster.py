@@ -11,7 +11,7 @@ from osgeo import gdal_array
 from osgeo import osr
 import matplotlib.pylab as plt
 from get_str_rch_values import get_base_rch
-from read_write import no_flow
+#from read_write import no_flow
 
 def array_to_raster(path, array, only_active=True):
     if only_active:

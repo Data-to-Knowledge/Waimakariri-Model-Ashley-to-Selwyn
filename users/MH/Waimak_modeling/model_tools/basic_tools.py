@@ -8,7 +8,7 @@ from core import env
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from core.ecan_io import rd_sql, sql_db
+#from core.ecan_io import rd_sql, sql_db
 import pickle
 import os
 import flopy_mh as flopy

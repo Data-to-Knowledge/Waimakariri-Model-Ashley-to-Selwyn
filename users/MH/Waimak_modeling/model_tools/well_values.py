@@ -12,7 +12,7 @@ import pickle
 from copy import deepcopy
 from basic_tools import convert_coords_to_matix, calc_elv_db, convert_matrix_to_coords, get_well_postions, calc_z_loc
 from users.MH.Waimak_modeling.supporting_data_path import sdp, temp_file_dir
-from core.ecan_io import rd_sql,sql_db
+#from core.ecan_io import rd_sql,sql_db
 from warnings import warn
 
 

@@ -28,4 +28,4 @@ no_flow = np.invert((np.loadtxt(bc_path)[0:190,:]).astype(bool)) # needs updatin
 
 if __name__ == '__main__':
     test = read_visas_matrix(r"C:\Users\MattH\Downloads\BHMODEL_OPTFLOW2.DAT")
-    print(no_flow.shape)
+    #print(no_flow.shape)
