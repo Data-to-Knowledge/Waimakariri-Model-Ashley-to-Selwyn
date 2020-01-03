@@ -15,6 +15,9 @@ import flopy_mh as flopy
 import pandas as pd
 
 if __name__ == '__main__':
+    #testing whether it makes sense to set scon from a previous model run not really it doesnt make that much difference to run time and mya make it longer in some cases
+
+    #note that it takes 5-10 min/modflow run and 30-40 min for mt3d run
     model = get_stocastic_set()[1]
     outdir = r"C:\matt_modelling_unbackedup\testmodflow_mt3d_scon_set"
     out = {}
@@ -39,6 +42,7 @@ if __name__ == '__main__':
     default_mt3d_kwargs = get_default_mt3d_kwargs()
     # setting mt3d kwargs
     scon =  flopy.utils.UcnFile(r"C:\matt_modelling_unbackedup\testmodflow_mt3d\emma_test\waimat_emma001.UCN").get_alldata()[0]
+    scon = 0
 
     if scon is not None:
         default_mt3d_kwargs['btn_scon'] = scon
@@ -63,6 +67,7 @@ if __name__ == '__main__':
 
     t = time()
     scon =  flopy.utils.UcnFile(r"C:\matt_modelling_unbackedup\testmodflow_mt3d\med_n_test\med_n001.UCN").get_alldata()[0]
+    scon = 0.1
     default_mt3d_kwargs = get_default_mt3d_kwargs()
     if scon is not None:
         default_mt3d_kwargs['btn_scon'] = scon
@@ -79,4 +84,4 @@ if __name__ == '__main__':
     print(out)
 
     out = pd.DataFrame({'value': out})
-    out.to_csv(os.path.join(outdir, 'times2.csv'))
+    out.to_csv(os.path.join(outdir, 'times_scon_not_set.csv'))
