@@ -11,7 +11,7 @@ import flopy_mh as flopy
 import os
 from warnings import warn
 from copy import deepcopy
-from waimak_extended_boundry import \
+from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
 from waimak_extended_boundry import smt
 

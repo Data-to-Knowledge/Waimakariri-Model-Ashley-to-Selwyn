@@ -5,17 +5,14 @@ Date Created: 8/09/2017 8:39 AM
 """
 
 from __future__ import division
-from waimak_extended_boundry import mod_gns_model, \
-    zip_non_essential_files
-from waimak_extended_boundry import get_forward_wells, \
-    get_forward_rch
+from waimak_extended_boundry.model_run_tools import mod_gns_model, zip_non_essential_files, get_forward_wells, \
+    get_forward_rch, modflow_converged
 from waimak_extended_boundry import smt
 import flopy_mh as flopy
 import os
-from waimak_extended_boundry import modflow_converged
 from traceback import format_exc
-from waimak_extended_boundry import \
-    get_drn_no_ncarpet_spd
+from waimak_extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import \
+    get_drn_no_ncarpet_spd #todo move to model run tools
 import pandas as pd
 
 

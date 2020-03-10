@@ -6,15 +6,14 @@ Date Created: 22/06/2017 5:05 PM
 from __future__ import division
 import env
 from Model_Tools import ModelTools
-from users.MH.Waimak_modeling.supporting_data_path import sdp, temp_file_dir
 from osgeo.gdal import Open as gdalOpen
 import numpy as np
 import os
 
 layers, rows, cols = 11, 364, 365
 
-_mt = ModelTools('ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers,
-                 rows=rows, cols=cols, grid_space=200, temp_file_dir=temp_file_dir, base_mod_path=None)
+_mt = ModelTools('ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(env.sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers,
+                 rows=rows, cols=cols, grid_space=200, temp_file_dir=env.temp_file_dir, base_mod_path=None)
 
 
 def _elvdb_calc():
@@ -22,18 +21,18 @@ def _elvdb_calc():
     calculate the elevation database
     :return:
     """
-    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(sdp)).ReadAsArray()
+    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(env.sdp)).ReadAsArray()
     top[np.isclose(top, -3.40282306074e+038)] = 0
 
     # quickly smooth the dem near the top of the waimakariri (that gorge)
-    top_smooth = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/DEM_smoother.tif".format(sdp)).ReadAsArray()
+    top_smooth = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/DEM_smoother.tif".format(env.sdp)).ReadAsArray()
     top_smooth[np.isclose(top_smooth, -3.40282306074e+038)] = 0
     top += top_smooth/2
 
 
     # bottoms
     # layer 0
-    bot0 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(sdp)).ReadAsArray()
+    bot0 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(env.sdp)).ReadAsArray()
     idx = np.isclose(bot0, -3.40282306074e+038)
     bot0[idx] = top[idx] - 10 #set nan values to 10 m thick.  all these are out of the no-flow bound
 
@@ -96,7 +95,7 @@ def _get_basement():
     get the model basement
     :return:
     """
-    basement = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/basement2.tif".format(sdp)).ReadAsArray()
+    basement = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/basement2.tif".format(env.sdp)).ReadAsArray()
     basement[np.isclose(basement, 9999999)] = np.nan
     basement = basement[1:,:]
     basement2 = np.concatenate((basement[:,:], np.repeat(basement[:, -1][:, np.newaxis], 33, axis=1)), axis=1)
@@ -109,7 +108,7 @@ def _no_flow_calc():
     :return:
     """
     no_flow = np.zeros((_mt.rows,_mt.cols))
-    outline = _mt.shape_file_to_model_array("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/new_active_domain.shp".format(sdp),'DN',True)
+    outline = _mt.shape_file_to_model_array("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/new_active_domain.shp".format(env.sdp),'DN',True)
     no_flow[np.isfinite(outline)] = 1
 
     no_flow = np.repeat(no_flow[np.newaxis,:,:],_mt.layers, axis=0)
@@ -217,8 +216,8 @@ def _get_constant_heads():
 
 
 smt = ModelTools(
-    'ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers, rows=rows,
-    cols=cols, grid_space=200, no_flow_calc=_no_flow_calc, temp_file_dir=temp_file_dir, elv_calculator=_elvdb_calc,
+    'ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(env.sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers, rows=rows,
+    cols=cols, grid_space=200, no_flow_calc=_no_flow_calc, temp_file_dir=env.temp_file_dir, elv_calculator=_elvdb_calc,
     base_mod_path=None,
     base_map_path=env.sci(r"D:\ecan_data\Waimakariri\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\topo250small.tif")
 )

@@ -9,7 +9,7 @@ import os
 import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import \
     _get_sw_samp_pts_dict, get_samp_points_df, _get_flux_flow_arrays
 from waimak_extended_boundry import smt
 from data_at_wells import get_well_positions

@@ -11,11 +11,11 @@ import multiprocessing
 import logging
 import psutil
 import time
-from users.MH.Waimak_modeling.supporting_data_path import sdp
-from waimak_extended_boundry import modflow_converged
-from waimak_extended_boundry import zip_non_essential_files
+from env import sdp
+from waimak_extended_boundry.model_run_tools.convergance_check import modflow_converged
+from waimak_extended_boundry.model_run_tools import zip_non_essential_files
 
-
+#todo delete???
 
 def _runnwt_model_forward_runs(path):
     try:

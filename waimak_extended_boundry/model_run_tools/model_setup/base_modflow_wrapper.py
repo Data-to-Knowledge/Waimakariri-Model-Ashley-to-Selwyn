@@ -13,7 +13,7 @@ import shutil
 import warnings
 from waimak_extended_boundry import smt
 from copy import deepcopy
-from users.MH.Waimak_modeling.supporting_data_path import sdp
+from env import sdp
 from realisation_id import get_base_well, get_model
 import zipfile
 

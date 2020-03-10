@@ -5,7 +5,7 @@ Date Created: 24/03/2018 7:58 AM
 
 from __future__ import division
 import multiprocessing
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     get_model_name_path, get_stocastic_set
 import os
 import psutil

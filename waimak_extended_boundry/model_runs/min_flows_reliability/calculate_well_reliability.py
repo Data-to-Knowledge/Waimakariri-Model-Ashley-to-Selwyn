@@ -10,14 +10,14 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import \
     _fill_df_with_bindata, _get_kstkpers, hds_no_data
-from waimak_extended_boundry import \
-    get_all_well_row_col
+from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+    get_all_well_row_col #todo move all wel col row to bc_data
 from core.ecan_io import sql_db, rd_sql
 import os
 import flopy_mh as flopy
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     get_max_rate, get_full_consent
 from copy import deepcopy
 

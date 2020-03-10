@@ -7,11 +7,11 @@ Date Created: 4/12/2017 3:06 PM
 from __future__ import division
 import flopy_mh as flopy
 import numpy as np
-from users.MH.Waimak_modeling.supporting_data_path import sdp
+from env import sdp
 import os
 from waimak_extended_boundry import smt
 from base_modflow_wrapper import import_gns_model
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.convergance_check import \
     modflow_converged
 from traceback import format_exc
 

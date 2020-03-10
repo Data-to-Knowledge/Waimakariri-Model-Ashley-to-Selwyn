@@ -4,4 +4,5 @@ Author: matth
 Date Created: 23/03/2017 2:20 PM
 """
 
-from env import *
+from env.env_paths import *
+from env.sdp import sdp, results_dir, temp_file_dir

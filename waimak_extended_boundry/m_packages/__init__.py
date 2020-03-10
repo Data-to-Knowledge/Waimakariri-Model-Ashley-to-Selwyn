@@ -1,6 +1,13 @@
 """
 Author: matth
 Date Created: 22/06/2017 11:00 AM
+
+These scripts form a history of the model build process.  many of them will no longer work and are not supported by
+this system.  they are left here so that users can see how the model packages were created if they ever need to
+
+in addtion the layer properties were defined by GNS so are not documented here.
+
+
 """
 
 from __future__ import division

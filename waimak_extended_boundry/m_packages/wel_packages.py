@@ -5,11 +5,11 @@ Date Created: 20/06/2017 11:57 AM
 
 from __future__ import division
 import flopy_mh as flopy
-from users.MH.Waimak_modeling.model_tools.well_values import get_race_data, get_nwai_wells
+from Waimak_modeling_non_extended.model_tools.well_values import get_race_data, get_nwai_wells
 from waimak_extended_boundry import smt
 import pandas as pd
 import numpy as np
-from users.MH.Waimak_modeling.supporting_data_path import sdp
+from env import sdp
 #from core.ecan_io import rd_sql, sql_db
 import os
 import pickle

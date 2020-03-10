@@ -14,15 +14,15 @@ import pandas as pd
 
 #from core.ecan_io import rd_sql, sql_db
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import _get_wel_spd_v1, _get_wel_spd_v2
-from waimak_extended_boundry import get_zone_array_index
-from waimak_extended_boundry import \
+from waimak_extended_boundry.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
+from waimak_extended_boundry.model_run_tools.cwms_index import get_zone_array_index
+from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_ird_base_array, get_lsr_base_period_inputs
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_base_well, temp_pickle_dir
-from users.MH.Waimak_modeling.supporting_data_path import sdp
+from env import sdp
 from copy import deepcopy
-from waimak_extended_boundry import \
+from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
     get_all_well_row_col
 
 _missing_well_use_converter = {'Aquaculture': 'other',

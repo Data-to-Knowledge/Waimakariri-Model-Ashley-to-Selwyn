@@ -5,7 +5,7 @@ Date Created: 20/06/2017 11:59 AM
 
 from __future__ import division
 import flopy_mh as flopy
-from waimak_extended_boundry import smt, _get_constant_heads
+from waimak_extended_boundry.extended_boundry_model_tools import smt, _get_constant_heads
 import numpy as np
 
 def create_bas_package(m):

@@ -3,6 +3,7 @@
 Author: matth
 Date Created: 21/12/2017 2:36 PM
 """
+#todo delete???
 
 from __future__ import division
 from realisation_id import get_model

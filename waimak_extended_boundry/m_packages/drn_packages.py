@@ -8,7 +8,7 @@ import env
 import flopy_mh as flopy
 import numpy as np
 import pandas as pd
-from users.MH.Waimak_modeling.model_tools import get_drn_samp_pts_dict, get_base_drn_cells
+from Waimak_modeling_non_extended.model_tools import get_drn_samp_pts_dict, get_base_drn_cells
 from waimak_extended_boundry import smt
 from sfr2_packages import _get_reach_data
 from wel_packages import get_wel_spd

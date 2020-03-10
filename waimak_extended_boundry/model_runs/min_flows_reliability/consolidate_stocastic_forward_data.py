@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import os
 from glob import glob
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     get_samp_points_df
 
 

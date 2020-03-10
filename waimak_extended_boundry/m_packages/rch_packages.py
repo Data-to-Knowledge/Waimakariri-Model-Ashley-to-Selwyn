@@ -13,12 +13,10 @@ from copy import deepcopy
 import flopy_mh as flopy
 import numpy as np
 
-from users.MH.Waimak_modeling.model_tools import get_base_rch, no_flow as old_no_flow
+from Waimak_modeling_non_extended.model_tools import get_base_rch, no_flow as old_no_flow
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.supporting_data_analysis.lsr_support import \
-    map_rch_to_array
-from waimak_extended_boundry.supporting_data_analysis.lsr_support import \
-    gen_water_year_average_lsr_irr
+from waimak_extended_boundry.supporting_data_analysis.lsr_support.map_rch_to_model_array import map_rch_to_array
+from waimak_extended_boundry.supporting_data_analysis.lsr_support.generate_an_mean_rch import gen_water_year_average_lsr_irr
 import pandas as pd
 from warnings import warn
 

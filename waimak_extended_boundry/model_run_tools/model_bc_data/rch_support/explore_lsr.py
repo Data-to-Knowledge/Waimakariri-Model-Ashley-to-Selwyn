@@ -9,13 +9,13 @@ import env
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from waimak_extended_boundry import _get_rch_comparison
-from waimak_extended_boundry import \
+from waimak_extended_boundry.m_packages.rch_packages import _get_rch_comparison
+from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_lsrm_base_array, get_lsr_base_period_inputs, get_ird_base_array
 import itertools
 import os
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import get_zone_array_index
+from waimak_extended_boundry.model_run_tools.cwms_index import get_zone_array_index
 import matplotlib.patches as mpatches
 
 def plt_cc_rch(naturalised, pc5, title):
