@@ -5,7 +5,7 @@ Date Created: 22/06/2017 10:59 AM
 
 from __future__ import division
 import flopy_mh as flopy
-import m_packages
+from waimak_extended_boundry.model_and_NSMC_build import m_packages
 import os
 import shutil
 from future.builtins import input
@@ -61,10 +61,10 @@ def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, v
 
     m_packages.create_dis_package(m)
     m_packages.create_bas_package(m)
-    m_packages.create_lay_prop_package(m, mfv,k_version)
+    m_packages.create_lay_prop_package(m, mfv, k_version)
     m_packages.create_rch_package(m)
     m_packages.create_wel_package(m, wel_version)
-    m_packages.create_drn_package(m, wel_version=wel_version, reach_version=reach_v,n_car_dns=n_car_dns)
+    m_packages.create_drn_package(m, wel_version=wel_version, reach_version=reach_v, n_car_dns=n_car_dns)
     m_packages.create_sfr_package(m, sfr_version, seg_v, reach_v)
 
     # add simple packages

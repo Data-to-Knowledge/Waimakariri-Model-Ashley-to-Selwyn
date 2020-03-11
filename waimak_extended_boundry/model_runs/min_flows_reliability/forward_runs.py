@@ -5,7 +5,7 @@ Date Created: 8/09/2017 11:54 AM
 """
 
 from __future__ import division
-from base_forward_runs import setup_run_forward_run_mp
+from waimak_extended_boundry.model_run_tools.forward_quanity_support.base_forward_runs import setup_run_forward_run_mp
 import os
 import multiprocessing
 import logging

@@ -9,7 +9,7 @@ import geopandas as gpd
 from waimak_extended_boundry import smt
 import pandas as pd
 import flopy_mh as flopy
-from waimak_extended_boundry.m_packages.wel_packages import _get_wel_spd_v3
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import _get_wel_spd_v3
 
 def make_con_layer(bnd_type, rch_con_array, well_data, sfr_data):
     """

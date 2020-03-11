@@ -7,15 +7,15 @@ from __future__ import division
 import os
 import multiprocessing
 import logging
-from stream_depletion_model_setup import setup_and_run_stream_dep_multip
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.stream_depletion_model_setup import setup_and_run_stream_dep_multip
 from copy import copy
 import time
-from starting_hds_ss_sy import get_ss_sy, get_starting_heads_sd30, get_sd_well_list
+from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import get_ss_sy, get_starting_heads_sd30, get_sd_well_list
 from waimak_extended_boundry import smt
 import psutil
 import datetime
 from future.builtins import input
-from base_sd_runs import get_sd_spv
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.base_sd_runs import get_sd_spv
 
 
 def setup_runs_sd30(model_id, well_list, base_path, ss, sy, start_heads):

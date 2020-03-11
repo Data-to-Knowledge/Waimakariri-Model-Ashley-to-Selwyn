@@ -11,7 +11,7 @@ from env import sdp
 import os
 from waimak_extended_boundry import smt
 from base_modflow_wrapper import import_gns_model
-from waimak_extended_boundry.model_run_tools.convergance_check import \
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged
 from traceback import format_exc
 

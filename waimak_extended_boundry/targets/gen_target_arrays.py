@@ -9,7 +9,7 @@ import env
 import numpy as np
 import pandas as pd
 from waimak_extended_boundry.extended_boundry_model_tools import smt, _get_constant_heads
-from waimak_extended_boundry.m_packages.drn_packages import _get_drn_spd
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
 import geopandas as gpd
 
 

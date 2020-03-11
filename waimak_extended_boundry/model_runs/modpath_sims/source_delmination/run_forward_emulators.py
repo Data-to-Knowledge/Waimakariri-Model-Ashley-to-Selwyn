@@ -5,7 +5,7 @@ Date Created: 21/12/2017 10:52 AM
 """
 
 from __future__ import division
-from source_raster import get_all_cbcs,run_forward_emulators, get_modeflow_dir_for_source
+from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.source_raster import get_all_cbcs,run_forward_emulators, get_modeflow_dir_for_source
 import os
 
 

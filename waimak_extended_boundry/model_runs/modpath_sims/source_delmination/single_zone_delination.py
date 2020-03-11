@@ -15,7 +15,7 @@ import flopy_mh as flopy
 import pandas as pd
 from copy import deepcopy
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_runs.modpath_sims.source_delmination.source_raster import \
+from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.source_raster import \
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
      get_forward_emulator_paths
 from waimak_extended_boundry.model_run_tools import get_samp_points_df,get_cbc, get_stocastic_set

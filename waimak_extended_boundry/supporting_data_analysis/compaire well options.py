@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from core.ecan_io import rd_sql, sql_db
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import get_wel_spd
 
 well_data = get_wel_spd(0)
 well_data = well_data.loc[(well_data.type=='well')]

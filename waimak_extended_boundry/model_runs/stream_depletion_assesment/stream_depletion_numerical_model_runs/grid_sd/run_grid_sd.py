@@ -8,10 +8,10 @@ from __future__ import division
 import os
 import time
 from well_by_well_str_dep_ss import well_by_well_depletion_grid
-from extract_grid_sd import calc_str_dep_all_wells_grid
-from visualise_grid_sd import krig_plot_sd_grid
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.extract_grid_sd import calc_str_dep_all_wells_grid
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.visualise_grid_sd import krig_plot_sd_grid
 import socket
-from waimak_extended_boundry.model_runs.stream_depletion_assesment.stream_depletion_numerical_model_runs.sd_metadata import save_sd_metadata
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.sd_metadata import save_sd_metadata
 from make_grid_sd_zones import make_sd_zone
 if __name__ == '__main__':
     # a convenience function to run all of the grid sd, extract, and visualise the data

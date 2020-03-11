@@ -14,7 +14,7 @@ from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import mod_gns_model, get_max_rate, \
     get_full_consent, get_race_data, zip_non_essential_files, modflow_converged
 from traceback import format_exc
-from waimak_extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import get_drn_no_ncarpet_spd
+from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
 
 def setup_and_run_stream_dep_multip(kwargs):
     """

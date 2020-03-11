@@ -16,7 +16,7 @@ from copy import deepcopy
 import flopy_mh as flopy
 from waimak_extended_boundry import smt
 import matplotlib.pyplot as plt
-from visualise_data_from_fruns import gw_site_groups
+from waimak_extended_boundry.model_runs.min_flows_reliability.visualise_data_from_fruns import gw_site_groups
 import itertools
 import netCDF4 as nc
 import sys

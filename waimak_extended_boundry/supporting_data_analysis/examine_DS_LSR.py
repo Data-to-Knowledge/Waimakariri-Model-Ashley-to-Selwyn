@@ -7,7 +7,7 @@ Date Created: 2/08/2017 4:11 PM
 from __future__ import division
 import numpy as np
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.m_packages.rch_packages import _get_rch
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import _get_rch
 import matplotlib.pyplot as plt
 
 new_no_flow = smt.get_no_flow()

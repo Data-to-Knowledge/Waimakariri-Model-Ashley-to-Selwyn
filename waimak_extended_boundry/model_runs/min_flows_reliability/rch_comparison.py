@@ -6,7 +6,7 @@ Date Created: 2/10/2017 5:14 PM
 
 from __future__ import division
 import numpy as np
-from waimak_extended_boundry.m_packages.rch_packages import _get_rch
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import _get_rch
 from waimak_extended_boundry.model_run_tools import get_lsrm_base_array, get_zone_array_index
 from copy import deepcopy
 import itertools

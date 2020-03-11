@@ -8,9 +8,9 @@ from __future__ import division
 from model_setup import *
 from data_extraction import *
 from model_bc_data import *
-from convergance_check import *
-from cwms_index import *
-from transfer_readme import trans_readme
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import *
+from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import *
+from waimak_extended_boundry.model_run_tools.metadata_managment.transfer_readme import *
 from data_extraction.data_at_wells import \
     _get_kstkpers
 

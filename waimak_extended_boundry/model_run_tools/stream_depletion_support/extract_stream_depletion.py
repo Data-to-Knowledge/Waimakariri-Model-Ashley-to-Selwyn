@@ -5,7 +5,7 @@ Date Created: 1/06/2017 11:58 AM
 from __future__ import division
 import flopy_mh as flopy
 import pandas as pd
-from base_sd_runs import get_str_dep_base_path, get_sd_spv
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.base_sd_runs import get_str_dep_base_path, get_sd_spv
 import glob
 import itertools
 import numpy as np

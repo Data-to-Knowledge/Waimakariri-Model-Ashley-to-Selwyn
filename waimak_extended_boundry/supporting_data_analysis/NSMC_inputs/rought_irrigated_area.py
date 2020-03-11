@@ -6,7 +6,7 @@ Date Created: 25/08/2017 10:17 AM
 
 from __future__ import division
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.m_packages.rch_packages import _get_rch
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import _get_rch
 import numpy as np
 
 

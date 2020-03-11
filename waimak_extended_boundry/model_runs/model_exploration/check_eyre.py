@@ -7,7 +7,7 @@ Date Created: 3/04/2018 1:41 PM
 from __future__ import division
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import create_mp_slf, get_cbc, export_paths_to_shapefile
-from waimak_extended_boundry.model_runs.modpath_sims.setup_reverse_modpath import particle_loc_from_grid
+from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.setup_reverse_modpath import particle_loc_from_grid
 import pandas as pd
 from glob import glob
 import os

@@ -16,7 +16,7 @@ from waimak_extended_boundry.model_run_tools import mod_gns_model, get_full_cons
 from traceback import format_exc
 import pandas as pd
 import pickle
-from waimak_extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import get_drn_no_ncarpet_spd
+from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
 
 
 

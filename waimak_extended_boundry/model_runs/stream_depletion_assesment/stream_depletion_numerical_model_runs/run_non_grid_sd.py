@@ -10,8 +10,8 @@ import time
 from well_by_well_str_dep_sd7 import get_sd_well_list, well_by_well_depletion_sd7
 from well_by_well_str_dep_sd30 import well_by_well_depletion_sd30
 from well_by_well_str_dep_sd150 import well_by_well_depletion_sd150
-from extract_stream_depletion import calc_str_dep_all_wells
-from sd_metadata import save_sd_metadata
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.extract_stream_depletion import calc_str_dep_all_wells
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.sd_metadata import save_sd_metadata
 
 if __name__ == '__main__':
     # a conveninance function to run all of the non-well stream depletion assesments and data extraction

@@ -5,8 +5,8 @@ Date Created: 23/07/2017 1:31 PM
 """
 
 from __future__ import division
-from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
-from waimak_extended_boundry.m_packages.rch_packages import _get_rch
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import get_wel_spd
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import _get_rch
 from waimak_extended_boundry import smt
 import pandas as pd
 import numpy as np

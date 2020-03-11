@@ -5,7 +5,7 @@ Date Created: 16/10/2017 1:45 PM
 """
 
 from __future__ import division
-from ss_grid_sd_setup import grid_wells, setup_and_run_ss_grid_stream_dep_multip
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.ss_grid_sd_setup import grid_wells, setup_and_run_ss_grid_stream_dep_multip
 import pandas as pd
 import os
 from copy import copy
@@ -14,7 +14,7 @@ import psutil
 import time
 import logging
 import datetime
-from waimak_extended_boundry.model_runs.stream_depletion_assesment.stream_depletion_numerical_model_runs.starting_hds_ss_sy import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import \
     get_sd_starting_hds
 from waimak_extended_boundry import smt
 from warnings import warn

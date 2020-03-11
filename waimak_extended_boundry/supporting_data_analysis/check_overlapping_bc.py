@@ -6,9 +6,9 @@ Date Created: 3/10/2017 7:40 PM
 
 from __future__ import division
 import pandas as pd
-from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
-from waimak_extended_boundry.m_packages.drn_packages import _get_drn_spd
-from waimak_extended_boundry.m_packages.sfr2_packages import _get_reach_data
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import get_wel_spd
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.sfr2_packages import _get_reach_data
 import numpy as np
 from waimak_extended_boundry import smt
 

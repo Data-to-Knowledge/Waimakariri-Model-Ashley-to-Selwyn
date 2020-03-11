@@ -13,12 +13,12 @@ import numpy as np
 
 import env
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools.cwms_index import get_zone_array_index
+from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
 from waimak_extended_boundry.supporting_data_analysis.lsr_support.map_rch_to_model_array import \
     map_rch_to_array
-from waimak_extended_boundry.m_packages.rch_packages import get_rch_fixer, _get_rch
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import get_rch_fixer, _get_rch
 
 lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")

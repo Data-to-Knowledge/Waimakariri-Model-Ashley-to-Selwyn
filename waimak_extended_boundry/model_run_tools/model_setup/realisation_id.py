@@ -11,13 +11,13 @@ import pickle
 from waimak_extended_boundry import smt
 import os
 from warnings import warn
-from waimak_extended_boundry.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
 import numpy as np
 import subprocess
 import netCDF4 as nc
 import shutil
 from env import sdp
-from waimak_extended_boundry.model_run_tools.convergance_check import \
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged
 from copy import deepcopy
 

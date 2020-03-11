@@ -14,8 +14,8 @@ import pandas as pd
 
 #from core.ecan_io import rd_sql, sql_db
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
-from waimak_extended_boundry.model_run_tools.cwms_index import get_zone_array_index
+from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
+from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_ird_base_array, get_lsr_base_period_inputs
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
