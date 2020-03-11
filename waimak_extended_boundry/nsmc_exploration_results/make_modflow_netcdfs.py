@@ -6,9 +6,10 @@ Date Created: 11/11/2017 10:54 AM
 
 from __future__ import division
 import os
-from waimak_extended_boundry import \
-    get_model_name_path
+from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import *
+from waimak_extended_boundry.model_run_tools import get_model_name_path
 from future.builtins import input
+
 
 def make_modflow_netcdfs(hds_nc_path, bud_nc_path, zlib):
     # chekc the postition of phi lower and upper
@@ -32,21 +33,21 @@ def make_modflow_netcdfs(hds_nc_path, bud_nc_path, zlib):
     phi_upper = get_model_name_path('NsmcBaseB').replace('.nam', '')
 
     # flesh out paths and phi lower and upper
-    hds_paths = [os.path.join(hds_base_path,'{}.hds'.format(e)) for e in path_basenames] + [phi_lower + '.hds',
-                                                                                            phi_upper + '.hds']
-    sfo_paths = [os.path.join(sfo_base_path,'{}.sfo'.format(e)) for e in path_basenames] + [phi_lower + '.sfo',
-                                                                                            phi_upper + '.sfo']
-    cbc_paths = [os.path.join(cbc_base_path,'{}.cbc'.format(e)) for e in path_basenames] + [phi_lower + '.cbc',
-                                                                                            phi_upper + '.cbc']
+    hds_paths = [os.path.join(hds_base_path, '{}.hds'.format(e)) for e in path_basenames] + [phi_lower + '.hds',
+                                                                                             phi_upper + '.hds']
+    sfo_paths = [os.path.join(sfo_base_path, '{}.sfo'.format(e)) for e in path_basenames] + [phi_lower + '.sfo',
+                                                                                             phi_upper + '.sfo']
+    cbc_paths = [os.path.join(cbc_base_path, '{}.cbc'.format(e)) for e in path_basenames] + [phi_lower + '.cbc',
+                                                                                             phi_upper + '.cbc']
 
     description = """
     The heads, or cell budget file values for all models which passed filter one (phi filter).  These were recalculated
     for filters 2-4
     """
     # may be commented out as I needed ot re-run one
-    #make_hds_netcdf(nsmc_nums=filter2_3_4_num, hds_paths=hds_paths, description=description, nc_path=hds_nc_path, zlib=zlib)
+    # make_hds_netcdf(nsmc_nums=filter2_3_4_num, hds_paths=hds_paths, description=description, nc_path=hds_nc_path, zlib=zlib)
     make_cellbud_netcdf(nsmc_nums=filter2_3_4_num, sfo_paths=sfo_paths, cbc_paths=cbc_paths,
-                        description=description,nc_path=bud_nc_path, zlib=zlib)
+                        description=description, nc_path=bud_nc_path, zlib=zlib)
 
 
 if __name__ == '__main__':
@@ -55,10 +56,10 @@ if __name__ == '__main__':
         raise ValueError('user interuppted process to prevent overwrite')
 
     # differenes between the two are because I only have so much space on the sever, but teh uncompressed version is so much faster...
-    #make_modflow_netcdfs(hds_nc_path=env.gw_met_data("mh_modeling/netcdfs_of_key_modeling_data/post_filter1_hds.nc"),
+    # make_modflow_netcdfs(hds_nc_path=env.gw_met_data("mh_modeling/netcdfs_of_key_modeling_data/post_filter1_hds.nc"),
     #                     bud_nc_path=env.gw_met_data("mh_modeling/netcdfs_of_key_modeling_data/post_filter1_cell_budgets.nc"),
     #                     zlib=True)
 
     make_modflow_netcdfs(hds_nc_path=r"C:\mh_waimak_model_data\post_filter1_hds.nc",
                          bud_nc_path=r"C:\mh_waimak_model_data\post_filter1_budget.nc",
-                         zlib=False) # on gw02
+                         zlib=False)  # on gw02

@@ -5,7 +5,7 @@ Date Created: 7/11/2017 9:03 AM
 """
 
 from __future__ import division
-from waimak_extended_boundry import get_wel_spd
+from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
 import numpy as np
 
 

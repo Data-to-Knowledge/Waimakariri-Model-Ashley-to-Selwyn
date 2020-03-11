@@ -2,6 +2,8 @@
 coding=utf-8
 Author: matth
 Date Created: 26/06/2017 2:35 PM
+
+depreciated due to chahagnes in core
 """
 
 from __future__ import division

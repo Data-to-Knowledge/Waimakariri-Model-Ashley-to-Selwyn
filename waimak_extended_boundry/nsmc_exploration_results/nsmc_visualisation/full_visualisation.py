@@ -12,7 +12,7 @@ from observations.obs_box_plots import plot_obs_all_all_boxplots
 from observations.plot_ucn import plot_all_cons
 from parameters.param_ppp_boxplots import plot_all_ppp_boxplots
 from parameters.spatially_average_param import plt_all_spatial_param
-from waimak_extended_boundry import \
+from waimak_extended_boundry.nsmc_exploration_results.end_member_mixing_analysis.visualise_filter import \
     plot_river_mixing
 from traceback import format_exc
 import gc

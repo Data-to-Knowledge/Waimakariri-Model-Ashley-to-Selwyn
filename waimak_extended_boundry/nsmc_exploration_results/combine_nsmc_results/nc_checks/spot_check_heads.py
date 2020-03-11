@@ -9,7 +9,7 @@ import env
 import numpy as np
 import netCDF4 as nc
 import flopy_mh as flopy
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     hds_no_data
 
 # quick check for the netcdf

@@ -5,7 +5,7 @@ Date Created: 4/07/2018 8:56 AM
 """
 
 from __future__ import division
-from core import env
+import env
 import os
 import pandas as pd
 import netCDF4 as nc

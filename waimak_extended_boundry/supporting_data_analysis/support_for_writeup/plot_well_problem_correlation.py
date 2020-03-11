@@ -6,7 +6,7 @@ Date Created: 2/10/2018 9:18 AM
 
 from __future__ import division
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import get_chch_area_zones
+from waimak_extended_boundry.model_runs.n_analysis.interzone_n import get_chch_area_zones
 import pandas as pd
 import numpy as np
 import os

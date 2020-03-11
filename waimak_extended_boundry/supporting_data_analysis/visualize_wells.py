@@ -7,10 +7,10 @@ Date Created: 2/07/2017 4:46 PM
 from __future__ import division
 import env
 import pandas as pd
-from waimak_extended_boundry import _mt, _elvdb_calc
+from waimak_extended_boundry.extended_boundry_model_tools import _mt, _elvdb_calc
 from osgeo.gdal import Open as gdalOpen
 import numpy as np
-from users.MH.Waimak_modeling.supporting_data_path import sdp
+from env import sdp
 
 def well_depth_base_layer_1(targets):
     top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(sdp)).ReadAsArray()

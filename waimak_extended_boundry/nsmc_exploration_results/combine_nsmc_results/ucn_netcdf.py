@@ -9,7 +9,7 @@ import env
 import netCDF4 as nc
 import flopy_mh as flopy
 import numpy as np
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     _get_kstkpers
 from waimak_extended_boundry import smt
 from warnings import warn

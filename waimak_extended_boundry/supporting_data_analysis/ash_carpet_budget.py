@@ -1,7 +1,7 @@
 from __future__ import division
 import pandas as pd
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import _get_drn_spd
+from waimak_extended_boundry.m_packages.drn_packages import _get_drn_spd
 import flopy_mh as flopy
 
 

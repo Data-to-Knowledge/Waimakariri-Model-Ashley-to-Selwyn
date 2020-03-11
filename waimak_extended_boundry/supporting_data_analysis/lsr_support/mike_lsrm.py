@@ -2,6 +2,9 @@
 """
 Author: matth
 Date Created: 3/10/2017 2:04 PM
+
+depreciated, mike has now made this a package
+
 """
 
 from __future__ import division

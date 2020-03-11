@@ -6,8 +6,8 @@ Date Created: 28/08/2017 4:17 PM
 
 from __future__ import division
 import pandas as pd
-from waimak_extended_boundry import get_wel_spd
-from waimak_extended_boundry import get_well_budget
+from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
+from waimak_extended_boundry.supporting_data_analysis.well_budget import get_well_budget
 
 def get_well_NSMC_base(version=1):
     all_wells =get_wel_spd(version=version,recalc=True)

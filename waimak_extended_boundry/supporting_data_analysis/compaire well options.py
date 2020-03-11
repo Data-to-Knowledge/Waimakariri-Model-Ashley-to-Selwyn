@@ -2,6 +2,7 @@
 """
 Author: matth
 Date Created: 3/08/2017 1:41 PM
+depreciated for changes in core
 """
 
 from __future__ import division
@@ -9,7 +10,7 @@ import numpy as np
 import pandas as pd
 from core.ecan_io import rd_sql, sql_db
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import get_wel_spd
+from waimak_extended_boundry.m_packages.wel_packages import get_wel_spd
 
 well_data = get_wel_spd(0)
 well_data = well_data.loc[(well_data.type=='well')]

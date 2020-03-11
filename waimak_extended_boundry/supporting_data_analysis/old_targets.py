@@ -6,7 +6,7 @@ Date Created: 30/06/2017 12:44 PM
 
 from __future__ import division
 import  pandas as pd
-import users.MH.Waimak_modeling.model_tools as mt
+import Waimak_modeling_non_extended.model_tools as mt
 
 data = pd.read_csv(r"C:\Users\MattH\Downloads\verticle_targets.csv", index_col='Well No')
 

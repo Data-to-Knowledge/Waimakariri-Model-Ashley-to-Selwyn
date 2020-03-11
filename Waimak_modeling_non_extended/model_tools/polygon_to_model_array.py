@@ -9,7 +9,7 @@ import gdal
 import ogr
 import osr
 import os
-from users.MH.Waimak_modeling.supporting_data_path import temp_file_dir
+from env import temp_file_dir
 
 # set up a temporary place to hold the files
 

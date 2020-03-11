@@ -8,7 +8,7 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import _get_rch
+from waimak_extended_boundry.m_packages.rch_packages import _get_rch
 from copy import deepcopy
 
 

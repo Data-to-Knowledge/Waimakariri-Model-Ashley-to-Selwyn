@@ -9,10 +9,8 @@ import env
 import os
 import numpy as np
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
-    make_ucn_netcd
-from waimak_extended_boundry import \
-    emma_nsmc_numbers
+from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import \
+    make_ucn_netcd, emma_nsmc_numbers
 from future.builtins import input
 
 def make_netcd_endmember_mixing(nc_path,zlib):
