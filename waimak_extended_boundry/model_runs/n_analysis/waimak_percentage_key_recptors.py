@@ -6,7 +6,7 @@ Date Created: 26/03/2018 9:20 AM
 
 from __future__ import division
 import env
-from nitrate_at_key_receptors import get_stocastic_set, get_n_at_points_nc
+from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import get_stocastic_set, get_n_at_points_nc
 
 if __name__ == '__main__':
     outdir = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\waimak_per_results_at_points")

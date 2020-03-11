@@ -9,7 +9,7 @@ import env
 import geopandas as gpd
 import numpy as np
 import os
-from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from waimak_extended_boundry import smt
 
 if __name__ == '__main__':

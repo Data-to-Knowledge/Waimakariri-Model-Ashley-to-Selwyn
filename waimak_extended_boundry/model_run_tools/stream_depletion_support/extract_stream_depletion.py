@@ -12,7 +12,7 @@ import numpy as np
 import os
 from waimak_extended_boundry.model_run_tools import \
     get_samp_points_df, get_flux_at_points, get_full_consent, get_max_rate, modflow_converged
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
 

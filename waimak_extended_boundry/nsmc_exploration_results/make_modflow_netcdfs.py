@@ -6,9 +6,10 @@ Date Created: 11/11/2017 10:54 AM
 
 from __future__ import division
 import os
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import *
+from waimak_extended_boundry.combine_nsmc_results import *
 from waimak_extended_boundry.model_run_tools import get_model_name_path
 from future.builtins import input
+import env
 
 
 def make_modflow_netcdfs(hds_nc_path, bud_nc_path, zlib):

@@ -19,10 +19,10 @@ from waimak_extended_boundry.model_run_tools import zipped_modflow_converged, mt
     setup_run_mt3d_mp, get_default_mt3d_kwargs, get_sft_stress_period_data, get_ssm_stress_period_data, \
     get_gmp_con_layer, get_lsrm_base_array, get_zone_array_index
 from waimak_extended_boundry.model_runs.min_flows_reliability.forward_runs import run_forward_runs
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results.ucn_netcdf import \
+from waimak_extended_boundry.combine_nsmc_results.ucn_netcdf import \
     make_ucn_netcd
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results.cell_budget_netcdf import make_cellbud_netcdf
+from waimak_extended_boundry.combine_nsmc_results.cell_budget_netcdf import make_cellbud_netcdf
 
 
 def start_process():

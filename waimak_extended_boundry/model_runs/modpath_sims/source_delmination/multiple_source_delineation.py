@@ -18,7 +18,7 @@ from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.source_raster import \
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
     get_forward_emulator_paths
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import get_all_well_row_col
 from waimak_extended_boundry.model_run_tools import get_stocastic_set
 import gc
 

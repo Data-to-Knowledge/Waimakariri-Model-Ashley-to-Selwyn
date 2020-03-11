@@ -10,7 +10,7 @@ import os
 import shutil
 from future.builtins import input
 from env import sdp
-from extended_boundry_model_tools import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 
 def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, version=smt.model_version, mfv='mfnwt',n_car_dns=True):
     """

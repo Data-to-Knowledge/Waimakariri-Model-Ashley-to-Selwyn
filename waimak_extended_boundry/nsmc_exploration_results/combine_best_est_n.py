@@ -6,7 +6,7 @@ Date Created: 15/11/2017 10:49 AM
 
 from __future__ import division
 import env
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import make_ucn_netcd, emma_nsmc_numbers
+from waimak_extended_boundry.combine_nsmc_results import make_ucn_netcd, emma_nsmc_numbers
 import os
 from future.builtins import input
 

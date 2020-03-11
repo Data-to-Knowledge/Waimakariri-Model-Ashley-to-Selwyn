@@ -10,7 +10,7 @@ import os
 import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 from waimak_extended_boundry.model_run_tools import \
     _get_sw_samp_pts_dict, get_samp_points_df, _get_flux_flow_arrays

@@ -9,7 +9,7 @@ sys.path.insert(0, r"C:\Users\michaelek\git\Ecan.Science.Python.Base")
 # sys.path.append(r"C:\Users\michaelek\git\Ecan.Science.Python.Base\core")
 # sys.path.append(r"C:\Users\michaelek\git\Ecan.Science.Python.Base\flopy_mh")
 import env
-from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from waimak_extended_boundry import smt
 
 if __name__ == '__main__':

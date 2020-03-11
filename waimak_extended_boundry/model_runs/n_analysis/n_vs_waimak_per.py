@@ -11,7 +11,7 @@ from other_functions.stats import LR
 from matplotlib.offsetbox import AnchoredText
 import os
 import numpy as np
-from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import get_well_ids
+from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import get_well_ids
 
 
 def n_vs_wai_streams(outdir):

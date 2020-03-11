@@ -6,7 +6,7 @@ Date Created: 26/10/2017 12:40 PM
 
 from __future__ import division
 import pandas as pd
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import get_all_well_row_col
 
 def extract_peizo_filter_raw_data(outpath):
     piezo_data = pd.read_csv(r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\2017 piezo survey\Survey results\DataforNSMC_Piezo.csv",index_col=1)

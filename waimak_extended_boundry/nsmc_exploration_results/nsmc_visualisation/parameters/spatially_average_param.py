@@ -7,7 +7,7 @@ Date Created: 13/11/2017 4:57 PM
 from __future__ import division
 import env
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.supporting_data_analysis.NSMC_inputs.recharge_index_array import get_rch_index_array
+from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.recharge_index_array import get_rch_index_array
 import numpy as np
 from copy import deepcopy
 from scipy.interpolate import griddata

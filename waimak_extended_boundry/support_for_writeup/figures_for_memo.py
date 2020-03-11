@@ -11,7 +11,7 @@ from waimak_extended_boundry import smt
 from glob import glob
 from matplotlib.colors import from_levels_and_colors
 import numpy as np
-from waimak_extended_boundry.targets.gen_target_arrays import get_head_targets
+from waimak_extended_boundry.model_and_NSMC_build.targets.gen_target_arrays import get_head_targets
 
 #outdir = "{}/figs_for_report".format(smt.sdp) #old
 outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\modelling_reports\ashely_waimakarriri_model_build\figs_for_report" # updated on 3/10/2018

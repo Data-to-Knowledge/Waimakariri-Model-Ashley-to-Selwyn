@@ -13,7 +13,7 @@ import pandas as pd
 import sys
 import datetime
 from read_pst import rd_pst_parameters, param_from_rec, extract_obs_opt_rei, extract_opt_priors
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 from waimak_extended_boundry import smt
 import os

@@ -6,7 +6,7 @@ Date Created: 6/06/2018 2:52 PM
 
 from __future__ import division
 import env
-from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from waimak_extended_boundry.model_run_tools import get_gmp_plus_con_layer_by_landuse, \
     get_gmp_plus_con_layer_by_load_limit
 

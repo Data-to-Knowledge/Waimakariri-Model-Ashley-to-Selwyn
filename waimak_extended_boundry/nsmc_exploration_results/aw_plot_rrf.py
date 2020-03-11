@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # import reiextract as reiex
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import rrfextract as rrf
+from waimak_extended_boundry.combine_nsmc_results import rrfextract as rrf
 
 #from mpl_toolkits.axes_grid1 import make_axes_locatable
 

@@ -2,6 +2,8 @@
 """
 Author: matth
 Date Created: 4/04/2018 10:08 AM
+
+Non mt3d predictions -- superceeded
 """
 
 from __future__ import division
@@ -12,7 +14,7 @@ import numpy as np
 import os
 import itertools
 from glob import glob
-from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
+from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import \
     get_well_ids, get_str_ids
 from warnings import warn
 

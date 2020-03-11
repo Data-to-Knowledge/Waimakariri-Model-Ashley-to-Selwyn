@@ -6,7 +6,7 @@ Date Created: 4/05/2018 12:41 PM
 
 from __future__ import division
 import env
-from gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import setup_run_gmp_plus, extract_receptor_data
 from waimak_extended_boundry.model_run_tools import get_gmp_con_layer
 from waimak_extended_boundry.model_runs.n_analysis.percentage_reduction_maps_v5_from_mt3d import outdir as reduction_map_dir, scenarios as red_scens
 import os

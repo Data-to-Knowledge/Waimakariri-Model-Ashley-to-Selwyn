@@ -6,7 +6,7 @@ Date Created: 2/05/2018 3:31 PM
 
 from __future__ import division
 import env
-from gmp_plus_reductions import extract_receptor_data
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import extract_receptor_data
 
 if __name__ == '__main__':
     # run on Gwater-02

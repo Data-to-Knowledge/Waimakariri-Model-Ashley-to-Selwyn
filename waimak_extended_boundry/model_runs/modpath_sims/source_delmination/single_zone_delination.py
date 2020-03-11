@@ -20,7 +20,7 @@ from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.source_
      get_forward_emulator_paths
 from waimak_extended_boundry.model_run_tools import get_samp_points_df,get_cbc, get_stocastic_set
 from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import _get_sw_samp_pts_dict, _get_flux_flow_arrays
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import get_all_well_row_col
 
 
 def create_single_zone_indexs():

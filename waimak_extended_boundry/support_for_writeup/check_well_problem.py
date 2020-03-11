@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import os
 from scipy.stats import spearmanr, pearsonr
-from waimak_extended_boundry.model_runs.n_analysis.interzone_n import get_chch_area_zones
+from waimak_extended_boundry.model_run_tools.n_analysis_support.interzone_n import get_chch_area_zones
 
 if __name__ == '__main__':
     outpath = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\model_checks\pumpin_problem"

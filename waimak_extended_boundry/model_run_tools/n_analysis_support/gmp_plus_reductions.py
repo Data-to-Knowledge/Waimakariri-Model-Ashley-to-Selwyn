@@ -6,7 +6,7 @@ Date Created: 1/05/2018 8:47 AM
 
 from __future__ import division
 import env
-from setup_run_models import setup_run_mt3d_suite, extract_data, pc5_ftl_repo
+from waimak_extended_boundry.model_runs.n_analysis.stocastic_transport.setup_run_models import setup_run_mt3d_suite, extract_data, pc5_ftl_repo
 from waimak_extended_boundry.model_run_tools import get_sft_stress_period_data, get_ssm_stress_period_data, \
     get_stocastic_set
 from waimak_extended_boundry import smt
@@ -15,8 +15,8 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 from other_functions.stats import LR
-from waimak_extended_boundry.model_runs.n_analysis.interzone_n import get_interzone_n, _np_describe
-from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
+from waimak_extended_boundry.model_run_tools.n_analysis_support.interzone_n import get_interzone_n, _np_describe
+from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
 
 

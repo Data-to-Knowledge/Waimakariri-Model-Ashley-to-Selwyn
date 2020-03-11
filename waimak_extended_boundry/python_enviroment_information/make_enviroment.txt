@@ -21,7 +21,7 @@ pip install pycrs==0.1.3 pygeoprocessing==0.4.2 fpdf==1.7.2
 conda install zlib geopandas netcdf4 xlrd matplotlib numpy=1.14 pandas psutil scipy statsmodels future
 conda install zlib geopandas netcdf4 xlrd matplotlib numpy pandas psutil scipy statsmodels future
 
-# this one worked just fine
+# this one worked just fine #todo update and clean up
 conda install zlib geopandas netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future
 
 

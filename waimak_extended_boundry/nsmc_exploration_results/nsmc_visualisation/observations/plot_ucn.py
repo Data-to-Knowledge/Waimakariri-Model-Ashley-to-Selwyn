@@ -15,7 +15,7 @@ from waimak_extended_boundry import smt
 import matplotlib.pyplot as plt
 import pandas as pd
 from warnings import warn
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
 np.random.seed(1)

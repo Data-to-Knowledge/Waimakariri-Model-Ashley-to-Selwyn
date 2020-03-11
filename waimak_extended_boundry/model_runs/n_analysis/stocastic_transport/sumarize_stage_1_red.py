@@ -6,7 +6,7 @@ Date Created: 15/06/2018 9:03 AM
 
 from __future__ import division
 import pandas as pd
-from gmp_plus_reductions import get_well_nums_for_group
+from waimak_extended_boundry.model_run_tools.n_analysis_support.gmp_plus_reductions import get_well_nums_for_group
 
 def get_counts(limit, well_ids, well_counts, datakey, all_data):
     out_num = 0

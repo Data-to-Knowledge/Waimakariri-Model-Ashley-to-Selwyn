@@ -10,7 +10,7 @@ Created on Mon Aug 21 11:07:43 2017
 """
 
 import pandas as pd
-from waimak_extended_boundry.targets.gen_target_arrays import get_vertical_gradient_targets
+from waimak_extended_boundry.model_and_NSMC_build.targets.gen_target_arrays import get_vertical_gradient_targets
 
 def get_vert_targets_full():
     vertwells = get_vertical_gradient_targets().reset_index()  # read in Matt H csv

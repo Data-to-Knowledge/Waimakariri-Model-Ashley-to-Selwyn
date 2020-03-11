@@ -9,7 +9,7 @@ import env
 import os
 import numpy as np
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.nsmc_exploration_results.combine_nsmc_results import \
+from waimak_extended_boundry.combine_nsmc_results import \
     make_ucn_netcd, emma_nsmc_numbers
 from future.builtins import input
 

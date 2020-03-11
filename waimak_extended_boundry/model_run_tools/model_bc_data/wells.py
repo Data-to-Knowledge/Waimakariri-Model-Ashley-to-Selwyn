@@ -22,7 +22,7 @@ from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_base_well, temp_pickle_dir
 from env import sdp
 from copy import deepcopy
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
 _missing_well_use_converter = {'Aquaculture': 'other',

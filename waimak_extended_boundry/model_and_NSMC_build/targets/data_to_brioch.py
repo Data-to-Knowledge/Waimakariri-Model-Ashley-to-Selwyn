@@ -5,10 +5,10 @@ Date Created: 1/09/2017 4:25 PM
 """
 
 from __future__ import division
-from waimak_extended_boundry.supporting_data_analysis.NSMC_inputs.data_to_cath import data_to_cath
+from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.data_to_cath import data_to_cath
 from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
 from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import get_wel_spd
-from waimak_extended_boundry.targets.gen_target_arrays import *
+from waimak_extended_boundry.model_and_NSMC_build.targets.gen_target_arrays import *
 import os
 
 def generate_all_data_for_brioch(outdir):

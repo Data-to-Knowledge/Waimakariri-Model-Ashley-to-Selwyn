@@ -11,7 +11,7 @@ import os
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import calculate_con_from_netcdf_well, calculate_con_from_netcdf_str, \
     get_con_at_wells, get_con_at_str, get_stocastic_set
-from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
 
