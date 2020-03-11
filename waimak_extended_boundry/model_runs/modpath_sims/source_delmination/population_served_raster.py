@@ -9,8 +9,7 @@ script to create a map of the population served by a given area
 from __future__ import division
 import env
 import os
-from waimak_extended_boundry import \
-    get_well_ids
+from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import get_well_ids
 from glob import glob
 from waimak_extended_boundry import smt
 import numpy as np

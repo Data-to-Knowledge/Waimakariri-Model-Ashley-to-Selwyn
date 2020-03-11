@@ -15,15 +15,12 @@ import flopy_mh as flopy
 import pandas as pd
 from copy import deepcopy
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_runs.modpath_sims.source_delmination.source_raster import \
     define_source_from_backward, define_source_from_forward, get_modeflow_dir_for_source, get_base_results_dir, \
-    get_cbc, get_forward_emulator_paths
-from waimak_extended_boundry import \
-    get_samp_points_df, _get_sw_samp_pts_dict, _get_flux_flow_arrays
-from waimak_extended_boundry import \
-    get_all_well_row_col
-from waimak_extended_boundry import \
-    get_stocastic_set
+     get_forward_emulator_paths
+from waimak_extended_boundry.model_run_tools import get_samp_points_df,get_cbc, get_stocastic_set
+from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import _get_sw_samp_pts_dict, _get_flux_flow_arrays
+from waimak_extended_boundry.supporting_data_analysis.all_well_layer_col_row import get_all_well_row_col
 
 
 def create_single_zone_indexs():

@@ -8,8 +8,7 @@ from __future__ import division
 import numpy as np
 import flopy_mh as flopy
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
-    create_mp_slf
+from waimak_extended_boundry.model_run_tools import create_mp_slf
 import os
 import pandas as pd
 

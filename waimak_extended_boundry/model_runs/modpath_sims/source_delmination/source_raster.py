@@ -17,16 +17,10 @@ import datetime
 import socket
 from traceback import format_exc
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
-    setup_run_backward_modpath
-from waimak_extended_boundry import extract_back_data, \
-    save_forward_data
-from waimak_extended_boundry import \
-    setup_run_forward_modpath
-from waimak_extended_boundry import \
-    get_cbc, get_cbc_mp
-from waimak_extended_boundry import \
-    modpath_converged
+from waimak_extended_boundry.model_runs.modpath_sims.setup_reverse_modpath import setup_run_backward_modpath
+from waimak_extended_boundry.model_runs.modpath_sims.extract_data import extract_back_data, save_forward_data
+from waimak_extended_boundry.model_runs.modpath_sims.setup_forward_modpath import setup_run_forward_modpath
+from waimak_extended_boundry.model_run_tools import get_cbc, get_cbc_mp, modpath_converged
 import gc
 
 

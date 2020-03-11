@@ -2,15 +2,13 @@
 Author: matth
 Date Created: 27/03/2018 7:35 PM
 """
-
 from __future__ import division
 import env
 import os
 import numpy as np
 import netCDF4 as nc
 import socket
-from waimak_extended_boundry import \
-    get_stocastic_set
+from waimak_extended_boundry.model_run_tools import get_stocastic_set
 from single_zone_delination import get_modeflow_dir_for_source, get_base_results_dir, get_cust_mapping, \
     define_source_from_backward, get_cbc, get_forward_emulator_paths, define_source_from_forward
 from waimak_extended_boundry import smt

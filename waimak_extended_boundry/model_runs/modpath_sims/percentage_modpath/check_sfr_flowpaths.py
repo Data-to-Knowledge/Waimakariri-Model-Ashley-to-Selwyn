@@ -9,9 +9,8 @@ import flopy_mh as flopy
 import numpy as np
 import pandas as pd
 
-from waimak_extended_boundry import \
-    export_paths_to_shapefile
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import export_paths_to_shapefile
+from waimak_extended_boundry.model_runs.modpath_sims.percentage_modpath.run_emulator import \
     get_group_number
 
 if __name__ == '__main__':

@@ -6,9 +6,7 @@ Date Created: 5/12/2017 11:13 AM
 
 from __future__ import division
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import get_zone_array_index
-from waimak_extended_boundry import export_paths_to_shapefile, create_mp_slf
-from waimak_extended_boundry import import_gns_model
+from waimak_extended_boundry.model_run_tools import get_zone_array_index, import_gns_model, export_paths_to_shapefile, create_mp_slf
 import flopy_mh as flopy
 import numpy as np
 import os

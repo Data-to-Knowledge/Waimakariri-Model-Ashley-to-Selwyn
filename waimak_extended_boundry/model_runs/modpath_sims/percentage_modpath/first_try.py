@@ -14,9 +14,9 @@ import numpy as np
 
 from con_array import _make_mednload_approx
 from run_emulator import run_emulator
-from waimak_extended_boundry import save_forward_data
-from waimak_extended_boundry import get_cbc, \
-    setup_run_forward_modpath
+from waimak_extended_boundry.model_runs.modpath_sims.extract_data import save_forward_data
+from waimak_extended_boundry.model_runs.modpath_sims.setup_forward_modpath import setup_run_forward_modpath
+from waimak_extended_boundry.model_run_tools import get_cbc
 
 if __name__ == '__main__':
     #just a test

@@ -5,8 +5,7 @@ Date Created: 13/12/2017 3:23 PM
 """
 
 from __future__ import division
-from waimak_extended_boundry import \
-    create_mp_slf
+from waimak_extended_boundry.model_run_tools import create_mp_slf
 from waimak_extended_boundry import smt
 import flopy_mh as flopy
 import pandas as pd
