@@ -7,7 +7,7 @@ Date Created: 1/05/2018 4:52 PM
 from __future__ import division
 import env
 from gmp_plus_reductions import setup_run_gmp_plus
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     get_gmp_plus_con_layer_by_landuse
 
 if __name__ == '__main__':

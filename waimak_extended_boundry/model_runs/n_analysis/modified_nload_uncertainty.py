@@ -7,12 +7,12 @@ Date Created: 4/04/2018 10:08 AM
 from __future__ import division
 from run_source_uncertainty import calc_all_ns, _np_describe
 import pandas as pd
-from core import env
+import env
 import numpy as np
 import os
 import itertools
 from glob import glob
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_well_ids, get_str_ids
 from warnings import warn
 

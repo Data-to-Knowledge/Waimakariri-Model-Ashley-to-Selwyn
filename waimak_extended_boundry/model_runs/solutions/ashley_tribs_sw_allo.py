@@ -6,12 +6,10 @@ Date Created: 21/03/2018 9:56 AM
 
 from __future__ import division
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
-    mod_gns_model
-from waimak_extended_boundry import get_base_well
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import mod_gns_model, get_base_well
+from waimak_extended_boundry.model_runs.stream_depletion_assesment.raising_heads_no_carpet import \
     get_drn_no_ncarpet_spd
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_runs.min_flows_reliability.extract_data_for_forward_runs import \
     extract_and_save_all_forward_runs
 import multiprocessing
 import pandas as pd

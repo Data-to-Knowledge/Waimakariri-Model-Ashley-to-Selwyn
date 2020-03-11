@@ -8,7 +8,7 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-from core.spatial.vector import spatial_overlays
+from other_functions.spatial import spatial_overlays
 import os
 from shapely.errors import TopologicalError
 

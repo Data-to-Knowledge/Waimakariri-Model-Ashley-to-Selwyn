@@ -5,8 +5,8 @@ Date Created: 6/10/2017 8:58 AM
 """
 
 from __future__ import division
-from waimak_extended_boundry import setup_and_run_stream_dep
-from waimak_extended_boundry import get_ss_sy, get_sd_starting_hds
+from waimak_extended_boundry.model_runs.stream_depletion_assesment.stream_depletion_numerical_model_runs.stream_depletion_model_setup import setup_and_run_stream_dep
+from waimak_extended_boundry.model_runs.stream_depletion_assesment.stream_depletion_numerical_model_runs.starting_hds_ss_sy import get_ss_sy, get_sd_starting_hds
 import os
 from waimak_extended_boundry import temp_pickle_dir
 import multiprocessing

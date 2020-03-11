@@ -11,10 +11,8 @@ import numpy as np
 import netCDF4 as nc
 import itertools
 from waimak_extended_boundry import smt
-from waimak_extended_boundry import \
-    get_stocastic_set
-from waimak_extended_boundry import \
-    base_receptors_path
+from waimak_extended_boundry.model_run_tools import get_stocastic_set
+from waimak_extended_boundry.model_runs.modpath_sims.source_delmination.interzone_source_delineation import base_receptors_path
 import os
 import psutil
 import geopandas as gpd

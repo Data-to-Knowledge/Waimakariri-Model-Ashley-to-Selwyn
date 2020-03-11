@@ -9,8 +9,7 @@ import env
 import geopandas as gpd
 import pandas as pd
 from glob import glob
-from waimak_extended_boundry import \
-    spatial_overlays
+from other_functions.spatial import spatial_overlays
 from percentage_reduction_maps import gen_stream_targets, gen_well_targets, get_current_pathway_n, gen_interzone_targets
 import pickle
 import os

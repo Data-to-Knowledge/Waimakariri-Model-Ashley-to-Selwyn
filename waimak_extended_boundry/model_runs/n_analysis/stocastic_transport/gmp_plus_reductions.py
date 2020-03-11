@@ -7,20 +7,17 @@ Date Created: 1/05/2018 8:47 AM
 from __future__ import division
 import env
 from setup_run_models import setup_run_mt3d_suite, extract_data, pc5_ftl_repo
-from waimak_extended_boundry import \
-    get_sft_stress_period_data, get_ssm_stress_period_data
+from waimak_extended_boundry.model_run_tools import get_sft_stress_period_data, get_ssm_stress_period_data, \
+    get_stocastic_set
 from waimak_extended_boundry import smt
 import os
 from warnings import warn
 import numpy as np
 import pandas as pd
-from core.stats.LR_class import LR
-from waimak_extended_boundry import get_interzone_n, \
-    _np_describe
-from waimak_extended_boundry import \
+from other_functions.stats import LR
+from waimak_extended_boundry.model_runs.n_analysis.interzone_n import get_interzone_n, _np_describe
+from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
-from waimak_extended_boundry import \
-    get_stocastic_set
 
 
 def get_alpine_fractions(site=None, return_paths=False, number=1000):
@@ -93,7 +90,6 @@ def get_alpine_fractions(site=None, return_paths=False, number=1000):
         # 'Waikuku',
         # 'Woodend - Tuahiwi',
         # 'West Eyreton_shallow',
-
 
         # Clarkville , scale similar to kaiapoi at island road waimakariri component 20% alpine river water
         'Clarkville': ['kaiapoi_islands_stream_river.txt'],
@@ -272,7 +268,6 @@ def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=
     # in future I could probably speed up runs by running a single mt3d run.  a test showed a run time of
     # 1412s for a scon of zero and 1335 s for a scon of another run... doesn't seem worthwhile
 
-
     setup_run_mt3d_suite(base_mt3d_dir, ftl_repo,
                          ssm_crch={0: rch_con},
                          ssm_stress_period_data={0: ssm},
@@ -302,9 +297,9 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     outdata = pd.DataFrame(index=sites,
                            columns=pd.MultiIndex.from_product((scenarios, pers_names),
                                                               names=['scenario', 'stat']), dtype=float)
-    outdata_raw= pd.DataFrame(index=sites,
-                           columns=pd.MultiIndex.from_product((scenarios, pers_names),
-                                                              names=['scenario', 'stat']), dtype=float)
+    outdata_raw = pd.DataFrame(index=sites,
+                               columns=pd.MultiIndex.from_product((scenarios, pers_names),
+                                                                  names=['scenario', 'stat']), dtype=float)
     well_sites = get_well_nums_for_group()
     cmp_waimak_data = {  # the alpine river fractions
         'stream': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
@@ -351,7 +346,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
                 corrected_raw_data = correct_alpine_river(site, cmp_waimak_data, raw_data, well_sites, plot_dir)
             else:
                 corrected_raw_data = raw_data.copy()
-            
+
             # add the stocastic N load
             stocastic_data = add_stocastic_load(site, corrected_raw_data)
             all_raw_data = _np_describe(raw_data)
@@ -371,7 +366,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     outdata['99%'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_99ths.csv'))
     outdata['mean'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_mean.csv'))
     outdata['std'].to_csv(os.path.join(corrected_dir, 'n_data_waimak_zone_std.csv'))
-    
+
     outdata_raw.to_csv(os.path.join(raw_outdir, 'all_n_waimak_zone.csv'))
     outdata_raw = outdata_raw.reorder_levels(['stat', 'scenario'], axis=1)
     outdata_raw['1%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_1ths.csv'))
@@ -384,9 +379,6 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     outdata_raw['99%'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_99ths.csv'))
     outdata_raw['mean'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_mean.csv'))
     outdata_raw['std'].to_csv(os.path.join(raw_outdir, 'n_data_waimak_zone_std.csv'))
-
-
-
 
     ##### interzone receptors including n load uncertainty #####
     interzone_outdir = os.path.join(outdir, 'interzone')
@@ -409,7 +401,6 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     data['std'].to_csv(os.path.join(interzone_outdir, 'n_data_interzone_std.csv'))
 
 
-
 def add_stocastic_load(site, base_data):
     base_data = np.atleast_1d(base_data)
     if site in get_str_ids():
@@ -425,8 +416,8 @@ def add_stocastic_load(site, base_data):
     else:
         # private well # path must not be ucn as it is more than the maxpath length
         base_dir = (r"P:/Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_"
-                           r"bd_va\n_results\private_wells_90\stocastic_n_private_wells_90\without_trans\nconc_cmp_"
-                           r"private_wells_90_named_right\raw_data")  # cmp as gmp has a reduction associated
+                    r"bd_va\n_results\private_wells_90\stocastic_n_private_wells_90\without_trans\nconc_cmp_"
+                    r"private_wells_90_named_right\raw_data")  # cmp as gmp has a reduction associated
     modifiers = np.loadtxt(os.path.join(base_dir, '{}.txt'.format(site.replace('wdc_', ''))))
 
     raw_data = base_data.copy().flatten()
@@ -446,13 +437,13 @@ def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
         wai = waimak_data['well'].loc[well_sites[site]].mean(axis=0)
         n = n_data.mean(axis=0)
         # well stuff
-    n.name='n'
-    wai.name='wai'
+    n.name = 'n'
+    wai.name = 'wai'
     plot_data = pd.merge(pd.DataFrame(wai), pd.DataFrame(n),
                          left_index=True, right_index=True)
     model = LR(plot_data.wai, plot_data.n)
     outdata = model.predict(get_alpine_fractions(site))
-    model.plot(False,os.path.join(plot_dir, '{}.png'.format(site)))
+    model.plot(False, os.path.join(plot_dir, '{}.png'.format(site)))
     return outdata
 
 
@@ -461,7 +452,6 @@ if __name__ == '__main__':
         for path in paths:
             if not os.path.exists(path):
                 print('missing', key, path)
-
 
     if False:
         # a test of the extract receptor data... I expect something to break...

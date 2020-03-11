@@ -2,6 +2,8 @@
 """
 Author: matth
 Date Created: 3/04/2018 10:22 AM
+This script no longer works due to changes in ecan data structure, it is left here as is where is
+
 """
 
 from __future__ import division

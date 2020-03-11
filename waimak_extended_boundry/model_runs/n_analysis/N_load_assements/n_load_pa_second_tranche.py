@@ -9,8 +9,7 @@ import geopandas as gpd
 import os
 from n_load_pa_rules import create_farm_scale_data
 from glob import glob
-from waimak_extended_boundry import \
-    run_all_nload_stuffs
+from waimak_extended_boundry.model_runs.n_analysis.modified_nload_uncertainty import run_all_nload_stuffs
 from sumarize_pa_rules import sumaraize
 
 

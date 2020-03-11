@@ -33,7 +33,7 @@ import geopandas as gpd
 from glob import glob
 import time
 import os
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_runs.n_analysis.nitrate_at_key_receptors import \
     get_well_ids, get_str_ids
 from warnings import warn
 

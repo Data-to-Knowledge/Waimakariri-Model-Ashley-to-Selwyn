@@ -13,7 +13,7 @@ import numpy as np
 from waimak_extended_boundry import smt
 import os
 import pandas as pd
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
     get_gmp_load_raster, get_pc5pa_additonal_load
 from get_current_pathway_n import get_mt3d_current_pathway_n
 
