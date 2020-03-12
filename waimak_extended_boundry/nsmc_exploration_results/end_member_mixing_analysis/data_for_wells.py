@@ -9,7 +9,7 @@ depreciated, but here for results
 from __future__ import division
 from pdsql.mssql import rd_sql
 import pandas as pd
-from waimak_extended_boundry import get_all_well_row_col
+from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import get_all_well_row_col
 import geopandas as gpd
 
 if __name__ == '__main__':

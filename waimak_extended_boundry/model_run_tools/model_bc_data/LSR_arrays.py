@@ -16,7 +16,7 @@ from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
-from waimak_extended_boundry.non_model_work.lsr_support import \
+from waimak_extended_boundry.non_model_work.lsr_support.map_rch_to_model_array import \
     map_rch_to_array
 from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import get_rch_fixer, _get_rch
 

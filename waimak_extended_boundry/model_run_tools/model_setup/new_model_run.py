@@ -4,6 +4,7 @@ Author: matth
 Date Created: 20/10/2017 4:14 PM
 """
 #todo delete????  it is used sometimes... think about that
+#todo this should be made redundent
 from __future__ import division
 import os
 from waimak_extended_boundry import \

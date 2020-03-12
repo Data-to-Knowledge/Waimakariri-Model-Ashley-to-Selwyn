@@ -3,7 +3,6 @@
 Author: matth
 Date Created: 26/10/2017 3:22 PM
 """
-#todo it might make sense to move this into the model run tools, it is used a lot
 from __future__ import division
 from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
 from waimak_extended_boundry import smt
@@ -14,7 +13,7 @@ import os
 import pickle
 import flopy_mh as flopy
 
-def get_drn_spd(): #todo move this up
+def get_drn_spd():
     raise NotImplementedError
 
 def get_drn_no_ncarpet_spd(model_id,recalc=False):

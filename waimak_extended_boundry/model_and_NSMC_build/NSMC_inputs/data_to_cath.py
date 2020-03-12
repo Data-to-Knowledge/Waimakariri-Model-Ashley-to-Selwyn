@@ -11,7 +11,7 @@ import geopandas as gpd
 from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.recharge_index_array import get_rch_index_array
 from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.gen_well_csv_for_NSMC import get_well_NSMC_base, \
     get_template_data
-from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs import create_parameter_file, \
+from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.parameter_file import create_parameter_file, \
     get_param_table
 from waimak_extended_boundry.model_and_NSMC_build.NSMC_inputs.NSMC_weights import get_NSMC_weights
 from waimak_extended_boundry import smt
