@@ -19,14 +19,15 @@ from waimak_extended_boundry.model_run_tools.n_analysis_support.interzone_n impo
 from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
 
+#todo I need to get a better handle on what this script does and it needs a touch more documenations
 
-def get_alpine_fractions(site=None, return_paths=False, number=1000):
+def get_alpine_fractions(site=None, return_paths=False, number=1000): #todo this whole thing is going to be a bit tricky
     # number is the number of samples to pull out
     # if path then just send out the data (to replace alpine fraction so that I can patch this thing
     # if site is not None get teh value
 
     base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Groundwater Quality\End member "
-                       r"mixing model\emma_for_n_adjustment\4_endmembers\raw_data")
+                       r"mixing model\emma_for_n_adjustment\4_endmembers\raw_data") # todo manage dataset
     paths = {
         # site name: path to the stocastic data
 
@@ -183,7 +184,7 @@ sites = {
     'northbrook_marshes_s',
     'ohoka_island_s',
     'southbrook_marshes_s',
-    # todo to add ashley output I simply need to add the sites here.
+    # todo to add ashley output I simply need to add the sites here., do this
 
     # wdc_wells
     'wdc_Kairaki',
@@ -304,10 +305,10 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     cmp_waimak_data = {  # the alpine river fractions
         'stream': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
                                       r"d results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set"
-                                      r"_str_data.csv"), index_col=0).transpose(),
+                                      r"_str_data.csv"), index_col=0).transpose(), #todo manage dataset
         'well': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations a"
                                     r"nd results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set_"
-                                    r"well_data.csv"), index_col=0).transpose()
+                                    r"well_data.csv"), index_col=0).transpose() #todo manage dataset
     }
     for scen, path in scenario_paths.items():
         raw_dir = os.path.join(intrazone_dir, 'raw_model_data', scen)
@@ -329,7 +330,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
                            cbc_nc_path=use_cbc_path,
                            missing_str_obs='raise')
 
-        all_well_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_well_data.csv'), index_col=0).transpose()
+        all_well_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_well_data.csv'), index_col=0).transpose() #todo manage??
         all_str_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_str_data.csv'), index_col=0).transpose()
         for site in sites:
             if site in get_str_ids():

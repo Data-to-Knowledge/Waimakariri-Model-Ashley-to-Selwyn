@@ -23,7 +23,7 @@ from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import
 lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
-
+#todo this whole script is hard work!
 def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None,
                     amag_type=None, cc_to_waimak_only=False, super_gmp=False):
     """

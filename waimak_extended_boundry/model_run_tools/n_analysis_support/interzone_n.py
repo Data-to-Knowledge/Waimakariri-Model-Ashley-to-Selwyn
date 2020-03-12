@@ -12,10 +12,12 @@ import netCDF4 as nc
 import itertools
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import get_stocastic_set
-from waimak_extended_boundry.model_runs.modpath_sims.source_delmination.interzone_source_delineation import base_receptors_path
 import os
 import psutil
 import geopandas as gpd
+
+base_receptors_path = env.sci( #todo manage this
+    r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\shp\interzone_receptors.shp")
 
 p = psutil.Process(os.getpid())
 # set to lowest priority, this is windows only, on Unix use ps.nice(19)
@@ -32,7 +34,7 @@ layer_names = {
 
 }
 
-scenario_paths = {
+scenario_paths = { #todo manage this
     'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc",
     # this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
     'gmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc"),
@@ -117,7 +119,7 @@ def get_raw_model_results(scenario_path, layers, index):
     return out_data
 
 
-def apply_nload_uncertainty(raw_data, scenario):
+def apply_nload_uncertainty(raw_data, scenario): #todo manage this
     if 'gmp' in scenario:
         modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
                                r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\without_trans\nload_cmp_"

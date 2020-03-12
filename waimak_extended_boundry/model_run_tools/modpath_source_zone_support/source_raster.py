@@ -251,7 +251,7 @@ def start_process():
     p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
-def get_modeflow_dir_for_source(version=1):
+def get_modeflow_dir_for_source(version=1): #todo raise an exception??
     """
     somethign to keep the modflow dirs for the modpath sernarios straight
     :param version: which version (so far only 1 version)
@@ -264,7 +264,7 @@ def get_modeflow_dir_for_source(version=1):
     return path
 
 
-def get_base_results_dir(mode, comp):
+def get_base_results_dir(mode, comp): #todo raise an exception?
     """
     keeps track fo the base dirs for the forward and backward particles
     :param mode:'forward' or 'backward'
@@ -288,7 +288,7 @@ def get_base_results_dir(mode, comp):
     return out
 
 
-def get_forward_emulator_paths(model_ids, weak_sink=False):
+def get_forward_emulator_paths(model_ids, weak_sink=False): #todo raise exception? or better yet just describe and raise the exceptions earlier
     """
     get dictionary of forward emulator paths
     :param model_ids: model_ids

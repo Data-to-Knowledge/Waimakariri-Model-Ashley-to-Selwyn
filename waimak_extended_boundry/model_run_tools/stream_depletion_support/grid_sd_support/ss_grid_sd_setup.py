@@ -146,7 +146,7 @@ def grid_wells(flux, recalc=False):  # set up a grid
         outdata = pickle.load(open(pickle_path))
     else:
         base_dir = env.sci(
-            "Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\grid_sd\inputs")
+            "Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\grid_sd\inputs") # todo manage this dataset
         layer_shapes = {0: 'layer1_2.shp',  # the file names are 1 indexed while they python layers are zero indexed
                         1: 'layer1_2.shp',
                         2: 'layer3_5_clip2.shp',

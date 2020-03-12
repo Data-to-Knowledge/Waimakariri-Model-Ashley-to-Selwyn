@@ -24,7 +24,7 @@ def _get_str_dep_base_path_mp(kwargs):
     """
     return get_str_dep_base_path(**kwargs)
 
-def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False):
+def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False): #todo how to manage
     """
     function to return the model path for the fully naturalized fully transient run and ensure that the model has been
     run this run has a ss and then full year run from july to end of june  ## for SD 7

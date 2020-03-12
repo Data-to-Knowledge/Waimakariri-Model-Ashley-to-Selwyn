@@ -322,7 +322,7 @@ def _get_flux_flow_arrays(site, sw_samp_pts_dict, sw_samp_pts_df):
     return drn_array, sfr_array
 
 
-def get_samp_points_df(recalc=False):
+def get_samp_points_df(recalc=False): #todo update from new dataset
     """
     generate a dataframe with useful info about sampling points
     bc_type: drn or sfr, comb
@@ -422,7 +422,7 @@ def get_samp_points_df(recalc=False):
     return outdata
 
 
-def _get_sw_samp_pts_dict(recalc=False):
+def _get_sw_samp_pts_dict(recalc=False): # todo redo to avoid pickle and manage databases
     """
     gets a dictionary of boolean arrays for each sampling point.  These are ultimately derived from shape files, but
     if possible this function will load a pickled dictionary
@@ -451,7 +451,7 @@ def _get_sw_samp_pts_dict(recalc=False):
     return sw_samp_pts
 
 
-def _make_swaz_drn_points():
+def _make_swaz_drn_points(): #todo this should be minimized.
     """
     a function to make the swaz points from previous data
     :return:

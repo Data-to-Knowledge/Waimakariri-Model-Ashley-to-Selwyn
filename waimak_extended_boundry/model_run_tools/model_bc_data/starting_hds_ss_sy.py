@@ -49,7 +49,7 @@ def get_starting_heads_sd7(model_id):
     return hds
 
 
-def _get_no_pumping_ss_hds(model_id, recalc=False):
+def _get_no_pumping_ss_hds(model_id, recalc=False): #todo this needs to be managed for datasets
     pickle_path = "{}/model_{}_sd_starting_hds.p".format(smt.pickle_dir, model_id)
     if (os.path.exists(pickle_path)) and (not recalc):
         hds = pickle.load(open(pickle_path))

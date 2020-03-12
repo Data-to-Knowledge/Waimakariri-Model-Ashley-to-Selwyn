@@ -3,22 +3,19 @@
 Author: matth
 Date Created: 20/10/2017 4:14 PM
 """
-#todo delete????  it is used sometimes... think about that
-#todo this should be made redundent
 from __future__ import division
 import os
-from waimak_extended_boundry import \
-    get_full_consent, get_max_rate
-from base_modflow_wrapper import import_gns_model
-from realisation_id import get_base_well, get_rch_multipler, get_model_name_path
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools import \
+    get_full_consent, get_max_rate, modflow_converged
+from waimak_extended_boundry.model_run_tools.model_setup.base_modflow_wrapper import import_gns_model
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_base_well, get_rch_multipler, get_model_name_path
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.ss_grid_sd_setup import \
     get_base_grid_sd_path
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.base_sd_runs  import \
     get_str_dep_base_path
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import \
     _get_no_pumping_ss_hds
-from waimak_extended_boundry import modflow_converged
-from waimak_extended_boundry import \
+from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import \
     get_drn_no_ncarpet_spd
 
 def minium_new_model_run(model_id):

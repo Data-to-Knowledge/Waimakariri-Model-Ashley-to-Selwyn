@@ -3,7 +3,6 @@
 Author: mattH
 Date Created: 21/07/2017 10:44 AM
 """
-#todo move to model run tools
 from __future__ import division
 import env
 import pandas as pd
@@ -16,6 +15,7 @@ import os
 from future.builtins import input
 
 
+#todo make this dataset avaible
 def get_all_well_row_col(recalc=False):
     save_path = '{}/all_wells_row_col_layer2.csv'.format(smt.sdp)
     if os.path.exists(save_path) and not recalc:

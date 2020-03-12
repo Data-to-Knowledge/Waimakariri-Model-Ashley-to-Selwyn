@@ -20,7 +20,7 @@ from env import sdp
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged
 from copy import deepcopy
-
+#todo oh god this one is big!!!!
 temp_pickle_dir = '{}/temp_pickle_dir'.format(smt.pickle_dir)
 if not os.path.exists(temp_pickle_dir):
     os.makedirs(temp_pickle_dir)

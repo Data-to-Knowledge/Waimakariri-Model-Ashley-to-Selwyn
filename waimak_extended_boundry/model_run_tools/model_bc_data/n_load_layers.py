@@ -13,7 +13,7 @@ import flopy_mh as flopy
 import geopandas as gpd
 import shutil
 
-
+#todo everything here needs to be managed from a database perspective
 def get_gmp_con_layer(recalc=False):
     pickle_path = "{}/gmp_n_conc.txt".format(smt.pickle_dir)
     if (os.path.exists(pickle_path)) and (not recalc):

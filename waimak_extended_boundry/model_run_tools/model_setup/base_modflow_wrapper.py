@@ -60,7 +60,7 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
     m._set_name(name)
     m.change_model_ws(dir_path)
     if exe_path is None:
-        m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp)
+        m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp) #todo this needs to be handelled
     else:
         m.exe_name = exe_path
 

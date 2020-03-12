@@ -116,7 +116,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              ftlfree=True,  # formatted FTL to handle bug
                              version='mt3d-usgs',
                              exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
-                                      "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)),
+                                      "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)), #todo fix this for dataset
                              structured=True,
                              # defualt probably fine, though a point of weakness I don't know what it is
                              listunit=500,

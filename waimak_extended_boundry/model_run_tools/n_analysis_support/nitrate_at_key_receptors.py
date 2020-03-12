@@ -14,7 +14,7 @@ from waimak_extended_boundry.model_run_tools import calculate_con_from_netcdf_we
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
-
+#todo this one is hard as well, basically this is really poorly managed
 def get_well_ids():
     """
     the well number and other key info

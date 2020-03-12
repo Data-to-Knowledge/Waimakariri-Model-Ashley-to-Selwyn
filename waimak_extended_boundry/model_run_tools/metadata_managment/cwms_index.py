@@ -10,7 +10,7 @@ import pickle
 import os
 
 
-def get_zone_array_index(zones, recalc=False):
+def get_zone_array_index(zones, recalc=False): #todo manage data
     """
     returns a boolean array with true for the zones listed
     :param zones: one or more of chch, waimak, selwyn, inland_waimak, coastal_waimak
