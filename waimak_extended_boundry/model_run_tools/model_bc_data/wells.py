@@ -20,7 +20,7 @@ from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_ird_base_array, get_lsr_base_period_inputs
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_base_well, temp_pickle_dir
-from env import sdp
+from env import sdp_required
 from copy import deepcopy
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
@@ -73,7 +73,7 @@ def get_full_consent(model_id, org_pumping_wells=False, missing_sd_wells=False,
         return outdata
 
     outdata = get_base_well(model_id, org_pumping_wells=org_pumping_wells)
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp))
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required))
     allo = allo.dropna(subset=['status_details'])
     allo = allo.loc[np.in1d(allo.status_details, ['Issued - Active', 'Issued - s124 Continuance']) & (
         allo.take_type == 'Take Groundwater')]
@@ -148,7 +148,7 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
         return outdata
 
     outdata = get_base_well(model_id, org_pumping_wells)
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp))
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required))
     allo = allo.dropna(subset=['status_details'])
     allo = allo.loc[np.in1d(allo.status_details, ['Issued - Active', 'Issued - s124 Continuance']) & (
         allo.take_type == 'Take Groundwater')]

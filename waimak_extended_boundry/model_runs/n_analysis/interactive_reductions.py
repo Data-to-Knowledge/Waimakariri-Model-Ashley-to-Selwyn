@@ -246,7 +246,7 @@ if __name__ == '__main__':
     mapper = LinearColorMapper(palette="Plasma10", low=0, high=100)
     img = p.image(image='image', x=smt.ulx, y=y, dw=smt.cols * smt.grid_space, dh=smt.rows * smt.grid_space,
                   color_mapper=mapper, source=data_source,
-                  alpha=0.5)  # todo try to figure out different plotting levels
+                  alpha=0.5)
     color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
     p.add_layout(color_bar, 'right')
 
@@ -368,7 +368,6 @@ if __name__ == '__main__':
                       ])
 
     # save
-    # todo need legend
     output_file(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_target_reductions.html",
                 title="Northern Waimakariri Tribs Reductions")
 

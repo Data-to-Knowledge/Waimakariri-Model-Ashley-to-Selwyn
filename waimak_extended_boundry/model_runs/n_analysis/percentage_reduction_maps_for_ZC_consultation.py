@@ -14,15 +14,15 @@ import os
 from amount_landuse_change import get_percentages
 import pandas as pd
 
-outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_red_for_consult") #todo
-scenarios = ['preferred', 'alternate']  # note that the mode is defined for each scenario #todo
+outdir = (r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\n_red_for_consult")
+scenarios = ['preferred', 'alternate']  # note that the mode is defined for each scenario
 
 if __name__ == '__main__':
     t = time.time()
     # to add a new scenario I must update scenarios in get well targets, get stream targets, get waimak target and get mode
     # to plot run plot_reduction_rasters
     # to get area run amount_landuse_change
-    #todo the mode and setup for stream and well targets could be improved...
+    # the mode and setup for stream and well targets could be improved...
     make_components = False
     include_interzone = False
     if include_interzone:

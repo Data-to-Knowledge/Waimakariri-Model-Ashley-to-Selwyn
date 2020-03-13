@@ -41,5 +41,5 @@ if __name__ == '__main__':
                                          'interzone_50_red': gmp_cbc
                                          },
                               outdir=(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulatio"
-                                             r"ns and results\ex_bd_va\zc_n_sol" #todo I could change the output folder so that It is clear what is what
+                                             r"ns and results\ex_bd_va\zc_n_sol" 
                                              r"s\all_scens"))

@@ -8,7 +8,7 @@ from __future__ import division
 import env
 import numpy as np
 import pandas as pd
-from waimak_extended_boundry.extended_boundry_model_tools import smt, _get_constant_heads
+from waimak_extended_boundry.extended_boundry_model_tools import smt, get_constant_heads
 from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
 import geopandas as gpd
 
@@ -94,7 +94,7 @@ def gen_sfr_flux_target_array():
 
 
 def gen_constant_head_targets():  # watch if we have constant heads in the sw boundary also note that this is 3d
-    chbs = _get_constant_heads()
+    chbs = get_constant_heads()
     shp_path = "{}/m_ex_bd_inputs/shp/coastal_head_target_zones.shp".format(smt.sdp)
     zones = smt.shape_file_to_model_array(shp_path, 'Id', alltouched=True)
     zones[np.isnan(chbs[0])] = 0

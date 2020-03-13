@@ -16,7 +16,7 @@ import numpy as np
 import subprocess
 import netCDF4 as nc
 import shutil
-from env import sdp
+from env import sdp_required
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged
 from copy import deepcopy
@@ -337,7 +337,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)  # remove old files to prevent file mix ups
         m._set_name(name)
-        m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp)
+        m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp_required)
         units = deepcopy(m.output_units)
         for u in units:
             m.remove_output(unit=u)

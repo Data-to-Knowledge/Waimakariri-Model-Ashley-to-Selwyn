@@ -7,17 +7,12 @@ from __future__ import division
 import numpy as np
 import os
 from warnings import warn
-import pickle
 import flopy_mh as flopy
 from matplotlib.colors import from_levels_and_colors
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
 
-#todo try to get rid of flopy here
-# todo set up exceptions is required varibles are needed
-# todo look though new modeling and add any useful tools to this class e.g convergence check or something around bc overlap
-# todo document the shit out of this
 class ModelTools(object):
     ulx = None
     uly = None
@@ -51,7 +46,6 @@ class ModelTools(object):
         :param base_mod_path: the path to the base model (depreciated
         :param base_map_path: the path to a geotiff to allow underlaying it below plots
         """
-        #todo add a flopy.utils.SpatialReference object as an attriubte to this class with try/except
         self.rotation = rotation
         self.ulx = ulx
         self.uly = uly
@@ -65,9 +59,6 @@ class ModelTools(object):
         self._no_flow_calc = no_flow_calc
         self.temp_file_dir = temp_file_dir
         self.model_version_name = model_version_name
-        self.pickle_dir = '{}/pickled_files'.format(self.sdp)
-        if not os.path.exists(self.pickle_dir):
-            os.makedirs(self.pickle_dir)
         self.base_mod_path = base_mod_path
         self._elv_calculator = elv_calculator
         self.model_array_shape = (self.layers, self.rows, self.cols)
@@ -112,7 +103,7 @@ class ModelTools(object):
         else:
             return np.zeros((self.rows, self.cols))
 
-    def add_mxmy_to_df(self, df):  # todo make faster
+    def add_mxmy_to_df(self, df):
         """
         adds the x and y centroid of the cells to a dataframe with either row,col or i,j in the keys
         :param df:
@@ -208,7 +199,7 @@ class ModelTools(object):
             return lon, lat, elv
 
     def convert_coords_to_matix(self, lon, lat, elv=None, elv_db=None,
-                                return_AE=False):  # todo can this be made quicker vectorize this shit...
+                                return_AE=False):
         """
         convert from real world coordinates to model indexes by comparing value to center point of array.  Where the value
         is on an edge defaults to top left corner (e.g. row 1, col 1, layer 1)
@@ -233,7 +224,7 @@ class ModelTools(object):
             elv_db = self.calc_elv_db()
         # find the index of the closest middle point
         # convert lon to col
-        col = np.abs(model_xs[0, :] - lon).argmin()  # todo see if this is identical with the gdal process
+        col = np.abs(model_xs[0, :] - lon).argmin()
 
         # convert lat to row
         row = np.abs(model_ys[:, 0] - lat).argmin()
@@ -395,7 +386,6 @@ class ModelTools(object):
         :param kwargs: other kwargs passed to matplotlib.pcolor alpha is the only kwarg that is also passed to the background
         :return: fig, ax
         """
-        #todo interactive option?
         alpha = 1
         array = deepcopy(array.astype(float))
         if vmax is None:
@@ -454,7 +444,7 @@ class ModelTools(object):
             temp = np.zeros((self.rows, self.cols))
             temp[no_flow] = np.nan
             if plt_background:
-                cmap, norm = from_levels_and_colors([-1, -0.5, 1, 2], ['black', 'black', 'black']) #todo could pcolor be changed to imshow
+                cmap, norm = from_levels_and_colors([-1, -0.5, 1, 2], ['black', 'black', 'black'])
                 ax.pcolor(model_xs, model_ys, np.ma.masked_invalid(temp), cmap=cmap, alpha=alpha, edgecolors=edgecolors)
             array[~no_flow] = np.nan
         if 'cmap' in kwargs:
@@ -589,7 +579,7 @@ class ModelTools(object):
         return outdata
 
     def _layer_to_model_array(self, source_layer, attribute, alltouched=False,
-                              area_statistics=False, fine_spacing=10, resample_method='average'): #todo propogate these to upper level
+                              area_statistics=False, fine_spacing=10, resample_method='average'):
         """
         hidden function to convert a source layer to a rasterized np array
         :param source_layer: from either function above
@@ -634,7 +624,7 @@ class ModelTools(object):
                                     contributing pixels. (GDAL >= 2.0.0)
         :return:  np array of rasterized data
         """
-        from osgeo import gdal, osr #todo see if I can use tempfile for this probably tempfile.TemporaryDirectory  only in python 3
+        from osgeo import gdal, osr
         if not os.path.exists(self.temp_file_dir):
             os.makedirs(self.temp_file_dir)
 
@@ -793,7 +783,7 @@ class ModelTools(object):
                 if isinstance(layer_temp, list):
                     if one_val_per_well:
                         layer_temp = max(set(layer_temp),
-                                         key=layer_temp.count)  # todo it may be preferable to calculate a mid screen
+                                         key=layer_temp.count)
                     else:
                         layer_temp = list(set(layer_temp))
                 layer[i] = layer_temp
@@ -821,33 +811,23 @@ class ModelTools(object):
         else:
             return layer, row, col
 
-    def calc_elv_db(self, recalc=False):  # todo make this stored in the class so that it isn't loaded multple times
+    def calc_elv_db(self, recalc=False):
         """
         calculates the elevation database (bottoms with the top of layer one on top or loads pickel
         :param recalc: force recalculates the elv_db from the gns data even if it is not present
         :return: elv_db
         """
-        pickle_path = '{}/elv_dp.p'.format(self.pickle_dir)
-        if os.path.exists(pickle_path) and not recalc:
-            elv_db = pickle.load(open(pickle_path))
-        else:
-            elv_db = self._elv_calculator()
-            pickle.dump(elv_db, open(pickle_path, 'w'))
+        elv_db = self._elv_calculator()
         return elv_db
 
     def get_no_flow(self, layer=None, recalc=False):
-        pickle_path = '{}/no_flow.p'.format(self.pickle_dir)
-        if os.path.exists(pickle_path) and not recalc:
-            no_flow = pickle.load(open(pickle_path))
-        else:
-            no_flow = self._no_flow_calc()
-            pickle.dump(no_flow, open(pickle_path, 'w'))
+        no_flow = self._no_flow_calc()
         if layer is None:
             return no_flow
         else:
             return no_flow[layer]
 
-    def get_base_model(self, recalc=False):  # todo raise eception if model path not passed perhaps delete
+    def get_base_model(self, recalc=False):
         """
         This has not been used much perhaps depreciate
         :param recalc:
@@ -858,35 +838,6 @@ class ModelTools(object):
                                        forgive=False)
         return m
 
-    def get_package_spd(self, package, recalc=False):  # todo delete
-        """
-        this had not been used much perhaps depreciate
-        :param package:
-        :param recalc:
-        :return:
-        """
-        import pickle
-
-        picklepath = '{}/base_{}.p'.format(self.pickle_dir, package)
-
-        if os.path.exists(picklepath) and not recalc:
-            base_data = pickle.load(open(picklepath))
-            return base_data
-
-        org_m = self.get_base_model()
-        if package.lower in ['str', 'sfr', 'drn', 'wel']:
-            base_data = org_m.get_package().stress_period_data.data[0]
-        elif package.lower == 'rch':
-            raise NotImplementedError()  # todo
-        else:
-            raise ValueError('unexpected package {}, may not be implemented'.format(package))
-        pickle.dump(base_data, open(picklepath, 'w'))
-
-        return base_data
-
-        # #todo think about adding get stress period data... input the package names and pickle the file if needed so you don't always have to load the thing
-
-    # todo eventually handle the layer,col,row vs kij keys
     def convert_well_data_to_stresspd(self, well_data_in):
         """
         take a dataframe aggregates the wells and returns the well stress period data for the well package
@@ -905,12 +856,6 @@ class ModelTools(object):
         outdata = outdata.astype(flopy.modflow.ModflowWel.get_default_dtype())
         return outdata
 
-    # todo think about adding default model_maps
-
-
-    # todo add base map and cross section
-    # todo add elvation check
-    # todo add recalc_pickles
 
     def check_layer_overlap(self, required_overlap=0.50, top=None, bot=None, use_elv_db=False, layer=None,
                             return_min=False):

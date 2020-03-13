@@ -9,7 +9,7 @@ from waimak_extended_boundry.model_and_NSMC_build import m_packages
 import os
 import shutil
 from future.builtins import input
-from env import sdp
+from env import sdp_required
 from waimak_extended_boundry.extended_boundry_model_tools import smt
 
 def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, version=smt.model_version, mfv='mfnwt',n_car_dns=True):
@@ -43,9 +43,9 @@ def create_m_extended_boundry(name, dir_path, safe_mode=True, mt3d_link=False, v
 
     # create the model
     if mfv == 'mf2005':
-        ex = "{}/models_exes/mf2005.exe".format(sdp)
+        ex = "{}/models_exes/mf2005.exe".format(sdp_required)
     elif mfv == 'mfnwt':
-        ex = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp)
+        ex = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp_required)
     else:
         raise ValueError('unexpected modflow version {}'.format(mfv))
     m = flopy.modflow.Modflow(name, version=mfv, exe_name=ex, model_ws=dir_path)

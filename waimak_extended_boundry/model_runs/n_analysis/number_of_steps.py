@@ -233,7 +233,7 @@ def number_of_steps(step_reductions, pa_00, target_scheme):
 
     return outdata
 
-def run_scenarios(outdir): #todo run scenarios and make timelines # set max threshold to 100%
+def run_scenarios(outdir): #to run scenarios and make timelines # set max threshold to 100%
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     outdata = {}
@@ -288,7 +288,6 @@ def run_scenarios(outdir): #todo run scenarios and make timelines # set max thre
 
 
 if __name__ == '__main__':
-    #todo interzone not there...
     outdir = r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\number_of_steps"
     if True: # just a way to stop this from running
         summary = run_scenarios(outdir)

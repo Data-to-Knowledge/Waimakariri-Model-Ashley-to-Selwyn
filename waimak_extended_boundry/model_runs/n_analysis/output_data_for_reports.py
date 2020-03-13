@@ -16,7 +16,7 @@ from percentage_reduction_maps import wdc_wells, private_wells, streams, gen_str
 from glob import glob
 
 
-def output_current_pathways_table(data_path, outdir, prefix=''):  # todo
+def output_current_pathways_table(data_path, outdir, prefix=''):  # tod
     data = pd.read_csv(data_path, index_col=0, header=[0, 1])
 
     # see n waimak  but basically CMP, GMP, PC5PA, current pathways (half PC5PA)
@@ -261,7 +261,7 @@ if __name__ == '__main__':
         print('making current pathways table')
         output_current_pathways_table(
             r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\all_scens\waimakariri_zone\corrected_model_data\all_n_waimak_zone.csv",
-            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\summary_info")  # todo
+            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\zc_n_sols\summary_info")  # tod
 
         for data_path, prefix in zip(datapaths, prefixes):
             print('making future scenarios table for {}'.format(prefix))

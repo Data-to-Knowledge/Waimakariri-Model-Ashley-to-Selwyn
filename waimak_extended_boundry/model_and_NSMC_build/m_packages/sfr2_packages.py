@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import flopy_mh as flopy
 from Waimak_modeling_non_extended.model_tools.get_str_rch_values import get_base_str, get_base_seg_data, get_stream_seg_dict, aqualinc_seg_dict, get_base_drn_cells
-from env import sdp
+from env import sdp_required
 import geopandas as gpd
 from copy import deepcopy
 import pickle
@@ -205,7 +205,7 @@ def _seg_data_v1(recalc=False):
     seg_data['width2'][np.in1d(seg_data['nseg'],seg_dict['str_eyre_swaz'])] = 5.5  # set eyre width to 5.5 m from aqualinc
 
 
-    aq_data = pd.read_excel("{}\inputs\str_data_from_aqualinc.xlsx".format(sdp))
+    aq_data = pd.read_excel("{}\inputs\str_data_from_aqualinc.xlsx".format(sdp_required))
     aq_data = aq_data.set_index('Vaue')
     seg_aq_dict = aqualinc_seg_dict()
     # the aqualinc report suggests that the cust and the waimak vary substantially across their length, so I have set
@@ -246,7 +246,7 @@ def _get_base_stream_values():
     str_data = str_data[(~dup) | (str_data['reach'] == 1)]
 
     # add drain cells and additional cells that we need
-    temp_drn_data = gpd.read_file("{}/inputs/shp_files/num7_drn_to_str/drn_to_str.shp".format(sdp))
+    temp_drn_data = gpd.read_file("{}/inputs/shp_files/num7_drn_to_str/drn_to_str.shp".format(sdp_required))
     temp_drn_data = temp_drn_data[['elv', 'lat', 'lon', 'reach', 'xdata', 'ydata']]
     temp_drn_data = temp_drn_data.rename(columns={'xdata': 'j', 'ydata': 'i'})
     org_drn = pd.DataFrame(get_base_drn_cells())

@@ -86,7 +86,7 @@ def extract_all_stream_krig(data_path, outpath):
                      'missing_value': np.nan})
     depth[:] = range(smt.layers - 1)
 
-    proj = outfile.createVariable('crs', 'i1') #this works really well... #todo add to core
+    proj = outfile.createVariable('crs', 'i1') #this works really well...
     proj.setncatts({'grid_mapping_name': "transverse_mercator",
                     'scale_factor_at_central_meridian': 0.9996,
                     'longitude_of_central_meridian': 173.0,

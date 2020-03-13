@@ -9,30 +9,43 @@ from Model_Tools import ModelTools
 from osgeo.gdal import Open as gdalOpen
 import numpy as np
 import os
+import netCDF4 as nc
+
 
 layers, rows, cols = 11, 364, 365
 
-_mt = ModelTools('ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(env.sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers,
+_mt = ModelTools('ex_bd_va', sdp=env.sdp_required, ulx=1512162.53275, uly=5215083.5772, layers=layers,
                  rows=rows, cols=cols, grid_space=200, temp_file_dir=env.temp_file_dir, base_mod_path=None)
 
 
-def _elvdb_calc():
+def _elvdb_calc(recalc=False):
     """
     calculate the elevation database
     :return:
     """
-    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(env.sdp)).ReadAsArray()
+    if not recalc:
+        temp = nc.Dataset(os.path.join(env.sdp_required,'elv_db.nc'))
+
+        elv_db  = np.concatenate((
+            np.array(temp.variables['top'])[np.newaxis,:],
+            np.array(temp.variables['bottom'])
+        ))
+        return elv_db
+
+    raise NotImplementedError('the following code has been depreciated and is left for documentation purposes only')
+
+    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(env.sdp_required)).ReadAsArray()
     top[np.isclose(top, -3.40282306074e+038)] = 0
 
     # quickly smooth the dem near the top of the waimakariri (that gorge)
-    top_smooth = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/DEM_smoother.tif".format(env.sdp)).ReadAsArray()
+    top_smooth = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/DEM_smoother.tif".format(env.sdp_required)).ReadAsArray()
     top_smooth[np.isclose(top_smooth, -3.40282306074e+038)] = 0
     top += top_smooth/2
 
 
     # bottoms
     # layer 0
-    bot0 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(env.sdp)).ReadAsArray()
+    bot0 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(env.sdp_required)).ReadAsArray()
     idx = np.isclose(bot0, -3.40282306074e+038)
     bot0[idx] = top[idx] - 10 #set nan values to 10 m thick.  all these are out of the no-flow bound
 
@@ -95,20 +108,30 @@ def _get_basement():
     get the model basement
     :return:
     """
-    basement = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/basement2.tif".format(env.sdp)).ReadAsArray()
+
+    raise NotImplementedError('the following code has been depreciated and is left for documentation purposes only')
+
+    basement = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/basement2.tif".format(env.sdp_required)).ReadAsArray()
     basement[np.isclose(basement, 9999999)] = np.nan
     basement = basement[1:,:]
     basement2 = np.concatenate((basement[:,:], np.repeat(basement[:, -1][:, np.newaxis], 33, axis=1)), axis=1)
     return basement2
 
 
-def _no_flow_calc():
+def _no_flow_calc(recalc=False):
     """
     calculate the ibound
     :return:
     """
+    if not recalc:
+        temp = nc.Dataset(os.path.join(env.sdp_required, 'no_flow.nc'))
+        no_flow=np.array(temp.variables['ibound'])
+        return no_flow
+
+    raise NotImplementedError('the following code has been depreciated and is left for documentation purposes only')
+
     no_flow = np.zeros((_mt.rows,_mt.cols))
-    outline = _mt.shape_file_to_model_array("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/new_active_domain.shp".format(env.sdp),'DN',True)
+    outline = _mt.shape_file_to_model_array("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/new_active_domain.shp".format(env.sdp_required), 'DN', True)
     no_flow[np.isfinite(outline)] = 1
 
     no_flow = np.repeat(no_flow[np.newaxis,:,:],_mt.layers, axis=0)
@@ -142,18 +165,25 @@ def _no_flow_calc():
 
 
     #set constant heads  to -1
-    constant_heads = _get_constant_heads()
+    constant_heads = get_constant_heads()
     no_flow[np.isfinite(constant_heads)] = -1
     no_flow[(np.isclose(constant_heads, -999))] = 1
 
     return no_flow
 
 
-def _get_constant_heads():
+def get_constant_heads(recalc=False):
     """
     get teh constant heads values
     :return:
     """
+
+    if not recalc:
+        temp = nc.Dataset(os.path.join(env.sdp_required, 'chbs.nc'))
+        chbs=np.array(temp.variables['chb'])
+        return chbs
+
+    raise NotImplementedError('the following code has been depreciated and is left for documentation purposes only')
 
     temp_c_heads_down = np.zeros((_mt.rows,_mt.cols)) * np.nan
     outdata = np.zeros((_mt.layers, _mt.rows, _mt.cols))*np.nan
@@ -216,10 +246,10 @@ def _get_constant_heads():
 
 
 smt = ModelTools(
-    'ex_bd_va', sdp='{}/ex_bd_va_sdp'.format(env.sdp), ulx=1512162.53275, uly=5215083.5772, layers=layers, rows=rows,
+    'ex_bd_va', sdp=env.sdp_required, ulx=1512162.53275, uly=5215083.5772, layers=layers, rows=rows,
     cols=cols, grid_space=200, no_flow_calc=_no_flow_calc, temp_file_dir=env.temp_file_dir, elv_calculator=_elvdb_calc,
     base_mod_path=None,
-    base_map_path=env.sci(r"D:\ecan_data\Waimakariri\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\topo250small.tif")
+    base_map_path=os.path.join(env.sdp_required,'topo250small.tif')
 )
 
 # quick versioning
@@ -230,13 +260,26 @@ if model_version == 'a':
     smt.sfr_version, smt.seg_v, smt.reach_v = 1, 1, 1
     smt.k_version = 1
     smt.wel_version = 1
-smt.temp_pickle_dir = os.path.join(smt.pickle_dir,'temp_pickle_dir')
+smt.temp_pickle_dir = os.path.join(env.temp_file_dir,'temp_pickle_dir')
 
 
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    temp = np.zeros(smt.model_array_shape)
-    smt.plt_matrix(temp[0], base_map=True,alpha=0.5,title=0.5)
-    smt.plt_matrix(temp[0], base_map=True,alpha=1,title=1)
+    elv_db = _elvdb_calc()
+    no_flow = _no_flow_calc()
+    chbs = get_constant_heads()
+
+    for o, nm in zip([elv_db,no_flow], ['elv_db','no_flow']):
+        for k in range(o.shape[0]):
+            smt.plt_matrix(o[k],base_map=True,no_flow_layer=None, title='{}_{}'.format(nm,k))
+    smt.plt_matrix(chbs,base_map=True,no_flow_layer=None, title='chbs')
     plt.show()
+
+    #checked elv_db
+    #checked no_flow
+    #checked chbs
+    #checked smt loosely, but functions should not have been affected
+
+
+    pass

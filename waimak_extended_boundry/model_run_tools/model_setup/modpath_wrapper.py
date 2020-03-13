@@ -7,7 +7,7 @@ Date Created: 4/12/2017 3:06 PM
 from __future__ import division
 import flopy_mh as flopy
 import numpy as np
-from env import sdp
+from env import sdp_required
 import os
 from waimak_extended_boundry import smt
 from base_modflow_wrapper import import_gns_model
@@ -88,7 +88,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
         flopy.modflow.ModflowUpw(m)
 
     mp = flopy.modpath.Modpath(modelname=mp_name,
-                               exe_name="{}/models_exes/modpath.6_0/bin/mp6.exe".format(sdp), #todo this needs to be fixed
+                               exe_name="{}/models_exes/modpath.6_0/bin/mp6.exe".format(sdp_required),  #todo this needs to be fixed
                                modflowmodel=m,
                                model_ws=mp_ws,
                                listunit=6,

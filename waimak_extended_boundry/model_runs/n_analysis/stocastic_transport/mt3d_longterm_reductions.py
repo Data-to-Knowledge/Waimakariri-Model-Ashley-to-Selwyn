@@ -50,5 +50,5 @@ if __name__ == '__main__':
                                       r"ns and results\ex_bd_va\zc_n_sol"
                                       r"s\long_scens"))
 
-    if data_to_report_format: #todo make it easy to pull out the data in the report formats
+    if data_to_report_format:
         raise NotImplementedError

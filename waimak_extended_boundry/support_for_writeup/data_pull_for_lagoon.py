@@ -12,7 +12,7 @@ import pandas as pd
 if __name__ == '__main__':
     m = get_model('NsmcBase')
     #row,col = smt.convert_coords_to_matix(1575962,5203005) # for lagoon
-    row,col = smt.convert_coords_to_matix(1556717,5193196) # for infiltration test #todo
+    row,col = smt.convert_coords_to_matix(1556717,5193196) # for infiltration test
     elv_db = smt.calc_elv_db()
 
     outdata = pd.DataFrame(index=range(11))

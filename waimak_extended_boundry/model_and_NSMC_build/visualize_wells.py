@@ -10,13 +10,13 @@ import pandas as pd
 from waimak_extended_boundry.extended_boundry_model_tools import _mt, _elvdb_calc
 from osgeo.gdal import Open as gdalOpen
 import numpy as np
-from env import sdp
+from env import sdp_required
 
 def well_depth_base_layer_1(targets):
-    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(sdp)).ReadAsArray()
+    top = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/tops.tif".format(sdp_required)).ReadAsArray()
     top[np.isclose(top, -3.40282306074e+038)] = 0
 
-    bottom_layer1 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(sdp)).ReadAsArray()
+    bottom_layer1 = gdalOpen("{}/ex_bd_va_sdp/m_ex_bd_inputs/shp/layering/base_layer_1.tif".format(sdp_required)).ReadAsArray()
     idx = np.isclose(bottom_layer1, -3.40282306074e+038)
     bottom_layer1[idx] = top[idx] - 10 #set nan values to 10 m thick.  all these are out of the no-flow bound
     elv = _elvdb_calc()

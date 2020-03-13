@@ -144,7 +144,7 @@ def get_pa_reductions(conservative_zones, inc_interzone=False):
         outdata[key] = data.loc[key, 'pa_increase']
 
     if inc_interzone:
-        raise NotImplementedError #todo
+        raise NotImplementedError #tod
 
     for key in outdata.keys():
         outdata[key] *= 0.5  # current pathways estmates a rough uptake of 50%

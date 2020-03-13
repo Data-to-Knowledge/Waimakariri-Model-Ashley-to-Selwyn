@@ -9,7 +9,7 @@ from Waimak_modeling_non_extended.model_tools.well_values import get_race_data, 
 from waimak_extended_boundry import smt
 import pandas as pd
 import numpy as np
-from env import sdp
+from env import sdp_required
 #from core.ecan_io import rd_sql, sql_db
 import os
 import pickle
@@ -550,7 +550,7 @@ def _get_s_wai_wells(subversion=1):
 
     elif subversion == 0:
 
-        allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp), index_col='crc')
+        allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required), index_col='crc')
 
         # option 2
         end_time = pd.datetime(2016, 12, 31)
@@ -641,7 +641,7 @@ def _check_chch_wells():
     some well checks
     :return:
     """
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp), index_col='crc')
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required), index_col='crc')
 
     # option 2
     end_time = pd.datetime(2016, 12, 31)
@@ -686,7 +686,7 @@ def _check_waimak_wells():
     some well checks
     :return:
     """
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp), index_col='crc')
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required), index_col='crc')
 
     # option 2
     end_time = pd.datetime(2016, 12, 31)
@@ -815,7 +815,7 @@ def add_use_type(data):
     :return:
     """
     data = deepcopy(data)
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp))
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required))
     allo = allo.set_index('wap')
     data.loc[:, 'use_type'] = 'injection'
     for i in data.loc[data.type == 'well'].index:
@@ -861,7 +861,7 @@ if __name__ == '__main__':
     new = _get_wel_spd_v3(recalc=True)
 
     n_wells_new = _check_waimak_wells()
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp), index_col='crc')
+    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required), index_col='crc')
     chch_wells = _check_chch_wells()
     n_wells = get_nwai_wells()
     s_wells_all = _get_s_wai_wells()

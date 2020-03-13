@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # to add a new scenario I must update scenarios in get well targets, get stream targets, get waimak target and get mode
     # to plot run plot_reduction_rasters
     # to get area run amount_landuse_change
-    #todo the mode and setup for stream and well targets could be improved...
+    # the mode and setup for stream and well targets could be improved...
     make_components = False
     include_interzone = False
     if include_interzone:

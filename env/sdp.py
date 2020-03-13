@@ -8,49 +8,13 @@ from env.env_paths import  sci, transfers
 import os
 import socket
 
-sdp = sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/supporting_data_for_scripts")
+# todo document this when it is all said and done
+sdp_required = r"D:\Waimakariri_model_input_data\required"
 
-results_dir = sci("Groundwater/Waimakariri/Groundwater/Numerical GW model/Model simulations and results")
+sdp_recommended = r"D:\Waimakariri_model_input_data\recommended"
+
+temp_file_dir =r"C:\Users\Matt Hanson\Downloads\temp_waimak_files"
 
 
-temp_file_dir = transfers("Temp/temp_gw_files")
 if not os.path.exists(temp_file_dir):
     os.makedirs(temp_file_dir)
-
-_comp = socket.gethostname()
-
-if _comp == 'HP1639':
-    base_mod_dir = "C:/Users/MattH/Desktop/Waimak_modeling_non_extended/python_models"
-    base_mod_dir2 = base_mod_dir
-elif _comp == 'DHI-Runs02':
-    base_mod_dir = "D:/mattH/python_wm_runs"
-    base_mod_dir2 = "E:/python_wai_models" # to handle a second drive on DHI-Runs 02
-elif _comp == 'GWATER02':
-    base_mod_dir = "D:/mh_waimak_models"
-    base_mod_dir2 = base_mod_dir
-elif _comp == 'RDSProd03':
-    base_mod_dir = r"C:\Users\matth\Desktop\base_mod"
-    base_mod_dir2 = base_mod_dir
-elif _comp == 'Desktop':
-    base_mod_dir = r"C:\matt_modelling_unbackedup"
-    base_mod_dir2 = base_mod_dir
-else:
-    raise ValueError('unidentified machine {} no default path for models'.format(_comp))
-
-
-def get_org_mod_path(model='m_strong_vert'):
-    """
-    a function to keep track of all our model versions
-    :param model: the model to select (see keys below) defaults to m_strong_vert to ensure backwards compatability for
-                  runs
-    :return: path to the model (excluding extension)
-    """
-    paths = {
-        'm_flooded': "{}/from_GNS/m_flooded/BH_OptMod_Flow".format(sdp),
-        'm_strong_vert': '{}/from_GNS/m_strong_vert/native_mf/BH20170502_m2/BH20170210_bh0501'.format(sdp),
-        'm_relax_vert': "{}/from_GNS/m_relax_vert/native_mf/AWFlow20170502_m3_origtxt/BH20170210_bh0501".format(sdp)
-    }
-    if model not in paths.keys():
-        raise ValueError('model {} not defined'.format(model))
-
-    return paths[model]
