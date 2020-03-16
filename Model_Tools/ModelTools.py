@@ -368,6 +368,9 @@ class ModelTools(object):
         band.FlushCache()
         band.SetNoDataValue(-99)
 
+    def plt_show(self):
+        plt.show()
+
     def plt_matrix(self, array, vmin=None, vmax=None, title=None, no_flow_layer=0, ax=None, color_bar=True,
                    base_map=False, plt_background=True, cbar_lab=None, **kwargs):
         """

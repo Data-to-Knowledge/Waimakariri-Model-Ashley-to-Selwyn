@@ -5,13 +5,9 @@ Date Created: 7/09/2017 2:23 PM
 """
 
 from __future__ import division
-import env
 import flopy_mh as flopy
-import pickle
-from waimak_extended_boundry import smt
+from waimak_extended_boundry import smt, loaded_model_realisation_dir
 import os
-from warnings import warn
-from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import _get_wel_spd_v1, _get_wel_spd_v2
 import numpy as np
 import subprocess
 import netCDF4 as nc
@@ -20,11 +16,12 @@ from env import sdp_required
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged
 from copy import deepcopy
-#todo oh god this one is big!!!!
+import pandas as pd
+
 temp_pickle_dir=None #todo manage
 
 
-def get_base_well(model_id, org_pumping_wells, recalc=False):
+def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
     """
     applies the NSMC pumping mulitpliers
     :param model_id: the NSMC realisation
@@ -32,19 +29,11 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
     :param recalc: usual recalc
     :return:
     """
+    well_path = os.path.join(sdp_required,'base_well_data.hdf')
     if org_pumping_wells:
-        org = 'model_period_pumping'
+        all_wells = pd.read_hdf(well_path,'model_period') # usage for the model period as passed to the optimisation
     else:
-        org = '14-15_pumping_waimak'
-    pickle_path = "{}/model_{}_base_wells_{}.p".format(temp_pickle_dir, model_id, org)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = pickle.load(open(pickle_path))
-        return outdata
-
-    if org_pumping_wells:
-        all_wells = _get_wel_spd_v1()  # usage for the model period as passed to the optimisation
-    else:
-        all_wells = _get_wel_spd_v2()  # usage for 2014/2015 period in waimak zone
+        all_wells = pd.read_hdf(well_path,'2014_2015_period')  # usage for 2014/2015 period in waimak zone
 
     all_wells.loc[:, 'nsmc_type'] = ''
 
@@ -77,29 +66,9 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
     for group in add_groups:
         all_wells.loc[all_wells.nsmc_type == group, 'flux'] = multipliers.loc[group, 'value'] / (
             all_wells.nsmc_type == group).sum()
-    pickle.dump(all_wells, open(pickle_path, 'w'))
     return all_wells
 
-
-def get_base_rch(model_id, recalc=False):
-    """
-    loads the rch from the model and saves as a pickle for faster use # depreciated
-    :param model_id: the model realisation to use
-    :param recalc: False
-    :return:
-    """
-    pickle_path = "{}/model_{}_base_rch.p".format(temp_pickle_dir, model_id)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        rch = pickle.load(open(pickle_path))
-        return rch
-
-    m = get_model(model_id)
-    rch = m.rch.rech.array[0, 0, :, :]
-    pickle.dump(rch, open(pickle_path, 'w'))
-    return rch
-
-
-def get_rch_multipler(model_id):
+def get_rch_multipler(model_id): #todo check
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
@@ -108,9 +77,7 @@ def get_rch_multipler(model_id):
     model_ws = os.path.dirname(get_model_name_path(model_id))
     rch_mult_path = os.path.join(model_ws, 'recharge_mul.ref')
     if not os.path.exists(rch_mult_path):
-        model_ws = os.path.splitunc(model_ws)[1].replace('/SCI',
-                                                         'P:/')  # for now assuming that SCI is mapped to P drive could fix in future
-        exe_path = r"P:/Groundwater/Matt_Hanson/model_exes/fac2real.exe"
+        exe_path = os.path.join(sdp_required, "base_for_nsmc_real/fac2real.exe")
         test = subprocess.call(exe_path + ' < fac2real_rech.in', cwd=model_ws, shell=True)
         print(test)
 
@@ -122,19 +89,21 @@ def get_rch_multipler(model_id):
     return outdata
 
 
-def get_model_name_path(model_id):
+def get_model_name_path(model_id): #todo test
     """
-    get the path to a model_id base model
-    # !!!model id needs to be non-numeric (start with a letter) and does not contain an '_' !!!!
-    :param model_id:
+    get the path to a model_id base model only NSMCs are currently supported e.g. 'NsmcReal{nsmc_num:06d}'
+
+    if used for future modelling any new model id needs to be non-numeric
+    (start with a letter) and does not contain an '_'
+    :param model_id: model identifier 'NsmcReal{nsmc_num:06d}'
     :return:
     """
     # new model check the well package, check the sfr package and run new_model_run
 
-    if model_id in ['test', 'opt', 'NsmcBaseB', 'VertUnstabA', 'VertUnstabB']:
-        warn('model {} is depreciated'.format(model_id))
+    model_dict = {}
 
-    model_dict = {
+    old_model_id = {
+        # this is here to support documentation in the future if needed
         # a place holder to test the scripts
         'test': r"C:\Users\MattH\Desktop\Waimak_modeling\ex_bd_tester\test_import_gns_mod\mf_aw_ex.nam",
 
@@ -182,9 +151,10 @@ def get_model_name_path(model_id):
     return name_path
 
 
-def _get_nsmc_realisation(model_id, save_to_dir=False):
+def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
     """
-    wrapper to get model from a NSMC realisation
+    wrapper to get model from a NSMC realisation saving the model takes c. 1.2 gb per model this includes many
+    duplicate files, but some  are used for additional functions
     :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
     :param save_to_dir: boolean if true save a copy of the model for quicker reteval in the dir specified below
     :param temp_int: a temp interger to make unique temporaty files only needed to handle multiprocessing applications
@@ -192,22 +162,27 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
     """
     assert 'NsmcReal' in model_id, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
     assert len(model_id) == 14, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
-    base_converter_dir = "{}/base_for_nsmc_real".format(smt.sdp)
+    base_converter_dir = os.path.join(sdp_required, "base_for_nsmc_real")
     # check if the model has previously been saved to the save dir, and if so, load from there
-    save_dir = env.gw_met_data("mh_modeling/nsmc_loaded_realisations_TEMP2") #changed for time approximation
+    save_dir = loaded_model_realisation_dir
+    if save_dir is None:
+        raise ValueError('loaded model realisation dir is NONE, please set in waimak_extended_boundry/extended_boundry_model_tools.py')
+
     converter_dir = os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+
+    # load from saved version if possible
     if os.path.exists(os.path.join(save_dir, '{}_base'.format(model_id),'{}_base.hds'.format(model_id))):
         name_file_path = os.path.join(save_dir, '{}_base'.format(model_id), '{m}_base.nam'.format(m=model_id))
         m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False, check=False)
         return m
 
-    # copy the orginal converter dir to the temporary working dir
+    # copy the base converter dir to the temporary converter dir
     shutil.copytree(base_converter_dir, converter_dir)
 
     nsmc_num = int(model_id[-6:])
-    param_data = nc.Dataset(env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\nsmc_params_obs_metadata.nc"))
+    param_data = nc.Dataset(os.path.join(sdp_required,"nsmc_params_obs_metadata.nc"))
     param_idx = np.where(np.array(param_data.variables['nsmc_num']) == nsmc_num)[0][0]
 
     print('writing data to parameter files')
@@ -310,7 +285,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
 
     # run model.bat
     print('running model.bat')
-    cwd = os.path.splitunc(converter_dir)[1].replace('/SCI', 'P:/')
+    cwd = converter_dir
     # for now assuming that SCI is mapped to P drive could fix in future
 
     p = subprocess.Popen([os.path.join(cwd, "model.bat")], cwd=cwd, shell=True)
@@ -331,7 +306,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
     if save_to_dir:
         name = '{}_base'.format(model_id)
         dir_path = os.path.join(save_dir, name)
-        print('saving model to holding dir'.format(dir_path))
+        print('saving model to holding dir: {}'.format(dir_path))
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)  # remove old files to prevent file mix ups
         m._set_name(name)
@@ -366,7 +341,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
 def get_model(model_id, save_to_dir=False):
     """
     load a flopy model instance of the model id
-    :param model_id:
+    :param model_id: "NsmcReal{nsmc_num:06d}"
     :param save_to_dir: boolean only for nsmc realisations save the model to dir?
     :return: m flopy model instance
     """
@@ -428,13 +403,5 @@ def get_stocastic_set(return_model_ids=True):
     else:
         return nsmc_nums
 if __name__ == '__main__':
-    import pandas as pd
-    # tests
-    m=get_model('NsmcBase')
-    reach = pd.DataFrame(m.sfr.reach_data)
-    reach = smt.add_mxmy_to_df(reach)
-    reach.to_csv(
-        r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\raw_sw_samp_points\sfr\all_sfr.csv")
 
-    print(m)
     print('done')

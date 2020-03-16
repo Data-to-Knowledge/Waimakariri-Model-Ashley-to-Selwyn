@@ -16,7 +16,7 @@ from waimak_extended_boundry.model_run_tools.model_bc_data.wells import \
 import pandas as pd
 from warnings import warn
 from traceback import format_exc
-
+from env import sdp_required
 
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 ssm_crch=None, ssm_stress_period_data=None,
@@ -115,8 +115,8 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              ftlfilename=ftl_name,
                              ftlfree=True,  # formatted FTL to handle bug
                              version='mt3d-usgs',
-                             exe_name="{}/models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
-                                      "mt3d-usgs-1.0.exe".format(os.path.dirname(smt.sdp)), #todo fix this for dataset
+                             exe_name=os.path.join(sdp_required, "models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
+                                      "mt3d-usgs-1.0.exe"),
                              structured=True,
                              # defualt probably fine, though a point of weakness I don't know what it is
                              listunit=500,

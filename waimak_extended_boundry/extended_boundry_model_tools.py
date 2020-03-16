@@ -252,6 +252,8 @@ smt = ModelTools(
     base_map_path=os.path.join(env.sdp_required,'topo250small.tif')
 )
 
+loaded_model_realisation_dir = None #todo this must be set before running models
+
 # quick versioning
 model_version = 'a'
 

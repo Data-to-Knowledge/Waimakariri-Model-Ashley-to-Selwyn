@@ -8,20 +8,26 @@ from waimak_extended_boundry import smt
 import numpy as np
 import pickle
 import os
+import netCDF4 as nc
+from env import sdp_required
 
-
-def get_zone_array_index(zones, recalc=False): #todo manage data
+def get_zone_array_index(zones, recalc=False):
     """
     returns a boolean array with true for the zones listed
     :param zones: one or more of chch, waimak, selwyn, inland_waimak, coastal_waimak
     :return:
     """
-    pickle_path = os.path.join(smt.pickle_dir, 'cwms_zone_arrays.p')
 
     zones = np.atleast_1d(zones)
-    if os.path.exists(pickle_path) and not recalc:
-        zones_idx_dict = pickle.load(open(pickle_path))
+    if not recalc:
+        zones_idx_dict ={}
+        data = nc.Dataset(os.path.join(sdp_required, 'cwms_zones.nc'))
+        for k in data.variables.keys():
+            if k in ['crs', 'latitude', 'longitude']:
+                continue
+            zones_idx_dict[k] = np.array(data.variables[k]).astype(bool)
     else:
+        raise NotImplementedError('this is here for documentation purposes only')
         zone_dict = {'waimak': 4, 'chch': 7, 'selwyn': 8}
         new_no_flow = smt.get_no_flow()
         zones_idx = smt.shape_file_to_model_array("{}/m_ex_bd_inputs/shp/cwms_zones.shp".format(smt.sdp), 'ZONE_CODE')
@@ -39,6 +45,8 @@ def get_zone_array_index(zones, recalc=False): #todo manage data
         temp_idx = (zones_idx==1) & zones_idx_dict['waimak']
         zones_idx_dict['inland_waimak'] = temp_idx
         pickle.dump(zones_idx_dict, open(pickle_path, 'w'))
+
+
     out_idx = np.zeros((smt.rows,smt.cols))
     for key in zones:
         out_idx += zones_idx_dict[key]
@@ -48,5 +56,7 @@ def get_zone_array_index(zones, recalc=False): #todo manage data
 
 
 if __name__ == '__main__':
-    test = get_zone_array_index('waimak')
+    test = get_zone_array_index('chch')
+    smt.plt_matrix(test)
+    smt.plt_show()
     print('done')

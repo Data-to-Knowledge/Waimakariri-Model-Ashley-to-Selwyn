@@ -88,7 +88,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
         flopy.modflow.ModflowUpw(m)
 
     mp = flopy.modpath.Modpath(modelname=mp_name,
-                               exe_name="{}/models_exes/modpath.6_0/bin/mp6.exe".format(sdp_required),  #todo this needs to be fixed
+                               exe_name=os.path.join(sdp_required,"models_exes/modpath.6_0/bin/mp6.exe"),
                                modflowmodel=m,
                                model_ws=mp_ws,
                                listunit=6,
