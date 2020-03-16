@@ -6,22 +6,16 @@ Date Created: 21/07/2017 10:44 AM
 from __future__ import division
 import env
 import pandas as pd
-import numpy as np
-#from core.ecan_io import rd_sql, sql_db
-from waimak_extended_boundry import smt
-import geopandas as gpd
-#import rasterio
 import os
-from future.builtins import input
 
 
-#todo make this dataset avaible
-def get_all_well_row_col(recalc=False):
-    save_path = '{}/all_wells_row_col_layer2.csv'.format(smt.sdp)
+def get_all_well_row_col(recalc=False): #todo test
+    save_path = os.path.join(env.sdp_required,'all_wells_row_col_layer2.hdf')
     if os.path.exists(save_path) and not recalc:
         out_data = pd.read_csv(save_path,index_col=0)
         return out_data
 
+    raise NotImplementedError('below is here only for documentation')
     cont = input('are you sure you want to calculate all wells layer, row, col this takes several hours:\n {} \n continue y/n\n').lower()
     if cont != 'y':
         raise ValueError('script aborted')
