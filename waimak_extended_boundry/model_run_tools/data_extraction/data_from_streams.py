@@ -14,6 +14,8 @@ import glob
 from waimak_extended_boundry import smt
 from data_at_wells import _get_kstkpers, unc_no_data
 from warnings import warn
+import netCDF4 as nc
+from env import sdp_required
 
 
 def get_flux_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None, skip_1_sfr=True):
@@ -322,7 +324,7 @@ def _get_flux_flow_arrays(site, sw_samp_pts_dict, sw_samp_pts_df):
     return drn_array, sfr_array
 
 
-def get_samp_points_df(recalc=False): #todo update from new dataset
+def get_samp_points_df(recalc=False): #todo test when I get the env sorted
     """
     generate a dataframe with useful info about sampling points
     bc_type: drn or sfr, comb
@@ -335,11 +337,12 @@ def get_samp_points_df(recalc=False): #todo update from new dataset
     """
     # create a dataframe linking identifiers with key information
     # (e.g. sfr vs drain, flow point, flux point, swaz, etc, number of sites.)
-    pickle_path = "{}/sw_samp_pts_info.p".format(smt.pickle_dir)
-    if os.path.exists(pickle_path) and not recalc:
-        outdata = pickle.load(open(pickle_path))
+    hdf_path = os.path.join(sdp_required,'sw_samp_points_df.hdf')
+    if not recalc:
+        outdata = pd.read_hdf(hdf_path,'sw points')
         return outdata
 
+    raise NotImplementedError('below is only for documentation purposes')
     outdata = pd.DataFrame(columns=['bc_type', 'm_type', 'n', 'comps'])
 
     identifiers = {
@@ -422,7 +425,7 @@ def get_samp_points_df(recalc=False): #todo update from new dataset
     return outdata
 
 
-def _get_sw_samp_pts_dict(recalc=False): # todo redo to avoid pickle and manage databases
+def _get_sw_samp_pts_dict(recalc=False):
     """
     gets a dictionary of boolean arrays for each sampling point.  These are ultimately derived from shape files, but
     if possible this function will load a pickled dictionary
@@ -430,11 +433,17 @@ def _get_sw_samp_pts_dict(recalc=False): # todo redo to avoid pickle and manage 
                    will be calculated from all avalible shapefiles (in base_shp_path)
     :return: dictionary {location: masking array}
     """
-    pickle_path = "{}/sw_samp_pts_dict.p".format(smt.pickle_dir)
-    if os.path.exists(pickle_path) and not recalc:
-        sw_samp_pts = pickle.load(open(pickle_path))
+    if not recalc:
+
+        sw_samp_pts ={}
+        data = nc.Dataset(os.path.join(sdp_required, 'sw_samp_dict.nc'))
+        for k in data.variables.keys():
+            if k in ['crs', 'latitude', 'longitude']:
+                continue
+            sw_samp_pts[k] = np.array(data.variables[k]).astype(bool)
         return sw_samp_pts
 
+    raise NotImplementedError('below is for documentation purposes only')
     # load all shapefiles in base_shp_path
     base_shp_path = "{}/m_ex_bd_inputs/raw_sw_samp_points/*/*/*.shp".format(smt.sdp)
     temp_lst = glob.glob(base_shp_path)
@@ -451,13 +460,15 @@ def _get_sw_samp_pts_dict(recalc=False): # todo redo to avoid pickle and manage 
     return sw_samp_pts
 
 
-def _make_swaz_drn_points(): #todo this should be minimized.
+def _make_swaz_drn_points():
     """
     a function to make the swaz points from previous data
     :return:
     """
     # only run one set
     import geopandas as gpd
+
+    raise NotImplementedError('depreciated')
     paths = [
         "{}/m_ex_bd_inputs/raw_sw_samp_points/drn/non_carpet_drains.shp".format(smt.sdp),
         "{}/m_ex_bd_inputs/raw_sw_samp_points/drn/carpet_drains.shp".format(smt.sdp)
@@ -472,21 +483,7 @@ def _make_swaz_drn_points(): #todo this should be minimized.
 
 if __name__ == '__main__':
     # tests
-    test_type = 1
-    if test_type == 0:
-        test = get_samp_points_df()
-        print('done')
-    elif test_type == 1:
-        test = get_samp_points_df(True)
-        test.to_csv(r"C:\Users\MattH\Downloads\current_str_sites.csv")
-        print('recalculated samp_df')
-    elif test_type == 2:
+    test = _get_sw_samp_pts_dict()
+    test2 = get_samp_points_df()
 
-        test = get_con_at_str(sites=['ashley_sh1', 'sfr_bottom_cust', 'kaiapoi_nroad', 'kaiapoi_harpers_s'],
-                              ucn_file_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_ucnrepo\mt_aw_ex_mednload_7.ucn",
-                              sobs_path=r"K:\mh_modeling\data_from_gns\median_n\MedNload_sobsrepo\mt_aw_ex_mednload_7.sobs",
-                              cbc_path=r"K:\mh_modeling\data_from_gns\cbcrepo\mf_aw_ex_7.cbc",
-                              sfo_path=r"K:\mh_modeling\data_from_gns\sforepo\mf_aw_ex_7.sfo",
-                              kstpkpers=None,
-                              rel_kstpkpers=-1)
-        print(test)
+    print(test)
