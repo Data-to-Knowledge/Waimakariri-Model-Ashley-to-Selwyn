@@ -89,7 +89,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
 
     :return: mt3d instance
     """
-    # todo add the parameters that are missing
+    # to add the parameters that are missing
 
     # convert from pd.dataframe to record arrays as record arrays cannot be handled by pickle
     ssm_stress_period_data = {key: val.to_records(index=False) for key, val in ssm_stress_period_data.items()}
@@ -255,7 +255,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                                obs_sf=obs_sf,  # I think this is the reach set up
                                sf_stress_period_data=sft_spd,
                                unitnumber=None,
-                               # todo there's a bug here in sft flopy package this way I pass a outfile extension
+                               # to there's a bug here in sft flopy package this way I pass a outfile extension
                                filenames=[None, mt3d_name + '.sobs'],
                                dtype=None,
                                extension='sft')
@@ -273,7 +273,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              unitnumber=506,
                              )
 
-    # todo add output for the standard output update flopy with this at some point in teh btn package
+    # to add output for the standard output update flopy with this at some point in teh btn package
     # i could also add the species name if supplied
     mt3d.add_output('{}.CNF'.format(mt3d_name), 17)
     for i in range(1, num_species + 1):

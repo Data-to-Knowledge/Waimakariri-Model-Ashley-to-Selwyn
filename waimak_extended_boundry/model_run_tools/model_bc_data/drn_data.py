@@ -4,15 +4,11 @@ Author: matth
 Date Created: 26/10/2017 3:22 PM
 """
 from __future__ import division
-from waimak_extended_boundry.model_and_NSMC_build.m_packages.drn_packages import _get_drn_spd
-from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools import \
-    mod_gns_model, get_model, get_race_data
 import numpy as np
 import os
-import pickle
 import pandas as pd
 from env import sdp_required
+import netCDF4 as nc
 
 def get_base_drn_spd(ncars=True):#todo test
     """
@@ -28,30 +24,51 @@ def get_base_drn_spd(ncars=True):#todo test
         drn_data = pd.read_hdf(data_path,'drn_without_n_car')
     return drn_data
 
+def _get_drn_cond(model_id):
+    """
+    gets the drain conductance values for the model id
+    :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
+    :return:
+    """
+    param_data = nc.Dataset(os.path.join(sdp_required,"nsmc_params_obs_metadata.nc"))
 
-def get_drn_spd(model_id): #todo move this up
+    nsmc_num = int(model_id[-6:])
+    nidx = np.where(param_data.variables['nsmc_num'][:] == nsmc_num)[0][0]
 
-    #todo returns record array with correct conductance values
-    raise NotImplementedError
+    drns = np.array(param_data.variables['drns'][:])
+    drn_cond = np.array(param_data.variables['drn_cond'][nidx,:])
 
-def get_drn_no_ncarpet_spd(model_id,recalc=False): # todo make this accessable
+    out = {k:v for k,v in zip(drns,drn_cond)}
 
-    #todo returns record array with correct conductance values
-    pickle_path = "{}/model_{}_drn_wout_ncarpet.p".format(smt.temp_pickle_dir, model_id)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = pickle.load(open(pickle_path))
-        return outdata
-    model = get_model(model_id)
-    org_drn_data = _get_drn_spd(1, 1)
-    n_carpet = org_drn_data.loc[np.in1d(org_drn_data.group, ['ash_carpet', 'cust_carpet'])]
-    n_carpet_ij = list(n_carpet.loc[:, ['i', 'j']].itertuples(False, None))
-    outdata = model.get_package('drn').stress_period_data.data[0]
-    idx = [e not in n_carpet_ij for e in zip(outdata['i'], outdata['j'])]
+    return out
 
-    outdata = outdata[idx]
-    pickle.dump(outdata,open(pickle_path,'w'))
+def get_drn_spd(model_id, ncarpet): #todo test
+    """
+    get stress period data for the model with n carpert drains
+    :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
+    :param ncarpet: boolean return n carpet drains
+    :return:
+    """
 
-    return outdata
+    drn_cond_mapper = _get_drn_cond(model_id)
+    base_data = get_base_drn_spd(True)
+
+    base_data.replace({'parameter_group':drn_cond_mapper})
+    base_data.loc[:,'cond'] = base_data.loc[:, 'parameter_group'].astype(float)
+
+    return base_data.loc[:,['k','i','j','elev','cond']].to_records()
+
+
+def get_drn_no_ncarpet_spd(model_id,recalc=False):
+    """
+    this is here only to support backward compatablity
+    :param model_id:
+    :param recalc:
+    :return:
+    """
+    return get_drn_spd(model_id,ncarpet=False)
 
 if __name__ == '__main__':
+    get_drn_spd('NsmcReal{:06d}'.format(15))
+
     print('done')

@@ -68,7 +68,7 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
             all_wells.nsmc_type == group).sum()
     return all_wells
 
-def get_rch_multipler(model_id): #todo check
+def get_rch_multipler(model_id): #todo test
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
@@ -326,7 +326,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
         m.write_input()
         success, buff = m.run_model()
         con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
-        m.change_model_ws(dir_path) #todo flopy update add an update that changes teh namefile when the directory changes
+        m.change_model_ws(dir_path) #to flopy update add an update that changes teh namefile when the directory changes
         m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
             os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))

@@ -9,17 +9,22 @@ import env
 from waimak_extended_boundry import smt
 import numpy as np
 import os
-import flopy_mh as flopy
 import geopandas as gpd
 import shutil
+import netCDF4 as nc
 
-#todo everything here needs to be managed from a database perspective
-def get_gmp_con_layer(recalc=False):
-    pickle_path = "{}/gmp_n_conc.txt".format(smt.pickle_dir)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = np.loadtxt(pickle_path)
+def get_gmp_con_layer(recalc=False): #todo test
+    """
+    'recharge concentration under good managment practices GMP'
+    :param recalc:
+    :return:
+    """
+    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    if (not recalc):
+        outdata = np.array(data.variables['gmp_n_conc'])
         return outdata
 
+    raise NotImplementedError ('below is left for documentation only')
     n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
                           'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
     outdata = smt.shape_file_to_model_array(n_load_path, attribute='nconc_gmp', alltouched=True,
@@ -29,13 +34,19 @@ def get_gmp_con_layer(recalc=False):
     return outdata
 
 
-def get_new_cmp_con(recalc=False):
+def get_new_cmp_con(recalc=False): #todo test
+    """
+    'recharge concentration under current managment practices'
+    :param recalc:
+    :return:
+    """
     # should be similar to the get original cmp layer, but I am unsure how the re-sampling was handled for that layer
-    pickle_path = "{}/cmp_n_conc_resampled.txt".format(smt.pickle_dir)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = np.loadtxt(pickle_path)
+    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    if (not recalc):
+        outdata = np.array(data.variables['cmp_con'])
         return outdata
 
+    raise NotImplementedError('below is left for documentation only')
     n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
                           'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
     outdata = smt.shape_file_to_model_array(n_load_path, attribute='nconc_cmp', alltouched=True,
@@ -45,17 +56,19 @@ def get_new_cmp_con(recalc=False):
     return outdata
 
 
-def get_pc5pa_additonal_load(recalc=False):
+def get_pc5pa_additonal_load(recalc=False): # todo test
     """
-    get the additional load from pc5pa
+    get the additional load from pc5pa rules
     :param recalc:
     :return:
     """
-    pickle_path = "{}/pc5pa_additional_n_load.txt".format(smt.pickle_dir)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = np.loadtxt(pickle_path)
+    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    if (not recalc):
+        outdata = np.array(data.variables['pc5pa_additional_n_load'])
         return outdata
 
+
+    raise NotImplementedError('below is left for documentation only')
     n_load_path = r"P:\Groundwater\Waimakariri\Landuse\Shp\Results_New_WF_rule_May17.gdb\Results_New_WF_rule_May17.gdb"
     layer = 'BAU_PC5_diff_woIrrig_180315'
 
@@ -66,17 +79,18 @@ def get_pc5pa_additonal_load(recalc=False):
     return outdata
 
 
-def get_pc5pa_additonal_con(recalc=False):
+def get_pc5pa_additonal_con(recalc=False):# todo test
     """
-    get the additional concentration increase as fraction from pc5pa
+    fraction of the additional load with new pc5PA rules
     :param recalc:
     :return:
     """
-    pickle_path = "{}/pc5pa_additional_n_con_per.txt".format(smt.pickle_dir)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = np.loadtxt(pickle_path)
+    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    if (not recalc):
+        outdata = np.array(data.variables['pc5pa_additional_n_con_per'])
         return outdata
 
+    raise NotImplementedError('below is left for documentation only')
     n_load_path = r"P:\Groundwater\Waimakariri\Landuse\Shp\Results_New_WF_rule_May17.gdb\Results_New_WF_rule_May17.gdb"
     layer = 'BAU_PC5_diff_woIrrig_180315'
 
@@ -87,27 +101,24 @@ def get_pc5pa_additonal_con(recalc=False):
     return outdata
 
 
-def get_gmp_load_raster(recalc=False):
-    pickle_path = "{}/gmp_n_load.txt".format(smt.pickle_dir)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = np.loadtxt(pickle_path)
+def get_gmp_load_raster(recalc=False): #todo test
+    """
+    array of N load for good management practices (GMP)
+    :param recalc:
+    :return:
+    """
+    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    if (not recalc):
+        outdata = np.array(data.variables['gmp_load'])
         return outdata
 
-    n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
-                          'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+    raise NotImplementedError('below is left for documentation only')
+    n_load_path = os.path.join(env.sdp_required, "NloadLayers/CMP_GMP_PointSources290118.shp")
     outdata = smt.shape_file_to_model_array(n_load_path, attribute='nload_gmp', alltouched=True,
                                             area_statistics=True, fine_spacing=10, resample_method='average')
     outdata[np.isnan(outdata)] = 0
     np.savetxt(pickle_path, outdata)
     return outdata
-
-
-def get_orginal_cmp_layer():
-    # the layer that all of brioch's runs were done with
-    rch_path = env.gw_met_data(r"mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_"
-                               r"Ash0\nconc_cmp_200m.ref")
-
-    return flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_path, float, '(FREE)')
 
 
 def get_gmp_plus_con_layer_by_landuse(
@@ -127,10 +138,12 @@ def get_gmp_plus_con_layer_by_landuse(
         Unknow=None):
     """
 
+    get the concentration layer for beyond gmp reductions for a given landuse (defined here and in the shapefile,
     :param exclude_ashley: boolean, if True exlcude the ashley zone area for reductions (see internal shapefile for zone)
     :param add_half_pc5pa: bool if True, add half (to assume reasonable uptake) of teh additional PA N
     # below are land types, reductions are expected in percentage e.g. 20 means 20% reduction from GMP
-    :param Arable:
+    :param Arable: all parameters below here are either None or an integer from 0 to 100 which denotes the percentage
+                   reduction beyond GMP for the given land use type
     :param DairyFarm:
     :param DairySupport:
     :param ForestTussock:
@@ -146,8 +159,7 @@ def get_gmp_plus_con_layer_by_landuse(
     """
     # this takes about 1 minute to run... I'm not pickling because there are too many options, but this
     # could be re-assessed if need to load it lots... better to calculate it once and then make copies...
-    base_nload_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
-                              'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+    base_nload_path = os.path.join(env.sdp_required, "NloadLayers/CMP_GMP_PointSources290118.shp")
 
     land_types = ('Arable',
                   'DairyFarm',
@@ -212,15 +224,14 @@ def get_gmp_plus_con_layer_by_load_limit(
     # this takes about 1 minute to run... I'm not pickling because there are too many options, but this
     # could be re-assessed if need to load it lots... better to calculate it once and then make copies...
     n_load_limit = np.atleast_1d(n_load_limit)
-    n_reduction = np.atleast_1d(n_reduction) #todo sort these togeather
+    n_reduction = np.atleast_1d(n_reduction)
     idx = np.argsort(n_load_limit)
     n_load_limit = n_load_limit[idx]
     n_reduction = n_reduction[idx]
 
     assert n_load_limit.shape == n_reduction.shape, 'n_load_limit and n_reduction must have the same shape'
 
-    base_nload_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
-                              'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
+    base_nload_path = os.path.join(env.sdp_required, "NloadLayers/CMP_GMP_PointSources290118.shp")
 
     base_data = gpd.read_file(base_nload_path)
     base_data.loc[:, 'use_n'] = base_data.loc[:, 'nconc_gmp']
