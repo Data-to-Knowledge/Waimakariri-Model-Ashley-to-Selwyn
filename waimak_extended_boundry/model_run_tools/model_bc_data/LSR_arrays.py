@@ -8,30 +8,47 @@ from __future__ import division
 
 import itertools
 import os
-
 import numpy as np
-
 import env
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
-from waimak_extended_boundry.non_model_work.lsr_support.map_rch_to_model_array import \
-    map_rch_to_array
-from waimak_extended_boundry.model_and_NSMC_build.m_packages.rch_packages import get_rch_fixer, _get_rch
 
-lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
-rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
-#todo this whole script is hard work!
+def get_optimisation_recharge(): # todo
+    """
+    return the base recharge array without any pest multipliers,
+    this is the recharge used for the start of the optimisation
+    :return:
+    """
+    pickle_path = '{}/org_rch_v2.p'.format(smt.pickle_dir) # for reference, add to the netcdf
+    raise NotImplementedError
+
+def get_rch_fixer(recalc=False): #todo fix this
+    """
+    an array to index the abnormal recharge in chch and te waihora 1 = tewaihora and coastal, 0 = chch, all others nan
+    :param recalc: boolean whether to recalc (True) or load from pickle if avalible
+    :return:
+    """
+    pickle_path = os.path.join(smt.pickle_dir, 'rch_fixer.p')
+
+    if os.path.exists(pickle_path) and not recalc:
+        return pickle.load(open(pickle_path))
+
+    fixer = smt.shape_file_to_model_array("{}/m_ex_bd_inputs/shp/rch_rm_chch_tew.shp".format(smt.sdp), 'ID', True)
+    pickle.dump(fixer, open(pickle_path, 'w'))
+    return fixer
+
+
 def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None,
                     amag_type=None, cc_to_waimak_only=False, super_gmp=False):
     """
-    get the rch for the forward runs
+    get the rch for the forward runs #todo this could actually use more documentation... it's a bit confusing
     :param model_id: which NSMC realisation to use
     :param naturalised: boolean if True then get rch for
-    :param rcm: regional Climate model identifier
-    :param rcp: representetive carbon pathway identifier
+    :param rcm: regional Climate model identifier #todo add values
+    :param rcp: representetive carbon pathway identifier # todo add values
     :param period: e.g. 2010, 2020, ect
     :param amag_type: the amalgamation type one of: 'tym': twenty year mean, was 10 but changed on 20/09/2017
                                                     'min': minimum annual average,
@@ -46,7 +63,6 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     # I think I need to apply everything as a percent change or somehow normalise the rch so that I do not get any big
     # changes associated with changes in models which created the recharge array.
 
-    hdf_path = _get_rch_hdf_path(lsrm_rch_base_dir, naturalised, pc5, rcm, rcp)
     # get rch array from LSRM
 
     amalg_dict = {None: 'mean', 'mean': 'mean', 'tym': 'period_mean', 'low_3_m': '3_lowest_con_mean',
@@ -61,11 +77,12 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
 
     rch_array = get_lsrm_base_array(sen, rcp, rcm, period, method)
     if super_gmp:
+        # this was not extensivly used, i think it was mostly a check
         assert sen == 'current', 'for super gmp senario must be current'
         assert all([e is None for e in [rcp,
                                         rcm]]), 'rcp, rcm, must all be None, no support for climate change scenarios'
         mult = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\cmp_gmp_point_sources_n.shp".format(smt.sdp),
-                                             'drn_change', True)
+                                             'drn_change', True) #todo manage this...
         mult[np.isnan(mult)]=1
 
         rch_array *= mult
@@ -75,7 +92,7 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     rch_array *= rch_mult
 
     if cc_to_waimak_only:
-        base_rch = _get_rch(2)
+        base_rch = get_optimisation_recharge()
         base_rch *= rch_mult
         idx_array = get_zone_array_index(['chch', 'selwyn'])
         rch_array[idx_array] = base_rch[idx_array]
@@ -93,6 +110,73 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     rch_array[~no_flow.astype(bool)] = 0
     return rch_array
 
+def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
+    """
+    get the LSR comparison period
+
+    :param sen: the senario, senarios = ['pc5', 'nat', 'current']
+    :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
+    :param rcm: rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
+    :param per: None(vcsn), 1980(RCPpast),  periods = range(2010, 2100, 20) (climate change)
+    :param at: ['period_mean', '3_lowest_con_mean', 'lowest_year'] (climate change) ['mean'] vcsn
+    :return:
+    """
+    if rcp is None and rcm is None:
+        per = None
+        at = 'mean'
+        sen = 'current'
+    elif rcp is not None and rcm is not None:
+        rcp = 'RCPpast'
+        per = 1980
+        at = 'period_mean'  # setting based on the period mean for RCP past for all
+    return (sen, rcp, rcm, per, at)
+
+
+def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
+    """
+    get the lsr array
+    :param sen: see above
+    :param rcp:
+    :param rcm:
+    :param per:
+    :param at:
+    :return:
+    """
+    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
+    if not os.path.exists(path):
+        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
+    outdata = np.loadtxt(path)
+    if outdata.shape != (smt.rows, smt.cols):
+        raise ValueError('incorrect shape for rch array: {}'.format(outdata.shape))
+
+    return outdata
+
+
+def get_ird_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
+    """
+    get the irrigation demand array
+    :param sen: see above
+    :param rcp:
+    :param rcm:
+    :param per:
+    :param at:
+    :return:
+    """
+    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
+    if not os.path.exists(path):
+        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
+    outdata = np.loadtxt(path)
+    if outdata.shape != (smt.rows, smt.cols):
+        raise ValueError('incorrect shape for ird: {}'.format(outdata.shape))
+    if sen == 'current':
+        outdata *= 1.2  # this accounts for the 20 % leakage in our current senario which is 80% efficient.  there is no difference between the two irrigation demand arrays otherwise
+    return outdata
+
+
+# deprecidated functions and opperations
+
+lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
+rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
 def _get_rch_hdf_path(base_dir, naturalised, pc5, rcm, rcp):
     """
@@ -104,6 +188,7 @@ def _get_rch_hdf_path(base_dir, naturalised, pc5, rcm, rcp):
     :param rcp: None or the RCP of the model
     :return:
     """
+    raise NotImplementedError('left for documentation purposes only')
     if rcp is None and rcm is not None:
         raise ValueError('rcm and rcp must either both be none or be defined')
     elif rcm is None and rcp is not None:
@@ -131,6 +216,9 @@ def _create_all_lsrm_arrays():
     saves arrays for all of the periods and types ect as needed saves both rch and ird arrays
     :return:
     """
+    from waimak_extended_boundry.non_model_work.lsr_support.map_rch_to_model_array import \
+        map_rch_to_array
+    raise NotImplementedError('this is left of documentation purposes only')
     if not os.path.exists(os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow')):
         os.makedirs(os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow'))
     zidx = get_zone_array_index('waimak')
@@ -231,143 +319,6 @@ def _create_all_lsrm_arrays():
         np.savetxt(outpath_ird, ird)
 
 
-def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
-    """
-    get the LSR comparison period
-
-    :param sen: the senario, senarios = ['pc5', 'nat', 'current']
-    :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
-    :param rcm: rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
-    :param per: None(vcsn), 1980(RCPpast),  periods = range(2010, 2100, 20) (climate change)
-    :param at: ['period_mean', '3_lowest_con_mean', 'lowest_year'] (climate change) ['mean'] vcsn
-    :return:
-    """
-    if rcp is None and rcm is None:
-        per = None
-        at = 'mean'
-        sen = 'current'
-    elif rcp is not None and rcm is not None:
-        rcp = 'RCPpast'
-        per = 1980
-        at = 'period_mean'  # setting based on the period mean for RCP past for all
-    return (sen, rcp, rcm, per, at)
-
-
-def get_lsrm_base_array(sen, rcp, rcm, per, at):
-    """
-    get the lsr array
-    :param sen: see above
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
-    :return:
-    """
-    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
-    if not os.path.exists(path):
-        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
-    outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows, smt.cols):
-        raise ValueError('incorrect shape for rch array: {}'.format(outdata.shape))
-
-    return outdata
-
-
-def get_ird_base_array(sen, rcp, rcm, per, at):
-    """
-    get the irrigation demand array
-    :param sen: see above
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
-    :return:
-    """
-    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
-    if not os.path.exists(path):
-        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
-    outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows, smt.cols):
-        raise ValueError('incorrect shape for ird: {}'.format(outdata.shape))
-    if sen == 'current':
-        outdata *= 1.2  # this accounts for the 20 % leakage in our current senario which is 80% efficient.  there is no difference between the two irrigation demand arrays otherwise
-    return outdata
-
-
 if __name__ == '__main__':
     # tests
     testtype = 0
-    if testtype == 0:
-        waimak = get_zone_array_index('waimak')
-        coastal_waimak = get_zone_array_index('coastal_waimak')
-        inland_waimak = get_zone_array_index('inland_waimak')
-        super_gmp = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=False, rcm=None, rcp=None, period=None,
-                    amag_type=None, cc_to_waimak_only=False, super_gmp=True)
-        gmp = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=True, rcm=None, rcp=None, period=None,
-                    amag_type=None, cc_to_waimak_only=False, super_gmp=False)
-        cmp_rch = get_forward_rch(model_id='NsmcBase', naturalised=False, pc5=False, rcm=None, rcp=None, period=None,
-                    amag_type=None, cc_to_waimak_only=False, super_gmp=False)
-
-        for name in ['waimak', 'inland_waimak', 'coastal_waimak']:
-            idx = eval(name)
-            print('{} cmp: {} m3/s'.format(name, np.nansum(cmp_rch[idx]*200*200)/86400))
-            print('{} super_gmp: {}, m3/s'.format(name, np.nansum(super_gmp[idx]*200*200)/86400))
-            print('{} gmp: {}, m3/s'.format(name, np.nansum(gmp[idx]*200*200)/86400))
-        print('done')
-    if testtype == 1:
-        _create_all_lsrm_arrays()
-
-    if testtype == 2:
-        {None: 'mean', 'mean': 'mean', 'tym': 'period_mean', 'low_3_m': '3_lowest_con_mean',
-         'min': 'lowest_year'}
-        periods = range(2010, 2100, 20)
-        rcps = ['RCP4.5', 'RCP8.5']
-        rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
-        amalg_types = ['tym', 'low_3_m', 'min']
-        senarios = ['pc5', 'nat', 'current']
-        # cc stuff
-        for per, rcp, rcm, at, sen in itertools.product(periods, rcps, rcms, amalg_types, senarios):
-            naturalised = False
-            pc5 = False
-            if sen == 'nat':
-                naturalised = True
-            elif sen == 'pc5':
-                pc5 = True
-            elif sen == 'current':
-                pass
-
-            test = get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at,
-                                   cc_to_waimak_only=True)
-
-        amalg_types = ['tym', 'low_3_m', 'min']
-        for rcm, sen, at in itertools.product(rcms, senarios, amalg_types):
-            naturalised = False
-            pc5 = False
-            if sen == 'nat':
-                naturalised = True
-            elif sen == 'pc5':
-                pc5 = True
-            elif sen == 'current':
-                pass
-            else:
-                raise ValueError('shouldnt get here')
-            per = 1980
-            rcp = 'RCPpast'
-            get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at)
-
-        for sen in senarios:
-            naturalised = False
-            pc5 = False
-            if sen == 'nat':
-                naturalised = True
-            elif sen == 'pc5':
-                pc5 = True
-            elif sen == 'current':
-                pass
-            else:
-                raise ValueError('shouldnt get here')
-            at = 'mean'
-            per = None
-            rcp = None
-            rcm = None
-            get_forward_rch('opt', naturalised=naturalised, pc5=pc5, rcm=rcm, rcp=rcp, period=per, amag_type=at)

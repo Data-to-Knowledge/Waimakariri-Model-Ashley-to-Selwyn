@@ -68,7 +68,7 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
             all_wells.nsmc_type == group).sum()
     return all_wells
 
-def get_rch_multipler(model_id): #todo test
+def get_rch_multipler(model_id): #todo test  # todo make a netcdf of recharge multipliers and access it here...
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
