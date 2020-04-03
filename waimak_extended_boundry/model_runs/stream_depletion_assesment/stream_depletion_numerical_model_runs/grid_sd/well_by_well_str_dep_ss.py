@@ -14,7 +14,7 @@ import psutil
 import time
 import logging
 import datetime
-from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import \
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.starting_hds_ss_sy import \
     get_sd_starting_hds
 from waimak_extended_boundry import smt
 from warnings import warn

@@ -13,7 +13,7 @@ from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_su
     get_base_grid_sd_path
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.base_sd_runs  import \
     get_str_dep_base_path
-from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import \
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.starting_hds_ss_sy import \
     _get_no_pumping_ss_hds
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import \
     get_drn_no_ncarpet_spd

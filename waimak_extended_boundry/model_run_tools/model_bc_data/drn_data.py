@@ -42,7 +42,7 @@ def _get_drn_cond(model_id):
 
     return out
 
-def get_drn_spd(model_id, ncarpet): #todo test
+def get_drn_spd(model_id, ncarpet=True): #todo test
     """
     get stress period data for the model with n carpert drains
     :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
@@ -51,7 +51,7 @@ def get_drn_spd(model_id, ncarpet): #todo test
     """
 
     drn_cond_mapper = _get_drn_cond(model_id)
-    base_data = get_base_drn_spd(True)
+    base_data = get_base_drn_spd(ncarpet)
 
     base_data.replace({'parameter_group':drn_cond_mapper})
     base_data.loc[:,'cond'] = base_data.loc[:, 'parameter_group'].astype(float)
@@ -59,7 +59,7 @@ def get_drn_spd(model_id, ncarpet): #todo test
     return base_data.loc[:,['k','i','j','elev','cond']].to_records()
 
 
-def get_drn_no_ncarpet_spd(model_id,recalc=False):
+def get_drn_no_ncarpet_spd(model_id):
     """
     this is here only to support backward compatablity
     :param model_id:

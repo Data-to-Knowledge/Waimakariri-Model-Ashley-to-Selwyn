@@ -13,7 +13,7 @@ from well_by_well_str_dep_sd150 import well_by_well_depletion_sd150
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.extract_stream_depletion import calc_str_dep_all_wells
 import shutil
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.sd_metadata import save_sd_metadata
-from waimak_extended_boundry.model_run_tools.model_bc_data.starting_hds_ss_sy import get_ss_sy
+from waimak_extended_boundry.model_run_tools.stream_depletion_support.starting_hds_ss_sy import get_ss_sy
 import datetime
 import socket
 
