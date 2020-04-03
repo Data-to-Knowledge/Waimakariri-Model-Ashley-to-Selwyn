@@ -10,35 +10,31 @@ import itertools
 import os
 import numpy as np
 import env
+import netCDF4 as nc
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
 
+rch_data_path = os.path.join(env.sdp_required,'recharge_arrays.nc')
 
-def get_optimisation_recharge(): # todo
+def get_optimisation_recharge(): # todo test
     """
     return the base recharge array without any pest multipliers,
     this is the recharge used for the start of the optimisation
     :return:
     """
-    pickle_path = '{}/org_rch_v2.p'.format(smt.pickle_dir) # for reference, add to the netcdf
-    raise NotImplementedError
+    data = np.array(nc.Dataset(rch_data_path).variables['opt_rch'])
+    return data
 
-def get_rch_fixer(recalc=False): #todo fix this
+def get_rch_fixer(): # todo test
     """
     an array to index the abnormal recharge in chch and te waihora 1 = tewaihora and coastal, 0 = chch, all others nan
     :param recalc: boolean whether to recalc (True) or load from pickle if avalible
     :return:
     """
-    pickle_path = os.path.join(smt.pickle_dir, 'rch_fixer.p')
-
-    if os.path.exists(pickle_path) and not recalc:
-        return pickle.load(open(pickle_path))
-
-    fixer = smt.shape_file_to_model_array("{}/m_ex_bd_inputs/shp/rch_rm_chch_tew.shp".format(smt.sdp), 'ID', True)
-    pickle.dump(fixer, open(pickle_path, 'w'))
-    return fixer
+    data = np.array(nc.Dataset(rch_data_path).variables['recharge_fixer'])
+    return data
 
 
 def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None,
@@ -47,8 +43,8 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     get the rch for the forward runs #todo this could actually use more documentation... it's a bit confusing
     :param model_id: which NSMC realisation to use
     :param naturalised: boolean if True then get rch for
-    :param rcm: regional Climate model identifier #todo add values
-    :param rcp: representetive carbon pathway identifier # todo add values
+    :param rcm: regional Climate model identifier
+    :param rcp: representetive carbon pathway identifier
     :param period: e.g. 2010, 2020, ect
     :param amag_type: the amalgamation type one of: 'tym': twenty year mean, was 10 but changed on 20/09/2017
                                                     'min': minimum annual average,
@@ -81,8 +77,8 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
         assert sen == 'current', 'for super gmp senario must be current'
         assert all([e is None for e in [rcp,
                                         rcm]]), 'rcp, rcm, must all be None, no support for climate change scenarios'
-        mult = smt.shape_file_to_model_array(r"{}\m_ex_bd_inputs\shp\cmp_gmp_point_sources_n.shp".format(smt.sdp),
-                                             'drn_change', True) #todo manage this...
+        mult = smt.shape_file_to_model_array(os.path.join(env.sdp_required,"shp/cmp_gmp_point_sources_n.shp"),
+                                             'drn_change', True)
         mult[np.isnan(mult)]=1
 
         rch_array *= mult
@@ -132,7 +128,132 @@ def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
     return (sen, rcp, rcm, per, at)
 
 
-def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
+def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo check
+    """
+    get the lsr array see below for requirments
+    :param sen:
+    :param rcp:
+    :param rcm:
+    :param per:
+    :param at:
+    :return:
+    """
+    senarios = ['pc5', 'nat', 'current']
+    rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
+    rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
+    periods = [None, 1980] + range(2010, 2100, 20)
+    ats = ['period_mean', '3_lowest_con_mean', 'lowest_year', 'mean']
+
+    # check arguments
+    assert sen in senarios
+    assert rcp in rcps
+    assert rcm in rcms
+    assert per in periods
+    assert at in ats
+
+    data = nc.Dataset(rch_data_path)
+
+    # capture the current data
+    if rcp is None and rcm is None:
+        assert per is None
+        assert at is 'mean'
+        idx = np.where(data['scenario']==sen)[0][0]
+        out = np.array(data['current_recharge'][idx])
+
+    # capture the rcp_past
+    elif rcp == 'RCPpast':
+        assert per == 1980
+        assert at != 'mean'
+        i = np.where(data['scenario']==sen)[0][0]
+        j = np.where(data['rcm']==rcm)[0][0]
+        k = np.where(data['amalg_type']==at)[0][0]
+        out = np.array(data['rcp_past_recharge'][i,j,k])
+
+    # climate change scenarios
+    elif rcp is not None and rcm is not None:
+        assert per in range(2010, 2100, 20)
+        assert at != 'mean'
+
+        i = np.where(data['scenario']==sen)[0][0]
+        j = np.where(data['rcp']==rcp)[0][0]
+        k = np.where(data['rcm']==rcm)[0][0]
+        l = np.where(data['period']==per)[0][0]
+        m = np.where(data['amalg_type']==at)[0][0]
+        out = np.array(data['future_recharge'][i,j,k,l,m])
+
+    else:
+        raise ValueError('rcm and rcp must either be both None or both not None')
+
+    assert out.shape == (smt.rows,smt.cols), 'weird shape {}'.format(out.shape)
+
+    return out
+
+
+
+def get_ird_base_array(sen, rcp, rcm, per, at): # todo check
+    """
+    get the irrigation demand array
+    :param sen: see above
+    :param rcp:
+    :param rcm:
+    :param per:
+    :param at:
+    :return:
+    """
+    senarios = ['pc5', 'nat', 'current']
+    rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
+    rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
+    periods = [None, 1980] + range(2010, 2100, 20)
+    ats = ['period_mean', '3_lowest_con_mean', 'lowest_year', 'mean']
+
+    # check arguments
+    assert sen in senarios
+    assert rcp in rcps
+    assert rcm in rcms
+    assert per in periods
+    assert at in ats
+
+    data = nc.Dataset(rch_data_path)
+
+    # capture the current data
+    if rcp is None and rcm is None:
+        assert per is None
+        assert at is 'mean'
+        idx = np.where(data['scenario'] == sen)[0][0]
+        out = np.array(data['current_ird'][idx])
+
+    # capture the rcp_past
+    elif rcp == 'RCPpast':
+        assert per == 1980
+        assert at != 'mean'
+        i = np.where(data['scenario'] == sen)[0][0]
+        j = np.where(data['rcm'] == rcm)[0][0]
+        k = np.where(data['amalg_type'] == at)[0][0]
+        out = np.array(data['rcp_past_ird'][i, j, k])
+
+    # climate change scenarios
+    elif rcp is not None and rcm is not None:
+        assert per in range(2010, 2100, 20)
+        assert at != 'mean'
+
+        i = np.where(data['scenario'] == sen)[0][0]
+        j = np.where(data['rcp'] == rcp)[0][0]
+        k = np.where(data['rcm'] == rcm)[0][0]
+        l = np.where(data['period'] == per)[0][0]
+        m = np.where(data['amalg_type'] == at)[0][0]
+        out = np.array(data['future_ird'][i, j, k, l, m])
+
+    else:
+        raise ValueError('rcm and rcp must either be both None or both not None')
+
+    assert out.shape == (smt.rows, smt.cols), 'weird shape {}'.format(out.shape)
+
+    return out
+
+
+# deprecidated functions and opperations
+
+def old_get_lsrm_base_array(sen, rcp, rcm, per, at): # todo use to check
     """
     get the lsr array
     :param sen: see above
@@ -152,7 +273,7 @@ def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
     return outdata
 
 
-def get_ird_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
+def old_get_ird_base_array(sen, rcp, rcm, per, at): # todo use to check
     """
     get the irrigation demand array
     :param sen: see above
@@ -173,7 +294,8 @@ def get_ird_base_array(sen, rcp, rcm, per, at): # todo update to new netcdf
     return outdata
 
 
-# deprecidated functions and opperations
+
+
 
 lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
