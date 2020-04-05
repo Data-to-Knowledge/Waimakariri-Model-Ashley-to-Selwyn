@@ -17,13 +17,11 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index impor
 from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_ird_base_array, get_lsr_base_period_inputs
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
-    get_base_well, temp_pickle_dir
+    get_base_well
 from env import sdp_required
 from copy import deepcopy
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
-
-#todo the whole script requires significant work.
 
 _missing_well_use_converter = {'Aquaculture': 'other',
                                'Arable Farming': 'irrigation-sw',
@@ -56,23 +54,13 @@ def get_full_consent(model_id, org_pumping_wells=False, missing_sd_wells=False,
     :param model_id: the NSMC realisation
     :param org_pumping_wells: Boolean if true use the model period wells else use the 2014/2015 pumping
     :param missing_sd_wells: bool if True include the wells that mark found missing
-    :param recalc: Boolean, if true recalculate otherwise load from a pickle
+    :param recalc: Boolean, if true recalculate otherwise load from a pickle, deprecidated
     :return: the full dataframe with just the flux converted
     """
-    if org_pumping_wells:
-        new = 'mod_period'
-    else:
-        new = '2014_15'
-    missing_sd = '_inc_missing_sd' if missing_sd_wells else ''
-    # todo this needs to be re-organised to address the multipliers
-    # todo how long does it take to run??? could I just get rid of the pickling...
-    pickle_path = "{}/model_{}_well_full_abstraction_{}{}.p".format(temp_pickle_dir, model_id, new, missing_sd)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = pickle.load(open(pickle_path))
-        return outdata
+    # todo how long does it take to run??? could I just get rid of the pickling... I've managed the input see how long it takes test
 
     outdata = get_base_well(model_id, org_pumping_wells=org_pumping_wells)
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required)) #todo input
+    allo = pd.read_csv(os.path.join(sdp_required, "allo_gis.csv"))
     allo = allo.dropna(subset=['status_details'])
     allo = allo.loc[np.in1d(allo.status_details, ['Issued - Active', 'Issued - s124 Continuance']) & (
         allo.take_type == 'Take Groundwater')]
@@ -94,8 +82,8 @@ def get_full_consent(model_id, org_pumping_wells=False, missing_sd_wells=False,
         # these will be handled when I amalgamate up to the model grid
         all_wells = get_all_well_row_col()
         idx = pd.notnull(all_wells.loc[:, ['layer', 'row', 'col']]).all(axis=1)
-        missing_wells = pd.read_csv("{}/m_ex_bd_inputs/missing_sd_wells.csv".format(smt.sdp),
-                                    skiprows=3, index_col='well_no').loc[:, ['consent', 'max_rate', 'cav', 'use_type']] #todo input
+        missing_wells = pd.read_csv(os.path.join(sdp_required,'missing_sd_wells.csv'),
+                                    skiprows=3, index_col='well_no').loc[:, ['consent', 'max_rate', 'cav', 'use_type']]
         missing_wells.loc[missing_wells.use_type.isnull(), ['use_type']] = 'other'
         missing_wells = missing_wells.replace({'use_type':_missing_well_use_converter})
 
@@ -108,7 +96,6 @@ def get_full_consent(model_id, org_pumping_wells=False, missing_sd_wells=False,
         idx = ~np.in1d(outdata.index, missing_wells.index)
         outdata = pd.concat((outdata.loc[idx], missing_wells))
 
-    pickle.dump(outdata, open(pickle_path, 'w'))
     return outdata
 
 
@@ -119,25 +106,13 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
     :param model_id: the NSMC realisation
     :param org_pumping_wells: Boolean if true use the model period wells else use the 2014/2015 pumping
     :param missing_sd_wells: bool if True include the wells that mark flagged as missing from the waimakariri zone
-    :param recalc: Boolean, if true recalculate otherwise load from a pickle
+    :param recalc: Boolean, if true recalculate otherwise load from a pickle, depreciated
     :return: the full dataframe with just the flux converted
     """
-    if org_pumping_wells:
-        new = 'mod_period'
-    else:
-        new = '2014_15'
-
-    missing_sd = '_inc_missing_sd' if missing_sd_wells else ''
-
-    # todo this needs to be re-jigged to create a basic version then add the multipliers
-    # todo how long does it take to run??? could I just get rid of the pickling...
-    pickle_path = "{}/model_{}_well_max_rate_{}{}.p".format(temp_pickle_dir, model_id, new, missing_sd)
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = pickle.load(open(pickle_path))
-        return outdata
+    # todo how long does it take to run??? could I just get rid of the pickling... I've modified it, just see how long it takes to run test
 
     outdata = get_base_well(model_id, org_pumping_wells)
-    allo = pd.read_csv("{}/inputs/wells/allo_gis.csv".format(sdp_required)) # todo input
+    allo = pd.read_csv(os.path.join(sdp_required, "allo_gis.csv"))
     allo = allo.dropna(subset=['status_details'])
     allo = allo.loc[np.in1d(allo.status_details, ['Issued - Active', 'Issued - s124 Continuance']) & (
         allo.take_type == 'Take Groundwater')]
@@ -165,7 +140,7 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
 
         all_wells = get_all_well_row_col()
         idx = pd.notnull(all_wells.loc[:, ['layer', 'row', 'col']]).all(axis=1)
-        missing_wells = pd.read_csv("{}/m_ex_bd_inputs/missing_sd_wells.csv".format(smt.sdp), #todo input
+        missing_wells = pd.read_csv(os.path.join(sdp_required,'missing_sd_wells.csv'),
                                     skiprows=3, index_col='well_no').loc[:, ['consent', 'max_rate', 'cav', 'use_type']]
         missing_wells.loc[missing_wells.use_type.isnull(), ['use_type']] = 'other'
         missing_wells = missing_wells.replace({'use_type':_missing_well_use_converter})
@@ -178,7 +153,6 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
         idx = ~np.in1d(outdata.index, missing_wells.index)
         outdata = pd.concat((outdata.loc[idx], missing_wells))
 
-    pickle.dump(outdata, open(pickle_path, 'w'))
     return outdata
 
 
@@ -289,7 +263,7 @@ def get_cc_pumping_muliplier(cc_inputs):
     return np.nanmean(outdata)
 
 
-def get_full_allo_multipler(org_pumping_wells, recalc=False):
+def get_full_allo_multipler(org_pumping_wells, recalc=False): # todo test
     """
     get the multipliers (on a per well basis) to move to full allocation
     :param org_pumping_wells: if true use model period wells, else use 2014/15 wells
@@ -311,10 +285,8 @@ def get_full_allo_multipler(org_pumping_wells, recalc=False):
     else:
         new = '2014_15'
 
-    pickle_path = "{}/model_well_allo_mult_{}.p".format(smt.pickle_dir, new) # todo this can just be saved as an hdf, no worries
-    if (os.path.exists(pickle_path)) and (not recalc):
-        outdata = pickle.load(open(pickle_path))
-        return outdata
+    outdata = pd.read_hdf(os.path.join(sdp_required, 'allo_multiplier.hdf'),new)
+    return outdata
 
     raise NotImplementedError('below is here for documentation purposes only')
     from waimak_extended_boundry.model_and_NSMC_build.m_packages.wel_packages import _get_wel_spd_v1, \
