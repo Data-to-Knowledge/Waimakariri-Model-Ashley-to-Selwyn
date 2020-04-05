@@ -12,7 +12,7 @@ import os
 def get_all_well_row_col(recalc=False): #todo test
     save_path = os.path.join(env.sdp_required,'all_wells_row_col_layer2.hdf')
     if os.path.exists(save_path) and not recalc:
-        out_data = pd.read_csv(save_path,index_col=0)
+        out_data = pd.read_hdf(save_path,index_col=0)
         return out_data
 
     raise NotImplementedError('below is here only for documentation')
