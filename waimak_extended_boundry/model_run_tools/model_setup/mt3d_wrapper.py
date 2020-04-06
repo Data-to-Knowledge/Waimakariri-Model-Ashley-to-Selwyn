@@ -326,6 +326,23 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
 
 def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, cust_biwash=0.1, ash_tribs=0.35,
                                glen_tui=None, garry=None, bullock=None, okuku=None, makerikeri=None, eyre_mar=0):
+    """
+    get the sft stress period data that sets the concentration of the inflow to SFR segments, defaults for PC7 are set
+    :param eyre: top of the eyre river
+    :param waimak: waimakariri R. at gorge
+    :param ash_gorge: Ashely R. at gorge
+    :param cust: top of the cust
+    :param cust_biwash: WIL race biwash
+    :param ash_tribs: None or value to set for all of the asley tribs (below), if None then the below must be set
+    :param glen_tui: glen tui at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
+    :param garry: garray at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
+    :param bullock: bullock at the ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
+    :param okuku: okuku at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
+    :param makerikeri: makerikeri at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
+    :param eyre_mar: value for the additional eyre mar scenario
+    :return:
+    """
+
     ashtrib_input = ash_tribs is not None and all([e is None for e in [glen_tui, garry, bullock, okuku, makerikeri]])
     individual_trib_input = ash_tribs is None and all(
         [e is not None for e in [glen_tui, garry, bullock, okuku, makerikeri]])

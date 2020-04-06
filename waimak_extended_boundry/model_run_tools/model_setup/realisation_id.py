@@ -18,7 +18,7 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from copy import deepcopy
 import pandas as pd
 
-temp_pickle_dir=None #todo manage
+temp_pickle_dir=None #todo manage almost gone
 
 
 def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
@@ -68,24 +68,17 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
             all_wells.nsmc_type == group).sum()
     return all_wells
 
-def get_rch_multipler(model_id): #todo test  # todo make a netcdf of recharge multipliers and access it here...
+def get_rch_multipler(model_id): #todo test
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
     :return:
     """
-    model_ws = os.path.dirname(get_model_name_path(model_id))
-    rch_mult_path = os.path.join(model_ws, 'recharge_mul.ref')
-    if not os.path.exists(rch_mult_path):
-        exe_path = os.path.join(sdp_required, "base_for_nsmc_real/fac2real.exe")
-        test = subprocess.call(exe_path + ' < fac2real_rech.in', cwd=model_ws, shell=True)
-        print(test)
+    dataset = nc.Dataset(os.path.join(sdp_required,'post_filter1_recharge_mult.nc'))
+    nsmc_num = int(model_id[-6:])
+    nidx = np.where(dataset.variables['nsmc_num'][:] == nsmc_num)[0][0]
+    outdata = np.array(dataset.variables['rch_mult'][nidx])
 
-    # to read in the possibly wrapped array use:
-    outdata = flopy.utils.Util2d.load_txt((smt.rows, smt.cols), rch_mult_path, float, '(FREE)')
-    no_flow = smt.get_no_flow(1)
-    no_flow[no_flow < 0] = 0
-    outdata[~no_flow.astype(bool)] = 1
     return outdata
 
 
