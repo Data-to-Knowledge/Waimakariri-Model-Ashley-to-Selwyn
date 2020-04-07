@@ -26,3 +26,9 @@ conda create --name waimak6 --channel conda-forge python=2.7 zlib geopandas=0.6.
 conda create --name waimak3 python=2.7 zlib geopandas netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future #todo also not working... this is fragile
 
 
+conda create --name waimak7 --channel conda-forge python=2.7 zlib geopandas=0.6.2 netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future pytables=3.4.2 #todo this is not working... super fragile
+
+# try to install the enviroment in a new minconda install
+conda create --name waimak --channel conda-forge python=2.7 zlib geopandas=0.6.2 netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future pytables=3.4.2 #todo this is not working... super fragile
+conda create --name waimak2 --channel conda-forge python=2.7 zlib geopandas=0.6.2 netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future # todo did not work
+conda create --name waimak3 --channel conda-forge python=2.7 zlib geopandas netcdf4 xlrd matplotlib numpy=1.13 pandas psutil scipy statsmodels future pytables=3.4.2 # todo try

@@ -1,0 +1,15 @@
+
+
+In the past the python environment has been somewhat unstables.  in order to combat this I have put togeather an
+Anaconda YML file, which lists all of the dependencies and should be able to load the environment for the foreseeable
+future. The biggest difficulty if maintaining the current flopy instance, which has been coppied into these scripts as
+flopy_mh as a number of edits were needed in order to fix bugs in the package.  unfortunately this requires numpy 1.13
+
+# todo see if I can package up the actual environment
+
+In order to install the environment:
+
+1) download miniconda (https://docs.conda.io/en/latest/miniconda.html)
+2) open the anaconda prompt and enter:
+        conda env create -f {path to environment.yml} # note exclude the {} and just enter the path
+3) the yml referenced here is teh waimak_model_environment.yml in this folder.
