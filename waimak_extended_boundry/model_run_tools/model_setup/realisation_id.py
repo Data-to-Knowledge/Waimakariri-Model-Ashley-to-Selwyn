@@ -18,10 +18,10 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from copy import deepcopy
 import pandas as pd
 
-temp_pickle_dir=None #todo manage almost gone
+temp_pickle_dir = None  # todo manage almost gone
 
 
-def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
+def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test
     """
     applies the NSMC pumping mulitpliers
     :param model_id: the NSMC realisation
@@ -29,11 +29,11 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
     :param recalc: usual recalc
     :return:
     """
-    well_path = os.path.join(sdp_required,'base_well_data.hdf')
+    well_path = os.path.join(sdp_required, 'base_well_data.hdf')
     if org_pumping_wells:
-        all_wells = pd.read_hdf(well_path,'model_period') # usage for the model period as passed to the optimisation
+        all_wells = pd.read_hdf(well_path, 'model_period')  # usage for the model period as passed to the optimisation
     else:
-        all_wells = pd.read_hdf(well_path,'2014_2015_period')  # usage for 2014/2015 period in waimak zone
+        all_wells = pd.read_hdf(well_path, '2014_2015_period')  # usage for 2014/2015 period in waimak zone
 
     all_wells.loc[:, 'nsmc_type'] = ''
 
@@ -54,7 +54,7 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
     all_wells.loc[all_wells.type == 'ulr_boundry_flux', 'nsmc_type'] = 'ulrzf'
     all_wells.loc[all_wells.type == 'boundry_flux', 'nsmc_type'] = 'nbndf'
 
-    base_dir = os.path.dirname(get_model_name_path(model_id))
+    base_dir = os.path.dirname(get_model_name_path(model_id))  # todo update from netcdf instead of the well adjust
     mult_path = '{}/wel_adj.txt'.format(base_dir)  # figure out what the pest control file will populate
     multipliers = pd.read_table(mult_path, index_col=0, delim_whitespace=True, names=['value'])
 
@@ -65,16 +65,17 @@ def get_base_well(model_id, org_pumping_wells, recalc=False): #todo test
     add_groups = ['llrzf', 'ulrzf']
     for group in add_groups:
         all_wells.loc[all_wells.nsmc_type == group, 'flux'] = multipliers.loc[group, 'value'] / (
-            all_wells.nsmc_type == group).sum()
+                all_wells.nsmc_type == group).sum()
     return all_wells
 
-def get_rch_multipler(model_id): #todo test
+
+def get_rch_multipler(model_id):  # todo test
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
     :return:
     """
-    dataset = nc.Dataset(os.path.join(sdp_required,'post_filter1_recharge_mult.nc'))
+    dataset = nc.Dataset(os.path.join(sdp_required, 'post_filter1_recharge_mult.nc'))
     nsmc_num = int(model_id[-6:])
     nidx = np.where(dataset.variables['nsmc_num'][:] == nsmc_num)[0][0]
     outdata = np.array(dataset.variables['rch_mult'][nidx])
@@ -82,7 +83,7 @@ def get_rch_multipler(model_id): #todo test
     return outdata
 
 
-def get_model_name_path(model_id): #todo test
+def get_model_name_path(model_id):  # todo test
     """
     get the path to a model_id base model only NSMCs are currently supported e.g. 'NsmcReal{nsmc_num:06d}'
 
@@ -144,7 +145,7 @@ def get_model_name_path(model_id): #todo test
     return name_path
 
 
-def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
+def _get_nsmc_realisation(model_id, save_to_dir=False):  # todo test
     """
     wrapper to get model from a NSMC realisation saving the model takes c. 1.2 gb per model this includes many
     duplicate files, but some  are used for additional functions
@@ -153,29 +154,35 @@ def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
     :param temp_int: a temp interger to make unique temporaty files only needed to handle multiprocessing applications
     :return:
     """
+    # todo in future this could be simplified to only pull from the netcdfs instead of the converter dirs,
+    # todo this would allow significant savings in time and space required to load a new model realisation.
+
+
     assert 'NsmcReal' in model_id, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
     assert len(model_id) == 14, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
     base_converter_dir = os.path.join(sdp_required, "base_for_nsmc_real")
     # check if the model has previously been saved to the save dir, and if so, load from there
     save_dir = loaded_model_realisation_dir
     if save_dir is None:
-        raise ValueError('loaded model realisation dir is NONE, please set in waimak_extended_boundry/extended_boundry_model_tools.py')
+        raise ValueError(
+            'loaded model realisation dir is NONE, please set in waimak_extended_boundry/extended_boundry_model_tools.py')
 
     converter_dir = os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     # load from saved version if possible
-    if os.path.exists(os.path.join(save_dir, '{}_base'.format(model_id),'{}_base.hds'.format(model_id))):
+    if os.path.exists(os.path.join(save_dir, '{}_base'.format(model_id), '{}_base.hds'.format(model_id))):
         name_file_path = os.path.join(save_dir, '{}_base'.format(model_id), '{m}_base.nam'.format(m=model_id))
-        m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False, check=False)
+        m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False,
+                                       check=False)
         return m
 
     # copy the base converter dir to the temporary converter dir
     shutil.copytree(base_converter_dir, converter_dir)
 
     nsmc_num = int(model_id[-6:])
-    param_data = nc.Dataset(os.path.join(sdp_required,"nsmc_params_obs_metadata.nc"))
+    param_data = nc.Dataset(os.path.join(sdp_required, "nsmc_params_obs_metadata.nc"))
     param_idx = np.where(np.array(param_data.variables['nsmc_num']) == nsmc_num)[0][0]
 
     print('writing data to parameter files')
@@ -267,14 +274,13 @@ def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
     with open(drn_tpl_path) as f:
         drns = f.read()
         for key, val in replacer.items():
-            drns = drns.replace(key,str(val))
-    drns = drns.replace('ptf $\n','') # get rid of the header for pest
+            drns = drns.replace(key, str(val))
+    drns = drns.replace('ptf $\n', '')  # get rid of the header for pest
 
     # write new data
     out_drn_path = os.path.join(converter_dir, 'mf_aw_ex.drn')
-    with open(out_drn_path,'w') as f:
+    with open(out_drn_path, 'w') as f:
         f.write(drns)
-
 
     # run model.bat
     print('running model.bat')
@@ -319,14 +325,14 @@ def _get_nsmc_realisation(model_id, save_to_dir=False): #todo test
         m.write_input()
         success, buff = m.run_model()
         con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
-        m.change_model_ws(dir_path) #to flopy update add an update that changes teh namefile when the directory changes
+        m.change_model_ws(
+            dir_path)  # to flopy update add an update that changes teh namefile when the directory changes
         m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
             os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))
             shutil.rmtree(converter_dir)
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
-        shutil.copytree(converter_dir, dir_path)
     shutil.rmtree(converter_dir)
     return m
 
@@ -369,6 +375,7 @@ def get_model(model_id, save_to_dir=False):
     m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False)
     return m
 
+
 def get_stocastic_set(return_model_ids=True):
     """
     a quick wrapper to get all of the 165 stocastic models
@@ -395,6 +402,7 @@ def get_stocastic_set(return_model_ids=True):
         return model_ids
     else:
         return nsmc_nums
-if __name__ == '__main__':
 
+
+if __name__ == '__main__':
     print('done')
