@@ -128,7 +128,7 @@ def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
     return (sen, rcp, rcm, per, at)
 
 
-def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo check
+def get_lsrm_base_array(sen, rcp, rcm, per, at):
     """
     get the lsr array see below for requirments
     :param sen:
@@ -142,7 +142,7 @@ def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo check
 
 
 
-def get_ird_base_array(sen, rcp, rcm, per, at): # todo check
+def get_ird_base_array(sen, rcp, rcm, per, at):
     """
     get the irrigation demand array
     :param sen: see above
@@ -223,51 +223,6 @@ def _get_rch_ird(sen, rcp, rcm, per, at, recharge):
 
 # deprecidated functions and opperations
 
-def old_get_lsrm_base_array(sen, rcp, rcm, per, at): # todo use to check then delete
-    """
-    get the lsr array
-    :param sen: see above
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
-    :return:
-    """
-    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/rch_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
-    if not os.path.exists(path):
-        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
-    outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows, smt.cols):
-        raise ValueError('incorrect shape for rch array: {}'.format(outdata.shape))
-
-    return outdata
-
-
-def old_get_ird_base_array(sen, rcp, rcm, per, at): # todo use to check then delete
-    """
-    get the irrigation demand array
-    :param sen: see above
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
-    :return:
-    """
-    path = os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow/ird_{}_{}_{}_{}_{}.txt'.format(sen, rcp, rcm, per, at))
-    if not os.path.exists(path):
-        raise ValueError('array not implemented, why are you using {}'.format((sen, rcp, rcm, per, at)))
-    outdata = np.loadtxt(path)
-    if outdata.shape != (smt.rows, smt.cols):
-        raise ValueError('incorrect shape for ird: {}'.format(outdata.shape))
-    if sen == 'current':
-        outdata *= 1.2  # this accounts for the 20 % leakage in our current senario which is 80% efficient.  there is no difference between the two irrigation demand arrays otherwise
-    return outdata
-
-
-
-
-
-lsrm_rch_base_dir = r"E:\ecan_data_org\mh_modeling\lsrm\lsrm_results\water_year_means"
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
 def _get_rch_hdf_path(base_dir, naturalised, pc5, rcm, rcp):
@@ -413,39 +368,5 @@ def _create_all_lsrm_arrays():
 
 if __name__ == '__main__':
     # tests
-    import pandas as pd
-    testtype = 0
-    senarios = ['pc5', 'nat', 'current']
-    rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
-    rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
-    periods = [None, 1980] + range(2010, 2100, 20)
-    ats = ['period_mean', '3_lowest_con_mean', 'lowest_year', 'mean']
-
-    outdata = pd.DataFrame(columns=['senarios','rcps','rcms','periods','ats', 'ird_same', 'rch_same','error'])
-    for i, (s,rc,rm,per,at) in enumerate(itertools.product(senarios,rcps,rcms,periods,ats)):
-        outdata.loc[i,'senarios'] = s
-        outdata.loc[i,'rcps'] = rc
-        outdata.loc[i,'rcms'] = rm
-        outdata.loc[i,'periods'] = per
-        outdata.loc[i,'ats'] = at
-
-
-        try:
-            old_ird = old_get_ird_base_array(s,rc,rm,per,at)
-            old_ird[np.isnan(old_ird)] = 0
-            new_ird = get_ird_base_array(s,rc,rm,per,at)
-            new_ird[np.isnan(new_ird)] = 0
-            outdata.loc[i,'ird_same'] = np.isclose(old_ird,new_ird).all()
-
-
-            old = old_get_lsrm_base_array(s,rc,rm,per,at)
-            old[np.isnan(old)] = 0
-            new = get_lsrm_base_array(s,rc,rm,per,at)
-            new[np.isnan(new)] = 0
-            outdata.loc[i,'rch_same'] = np.isclose(old,new).all()
-        except Exception as val:
-            outdata.loc[i,'error'] = val
-
-    outdata.to_csv(r"C:\Users\Matt Hanson\Downloads\test_rch.csv")
-
+    pass
 
