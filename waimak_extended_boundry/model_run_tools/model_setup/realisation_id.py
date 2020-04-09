@@ -33,7 +33,7 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test
     if org_pumping_wells:
         all_wells = pd.read_hdf(well_path, 'model_period')  # usage for the model period as passed to the optimisation
     else:
-        all_wells = pd.read_hdf(well_path, '2014_2015_period')  # usage for 2014/2015 period in waimak zone
+        all_wells = pd.read_hdf(well_path, 'pump_2014_2015')  # usage for 2014/2015 period in waimak zone
 
     all_wells.loc[:, 'nsmc_type'] = ''
 

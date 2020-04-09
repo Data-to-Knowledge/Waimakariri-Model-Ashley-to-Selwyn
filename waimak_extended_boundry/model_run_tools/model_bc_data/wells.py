@@ -283,7 +283,7 @@ def get_full_allo_multipler(org_pumping_wells, recalc=False): # todo test
     if org_pumping_wells:
         new = 'mod_period'
     else:
-        new = '2014_15'
+        new = 'pump_2014_15'
 
     outdata = pd.read_hdf(os.path.join(sdp_required, 'allo_multiplier.hdf'),new)
     return outdata
