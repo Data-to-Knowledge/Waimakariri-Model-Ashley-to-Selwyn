@@ -263,7 +263,7 @@ def get_cc_pumping_muliplier(cc_inputs):
     return np.nanmean(outdata)
 
 
-def get_full_allo_multipler(org_pumping_wells, recalc=False): # todo test
+def get_full_allo_multipler(org_pumping_wells, recalc=False):
     """
     get the multipliers (on a per well basis) to move to full allocation
     :param org_pumping_wells: if true use model period wells, else use 2014/15 wells

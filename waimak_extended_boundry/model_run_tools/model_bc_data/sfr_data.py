@@ -10,7 +10,7 @@ import env
 import netCDF4 as nc
 
 
-def get_base_sfr_data():  # todo check
+def get_base_sfr_data():
     """
     get the pre-optimisation data, exlcude hcond etc????
     :return:
@@ -21,7 +21,7 @@ def get_base_sfr_data():  # todo check
     return seg_data, rch_data
 
 
-def add_sfr_cond(model_id, rch_data):  # todo check
+def add_sfr_cond(model_id, rch_data):
     """
     get teh sfr conductance for a given reach
     :param model_id:
@@ -35,19 +35,19 @@ def add_sfr_cond(model_id, rch_data):  # todo check
     nidx = np.where(param_data.variables['nsmc_num'][:] == nsmc_num)[0][0]
     conduct_names = param_data.variables['sfr_cond'][:]
     conduct_vals = param_data.variables['sfr_cond_val'][nidx][:]
-    cond_dict = {k:v for k,v in zip(conduct_names,conduct_vals)}
+    cond_dict = {k: v for k, v in zip(conduct_names, conduct_vals)}
 
     # get the parameter mapper
-    param_mapper = pd.read_table(os.path.join(env.sdp_required,'base_for_nsmc_real/sfr_segdata.tpl'),
+    param_mapper = pd.read_table(os.path.join(env.sdp_required, 'base_for_nsmc_real/sfr_segdata.tpl'),
                                  skiprows=1, index_col=0)
 
-    for nseg, hcond1_nm, hcond2_nm in param_mapper[['hcond1','hcond2']].itertuples(True,None):
-        hcond1 = cond_dict[hcond1_nm]
-        hcond2 = cond_dict[hcond2_nm]
-        m = (hcond2 - hcond1) / rch_data.loc[rch_data.iseg==nseg,'rchlen'].sum()  # slope of conductance down segment
+    for nseg, hcond1_nm, hcond2_nm in param_mapper[['hcond1', 'hcond2']].itertuples(True, None):
+        hcond1 = cond_dict[hcond1_nm.replace('$', '').lower()]
+        hcond2 = cond_dict[hcond2_nm.replace('$', '').lower()]
+        m = (hcond2 - hcond1) / rch_data.loc[rch_data.iseg == nseg, 'rchlen'].sum()  # slope of conductance down segment
         # Series of conductance linearly varying from upper to lower
-        rhcond = (m * (rch_data.loc[rch_data.iseg==nseg,'rchlen'].cumsum() -
-                       rch_data.loc[rch_data.iseg==nseg,'rchlen'].rchlen / 2.0)) \
+        rhcond = (m * (rch_data.loc[rch_data.iseg == nseg, 'rchlen'].cumsum() -
+                       rch_data.loc[rch_data.iseg == nseg, 'rchlen'] / 2.0)) \
                  + hcond1  # m*x+c - x is distance along segment to cell midpoit
 
         rch_data.loc[rch_data.iseg == nseg, 'strhc1'] = rhcond
@@ -55,7 +55,7 @@ def add_sfr_cond(model_id, rch_data):  # todo check
     return rch_data
 
 
-def add_sfr_inflows(model_id, seg_data):  # todo check
+def add_sfr_inflows(model_id, seg_data):
     """
     add inflow data to the segment data, the sfr inflows for the Cust, cust biwash and Eyre are parameterised while
     the inflows for the Waimakariri R. Ashley R. and Ashley Tribs, were held constant
@@ -70,7 +70,7 @@ def add_sfr_inflows(model_id, seg_data):  # todo check
 
     eyre = float(param_data.variables['top_e_flo'][nidx])
     cust = float(param_data.variables['top_c_flo'][nidx])
-    race_biwash = float(param_data.variables['mid_c_flo'])
+    race_biwash = float(param_data.variables['mid_c_flo'][nidx])
 
     inflows = {
         3: 11300000.0,  # 'Waimakariri'
@@ -87,8 +87,8 @@ def add_sfr_inflows(model_id, seg_data):  # todo check
         19: race_biwash,  # 'Race Bywash (Cust)'
     }
 
-    for k,v in inflows.items():
-        seg_data.loc[k,'flow'] = v
+    for k, v in inflows.items():
+        seg_data.loc[k, 'flow'] = v
     return seg_data
 
 
@@ -112,18 +112,45 @@ def get_sfr_data(model_id, return_as_df=False):
         return seg_data, rch_data
 
 
-def convert_rch_to_recarray(rch_data): # todo finish when checking
+def convert_rch_to_recarray(rch_data):
     """
     convert teh reach data to teh record array needed for modflow
     :param rch_data:
     :return:
     """
-    raise NotImplementedError
+    dtype = [('node', '<i4'), ('k', '<i4'), ('i', '<i4'), ('j', '<i4'), ('iseg', '<i4'), ('ireach', '<i4'),
+             ('rchlen', '<f4'), ('strtop', '<f4'), ('slope', '<f4'), ('strthick', '<f4'), ('strhc1', '<f4'),
+             ('thts', '<f4'), ('thti', '<f4'), ('eps', '<f4'), ('uhc', '<f4'), ('reachID', '<i4'), ('outreach', '<i4')]
+    keys = [k[0] for k in dtype]
+    dtype = {k[0]: k[1] for k in dtype}
+    rch_data = rch_data.loc[:, keys].to_records(index=False, column_dtypes=dtype)
+    return rch_data
 
 
-def convert_seg_to_recarray(seg_data): # todo finish when checking
+def convert_seg_to_recarray(seg_data):
     """
     convert the segment data to the record array needed for modflow
     :return:
     """
-    raise NotImplementedError
+    dtype = [('nseg', '<i4'), ('icalc', '<i4'), ('outseg', '<i4'), ('iupseg', '<i4'), ('iprior', '<i4'),
+             ('nstrpts', '<i4'),
+             ('flow', '<f4'), ('runoff', '<f4'), ('etsw', '<f4'), ('pptsw', '<f4'), ('roughch', '<f4'),
+             ('roughbk', '<f4'),
+             ('cdpth', '<f4'), ('fdpth', '<f4'), ('awdth', '<f4'), ('bwdth', '<f4'), ('hcond1', '<f4'),
+             ('thickm1', '<f4'),
+             ('elevup', '<f4'), ('width1', '<f4'), ('depth1', '<f4'), ('thts1', '<f4'), ('thti1', '<f4'),
+             ('eps1', '<f4'),
+             ('uhc1', '<f4'), ('hcond2', '<f4'), ('thickm2', '<f4'), ('elevdn', '<f4'), ('width2', '<f4'),
+             ('depth2', '<f4'),
+             ('thts2', '<f4'), ('thti2', '<f4'), ('eps2', '<f4'), ('uhc2', '<f4')]
+    keys = [k[0] for k in dtype]
+    dtype = {k[0]: k[1] for k in dtype}
+    seg_data.reset_index(inplace=True)
+    seg_data = seg_data.loc[:, keys].to_records(index=False, column_dtypes=dtype)
+
+    return seg_data
+
+
+if __name__ == '__main__':
+
+    print 'done'

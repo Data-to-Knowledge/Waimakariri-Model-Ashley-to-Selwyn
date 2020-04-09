@@ -21,7 +21,7 @@ import pandas as pd
 temp_pickle_dir = None  # todo manage almost gone
 
 
-def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test
+def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test and compare to loaded model
     """
     applies the NSMC pumping mulitpliers
     :param model_id: the NSMC realisation

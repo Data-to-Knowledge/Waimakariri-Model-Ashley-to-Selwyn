@@ -10,7 +10,7 @@ import pandas as pd
 from env import sdp_required
 import netCDF4 as nc
 
-def get_base_drn_spd(ncars=True):#todo test
+def get_base_drn_spd(ncars=True):
     """
     get the drain data, but without the correct conductance values...
     :param ncars: boolean if True then return with teh north carpet drains(e.g. similar to the optimisation)
@@ -42,7 +42,7 @@ def _get_drn_cond(model_id):
 
     return out
 
-def get_drn_spd(model_id, ncarpet=True): #todo test
+def get_drn_spd(model_id, ncarpet=True):
     """
     get stress period data for the model with n carpert drains
     :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
@@ -53,10 +53,10 @@ def get_drn_spd(model_id, ncarpet=True): #todo test
     drn_cond_mapper = _get_drn_cond(model_id)
     base_data = get_base_drn_spd(ncarpet)
 
-    base_data.replace({'parameter_group':drn_cond_mapper})
+    base_data.replace({'parameter_group':drn_cond_mapper}, inplace=True)
     base_data.loc[:,'cond'] = base_data.loc[:, 'parameter_group'].astype(float)
 
-    return base_data.loc[:,['k','i','j','elev','cond']].to_records()
+    return base_data.loc[:,['k','i','j','elev','cond']].to_records(index=False)
 
 
 def get_drn_no_ncarpet_spd(model_id):
@@ -69,6 +69,6 @@ def get_drn_no_ncarpet_spd(model_id):
     return get_drn_spd(model_id,ncarpet=False)
 
 if __name__ == '__main__':
-    get_drn_spd('NsmcReal{:06d}'.format(15))
+    test = get_drn_spd('NsmcReal{:06d}'.format(17), False)
 
     print('done')
