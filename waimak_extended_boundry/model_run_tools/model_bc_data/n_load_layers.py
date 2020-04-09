@@ -13,7 +13,7 @@ import geopandas as gpd
 import shutil
 import netCDF4 as nc
 
-def get_gmp_con_layer(recalc=False): #todo test
+def get_gmp_con_layer(recalc=False):
     """
     'recharge concentration under good managment practices GMP'
     :param recalc:
@@ -34,7 +34,7 @@ def get_gmp_con_layer(recalc=False): #todo test
     return outdata
 
 
-def get_new_cmp_con(recalc=False): #todo test
+def get_new_cmp_con(recalc=False):
     """
     'recharge concentration under current managment practices'
     :param recalc:
@@ -56,7 +56,7 @@ def get_new_cmp_con(recalc=False): #todo test
     return outdata
 
 
-def get_pc5pa_additonal_load(recalc=False): # todo test
+def get_pc5pa_additonal_load(recalc=False):
     """
     get the additional load from pc5pa rules
     :param recalc:
@@ -79,7 +79,7 @@ def get_pc5pa_additonal_load(recalc=False): # todo test
     return outdata
 
 
-def get_pc5pa_additonal_con(recalc=False):# todo test
+def get_pc5pa_additonal_con(recalc=False):#
     """
     fraction of the additional load with new pc5PA rules
     :param recalc:
@@ -101,7 +101,7 @@ def get_pc5pa_additonal_con(recalc=False):# todo test
     return outdata
 
 
-def get_gmp_load_raster(recalc=False): #todo test
+def get_gmp_load_raster(recalc=False):
     """
     array of N load for good management practices (GMP)
     :param recalc:
@@ -264,7 +264,10 @@ def get_gmp_plus_con_layer_by_load_limit(
 
 
 if __name__ == '__main__':
-    org = get_gmp_con_layer()
-    new = get_gmp_plus_con_layer_by_load_limit(n_load_limit = [10,15,25],
-                                                n_reduction = [5,10,20])
-    print ('done')
+    fs=[get_gmp_con_layer, get_new_cmp_con, get_pc5pa_additonal_con,get_pc5pa_additonal_load,get_gmp_load_raster]
+    ts=['get_gmp_con_layer', 'get_new_cmp_con', 'get_pc5pa_additonal_con','get_pc5pa_additonal_load','get_gmp_load_raster']
+    for f, t in zip(fs,ts):
+        test = f()
+        smt.plt_matrix(test, base_map=True, no_flow_layer=None, title=t)
+
+    smt.plt_show()
