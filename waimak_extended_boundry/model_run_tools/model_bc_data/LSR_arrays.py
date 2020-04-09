@@ -18,7 +18,7 @@ from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
 
 rch_data_path = os.path.join(env.sdp_required,'recharge_arrays.nc')
 
-def get_optimisation_recharge(): # todo test
+def get_optimisation_recharge():
     """
     return the base recharge array without any pest multipliers,
     this is the recharge used for the start of the optimisation
@@ -27,7 +27,7 @@ def get_optimisation_recharge(): # todo test
     data = np.array(nc.Dataset(rch_data_path).variables['opt_rch'])
     return data
 
-def get_rch_fixer(): # todo test
+def get_rch_fixer():
     """
     an array to index the abnormal recharge in chch and te waihora 1 = tewaihora and coastal, 0 = chch, all others nan
     :param recalc: boolean whether to recalc (True) or load from pickle if avalible
@@ -138,55 +138,7 @@ def get_lsrm_base_array(sen, rcp, rcm, per, at): # todo check
     :param at:
     :return:
     """
-    senarios = ['pc5', 'nat', 'current']
-    rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
-    rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
-    periods = [None, 1980] + range(2010, 2100, 20)
-    ats = ['period_mean', '3_lowest_con_mean', 'lowest_year', 'mean']
-
-    # check arguments
-    assert sen in senarios
-    assert rcp in rcps
-    assert rcm in rcms
-    assert per in periods
-    assert at in ats
-
-    data = nc.Dataset(rch_data_path)
-
-    # capture the current data
-    if rcp is None and rcm is None:
-        assert per is None
-        assert at is 'mean'
-        idx = np.where(data['scenario']==sen)[0][0]
-        out = np.array(data['current_recharge'][idx])
-
-    # capture the rcp_past
-    elif rcp == 'RCPpast':
-        assert per == 1980
-        assert at != 'mean'
-        i = np.where(data['scenario']==sen)[0][0]
-        j = np.where(data['rcm']==rcm)[0][0]
-        k = np.where(data['amalg_type']==at)[0][0]
-        out = np.array(data['rcp_past_recharge'][i,j,k])
-
-    # climate change scenarios
-    elif rcp is not None and rcm is not None:
-        assert per in range(2010, 2100, 20)
-        assert at != 'mean'
-
-        i = np.where(data['scenario']==sen)[0][0]
-        j = np.where(data['rcp']==rcp)[0][0]
-        k = np.where(data['rcm']==rcm)[0][0]
-        l = np.where(data['period']==per)[0][0]
-        m = np.where(data['amalg_type']==at)[0][0]
-        out = np.array(data['future_recharge'][i,j,k,l,m])
-
-    else:
-        raise ValueError('rcm and rcp must either be both None or both not None')
-
-    assert out.shape == (smt.rows,smt.cols), 'weird shape {}'.format(out.shape)
-
-    return out
+    return _get_rch_ird(sen,rcp,rcm,per,at,recharge=True)
 
 
 
@@ -200,6 +152,25 @@ def get_ird_base_array(sen, rcp, rcm, per, at): # todo check
     :param at:
     :return:
     """
+    return _get_rch_ird(sen,rcp,rcm,per,at,recharge=False)
+
+
+def _get_rch_ird(sen, rcp, rcm, per, at, recharge):
+    """
+
+    :param sen:
+    :param rcp:
+    :param rcm:
+    :param per:
+    :param at:
+    :param recharge:boolean if True then Recharge else IRD
+    :return:
+    """
+    if recharge:
+        key_val = 'recharge'
+    else:
+        key_val = 'ird'
+
     senarios = ['pc5', 'nat', 'current']
     rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
     rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
@@ -219,29 +190,29 @@ def get_ird_base_array(sen, rcp, rcm, per, at): # todo check
     if rcp is None and rcm is None:
         assert per is None
         assert at is 'mean'
-        idx = np.where(data['scenario'] == sen)[0][0]
-        out = np.array(data['current_ird'][idx])
+        idx = np.where(np.array(data['scenario']) == sen)[0][0]
+        out = np.array(np.array(data['current_{}'.format(key_val)])[idx])
 
     # capture the rcp_past
     elif rcp == 'RCPpast':
         assert per == 1980
         assert at != 'mean'
-        i = np.where(data['scenario'] == sen)[0][0]
-        j = np.where(data['rcm'] == rcm)[0][0]
-        k = np.where(data['amalg_type'] == at)[0][0]
-        out = np.array(data['rcp_past_ird'][i, j, k])
+        i = np.where(np.array(data.variables['scenario']) == sen)[0][0]
+        j = np.where(np.array(data.variables['rcm']) == rcm)[0][0]
+        k = np.where(np.array(data.variables['amalg_type']) == at)[0][0]
+        out = np.array(data.variables['rcp_past_{}'.format(key_val)][i, j, k])
 
     # climate change scenarios
     elif rcp is not None and rcm is not None:
         assert per in range(2010, 2100, 20)
         assert at != 'mean'
 
-        i = np.where(data['scenario'] == sen)[0][0]
-        j = np.where(data['rcp'] == rcp)[0][0]
-        k = np.where(data['rcm'] == rcm)[0][0]
-        l = np.where(data['period'] == per)[0][0]
-        m = np.where(data['amalg_type'] == at)[0][0]
-        out = np.array(data['future_ird'][i, j, k, l, m])
+        i = np.where(np.array(data.variables['scenario']) == sen)[0][0]
+        j = np.where(np.array(data.variables['rcp']) == rcp)[0][0]
+        k = np.where(np.array(data.variables['rcm']) == rcm)[0][0]
+        l = np.where(np.array(data.variables['period']) == per)[0][0]
+        m = np.where(np.array(data.variables['amalg_type']) == at)[0][0]
+        out = np.array(data.variables['future_{}'.format(key_val)][i, j, k, l, m])
 
     else:
         raise ValueError('rcm and rcp must either be both None or both not None')
@@ -250,10 +221,9 @@ def get_ird_base_array(sen, rcp, rcm, per, at): # todo check
 
     return out
 
-
 # deprecidated functions and opperations
 
-def old_get_lsrm_base_array(sen, rcp, rcm, per, at): # todo use to check
+def old_get_lsrm_base_array(sen, rcp, rcm, per, at): # todo use to check then delete
     """
     get the lsr array
     :param sen: see above
@@ -273,7 +243,7 @@ def old_get_lsrm_base_array(sen, rcp, rcm, per, at): # todo use to check
     return outdata
 
 
-def old_get_ird_base_array(sen, rcp, rcm, per, at): # todo use to check
+def old_get_ird_base_array(sen, rcp, rcm, per, at): # todo use to check then delete
     """
     get the irrigation demand array
     :param sen: see above
@@ -297,7 +267,7 @@ def old_get_ird_base_array(sen, rcp, rcm, per, at): # todo use to check
 
 
 
-lsrm_rch_base_dir = env.gw_met_data('niwa_netcdf/lsrm/lsrm_results/water_year_means')
+lsrm_rch_base_dir = r"E:\ecan_data_org\mh_modeling\lsrm\lsrm_results\water_year_means"
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
 
 def _get_rch_hdf_path(base_dir, naturalised, pc5, rcm, rcp):
@@ -443,4 +413,39 @@ def _create_all_lsrm_arrays():
 
 if __name__ == '__main__':
     # tests
+    import pandas as pd
     testtype = 0
+    senarios = ['pc5', 'nat', 'current']
+    rcps = ['RCPpast', 'RCP4.5', 'RCP8.5', None]
+    rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M', None]
+    periods = [None, 1980] + range(2010, 2100, 20)
+    ats = ['period_mean', '3_lowest_con_mean', 'lowest_year', 'mean']
+
+    outdata = pd.DataFrame(columns=['senarios','rcps','rcms','periods','ats', 'ird_same', 'rch_same','error'])
+    for i, (s,rc,rm,per,at) in enumerate(itertools.product(senarios,rcps,rcms,periods,ats)):
+        outdata.loc[i,'senarios'] = s
+        outdata.loc[i,'rcps'] = rc
+        outdata.loc[i,'rcms'] = rm
+        outdata.loc[i,'periods'] = per
+        outdata.loc[i,'ats'] = at
+
+
+        try:
+            old_ird = old_get_ird_base_array(s,rc,rm,per,at)
+            old_ird[np.isnan(old_ird)] = 0
+            new_ird = get_ird_base_array(s,rc,rm,per,at)
+            new_ird[np.isnan(new_ird)] = 0
+            outdata.loc[i,'ird_same'] = np.isclose(old_ird,new_ird).all()
+
+
+            old = old_get_lsrm_base_array(s,rc,rm,per,at)
+            old[np.isnan(old)] = 0
+            new = get_lsrm_base_array(s,rc,rm,per,at)
+            new[np.isnan(new)] = 0
+            outdata.loc[i,'rch_same'] = np.isclose(old,new).all()
+        except Exception as val:
+            outdata.loc[i,'error'] = val
+
+    outdata.to_csv(r"C:\Users\Matt Hanson\Downloads\test_rch.csv")
+
+
