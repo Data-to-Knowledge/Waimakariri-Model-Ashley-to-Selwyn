@@ -19,6 +19,8 @@ import pandas as pd
 from itertools import izip_longest
 import psutil
 import gc
+import os
+
 
 # todo check this for problematic references, ect
 def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_no_value=-1, sobs=None):
@@ -36,10 +38,10 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
     """
     if not isinstance(ucn_paths, dict):
         raise ValueError('expected dictionary for unc_paths, see doc')
-    if sobs is not None and not isinstance(sobs,dict):
+    if sobs is not None and not isinstance(sobs, dict):
         raise ValueError('expected dicionary for sobs')
 
-    if isinstance(sobs,dict):
+    if isinstance(sobs, dict):
         if sobs.keys() != ucn_paths.keys():
             raise ValueError('expected same keys for sobs and ucns')
         if [len(e) for e in sobs.items()] != [len(e) for e in ucn_paths.items()]:
@@ -108,9 +110,9 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
                    'missing_value': np.nan,
                    'standard_name': 'projection_x_coordinate'})
     lon[:] = x
-    av_mem = psutil.virtual_memory().total -4e9
-    file_size = smt.get_empty_model_grid(True)[np.newaxis,:,:,:].nbytes
-    num_files = int(av_mem//file_size)
+    av_mem = psutil.virtual_memory().total - 4e9
+    file_size = smt.get_empty_model_grid(True)[np.newaxis, :, :, :].nbytes
+    num_files = int(av_mem // file_size)
     # some checks
     for var, paths in ucn_paths.items():
         print('extracting data for {}'.format(var))
@@ -131,27 +133,27 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
         kstpkper = _get_kstkpers(temp_ucn_file, rel_kstpkpers=-1)[0]  # get the last kstpkper
         if len(temp_ucn_file.get_kstpkper()) > 1:
             warn('more than one kstpkper for {}, using the last kstpkper which is {}'.format(var, kstpkper))
-        for i,group in enumerate(grouper(num_files,paths)):
-            print('starting set {} to {} of {} for {}'.format(i*3, i*3+num_files, len(paths), var))
+        for i, group in enumerate(grouper(num_files, paths)):
+            print('starting set {} to {} of {} for {}'.format(i * 3, i * 3 + num_files, len(paths), var))
             num_not_nan = pd.notnull(list(group)).sum()
-            outdata = np.zeros((num_not_nan,smt.layers,smt.rows,smt.cols),dtype=np.float32) * np.nan
-            for j,path in enumerate(group):
-                if j% 100 == 0:
-                    print('reading {} of {}'.format(j,j+100,num_files))
+            outdata = np.zeros((num_not_nan, smt.layers, smt.rows, smt.cols), dtype=np.float32) * np.nan
+            for j, path in enumerate(group):
+                if j % 100 == 0:
+                    print('reading {} of {}'.format(j, j + 100, num_files))
                 if path is None:
                     continue
                 ucn_file = flopy.utils.UcnFile(path)
                 temp_out = ucn_file.get_data(kstpkper=kstpkper).astype(np.float32)
                 temp_out[np.isclose(temp_out, ucn_no_value)] = np.nan
                 outdata[j] = temp_out
-            temp[i*num_files:i*num_files+num_not_nan] = outdata
+            temp[i * num_files:i * num_files + num_not_nan] = outdata
             gc.collect()
 
     if sobs is None:
         return nc_file
-    av_mem = psutil.virtual_memory().total -4e9
+    av_mem = psutil.virtual_memory().total - 4e9
     file_size = smt.get_empty_model_grid(False).nbytes
-    num_files = int(av_mem//file_size)
+    num_files = int(av_mem // file_size)
     for var, paths in sobs.items():
         print('extracting data for {}'.format(var))
         if isinstance(units, str):
@@ -168,17 +170,17 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
                         'missing_value': np.nan})
 
         # assume that only one kstpkper
-        for i,group in enumerate(grouper(num_files,paths)):
-            print('starting set {} to {} of {} for {}'.format(i*3, i*3+num_files, len(paths), var))
+        for i, group in enumerate(grouper(num_files, paths)):
+            print('starting set {} to {} of {} for {}'.format(i * 3, i * 3 + num_files, len(paths), var))
             num_not_nan = pd.notnull(list(group)).sum()
-            outdata = np.zeros((num_not_nan, smt.rows, smt.cols),dtype=np.float32)*np.nan
-            for j,path in enumerate(group):
-                if j% 100 == 0:
-                    print('reading {} of {}'.format(j,j+100,num_files))
+            outdata = np.zeros((num_not_nan, smt.rows, smt.cols), dtype=np.float32) * np.nan
+            for j, path in enumerate(group):
+                if j % 100 == 0:
+                    print('reading {} of {}'.format(j, j + 100, num_files))
                 if path is None:
                     continue
                 outdata[j] = _get_sfr_con_map(path)
-            temp[i*num_files:i*num_files+num_not_nan] = outdata
+            temp[i * num_files:i * num_files + num_not_nan] = outdata
             gc.collect()
 
     return nc_file
@@ -189,18 +191,20 @@ def grouper(n, iterable, fillvalue=None):
     args = [iter(iterable)] * n
     return izip_longest(fillvalue=fillvalue, *args)
 
+
 def _get_sfr_con_map(path):
-    data = pd.read_table(path,delim_whitespace=True)
+    data = pd.read_table(path, delim_whitespace=True)
     data.loc[:, 'SFR-CONCENTRATION'] = pd.to_numeric(data['SFR-CONCENTRATION'], 'coerce')
-    data.loc[:,'row'] = data.loc[:,'SFR-NODE'] + 1000
-    data.loc[:,'col'] = data.loc[:,'SFR-NODE'] + 1000
+    data.loc[:, 'row'] = data.loc[:, 'SFR-NODE'] + 1000
+    data.loc[:, 'col'] = data.loc[:, 'SFR-NODE'] + 1000
 
-    mappers = pd.read_table(env.sci(r'Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\from_gns\nsmc\sfr_reachdata.csv'))
-    mappers.loc[:,'reachID'] += 1000
+    mappers = pd.read_hdf(os.path.join(env.sdp_required, 'sfr_data.hdf'), 'reach_data')
+
+    mappers.loc[:, 'reachID'] += 1000 # to prevent replace mapping errors
     mappers = mappers.set_index('reachID')
-    row_map = mappers.loc[:,'i'].to_dict()
-    col_map = mappers.loc[:,'j'].to_dict()
+    row_map = mappers.loc[:, 'i'].to_dict()
+    col_map = mappers.loc[:, 'j'].to_dict()
 
-    data = data.replace({'row':row_map,'col':col_map})
-    outdata = smt.df_to_array(data,'SFR-CONCENTRATION')
+    data = data.replace({'row': row_map, 'col': col_map})
+    outdata = smt.df_to_array(data, 'SFR-CONCENTRATION')
     return outdata

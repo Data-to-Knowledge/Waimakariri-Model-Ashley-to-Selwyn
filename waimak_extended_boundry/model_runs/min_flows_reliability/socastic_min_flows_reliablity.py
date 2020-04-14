@@ -6,7 +6,7 @@ from __future__ import division
 import os
 import time
 from future.builtins import input
-from forward_runs import setup_run_args, run_forward_runs
+from waimak_extended_boundry.model_run_tools.forward_quanity_support.forward_runs import setup_run_args, run_forward_runs
 from waimak_extended_boundry.model_run_tools.forward_quanity_support.extract_data_for_forward_runs import gen_all_outdata_forward_runs, extract_and_save_all_cc_mult_missing_w
 from visualise_data_from_fruns import plot_and_save_forward_vis
 from waimak_extended_boundry.model_run_tools import trans_readme, get_stocastic_set

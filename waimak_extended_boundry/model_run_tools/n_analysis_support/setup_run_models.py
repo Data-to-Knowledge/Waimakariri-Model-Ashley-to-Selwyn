@@ -16,7 +16,7 @@ import multiprocessing
 import psutil
 import time
 from waimak_extended_boundry.model_run_tools import zipped_modflow_converged, mt3d_converged, setup_run_mt3d_mp, get_default_mt3d_kwargs
-from waimak_extended_boundry.model_runs.min_flows_reliability.forward_runs import run_forward_runs #todo what is up with this!!!
+from waimak_extended_boundry.model_run_tools.forward_quanity_support.forward_runs import run_forward_runs
 from waimak_extended_boundry.model_run_tools.data_extraction.ucn_netcdf import \
     make_ucn_netcd
 from waimak_extended_boundry.model_run_tools.data_extraction.cell_budget_netcdf import make_cellbud_netcdf
@@ -149,6 +149,6 @@ def extract_cbc_data(base_modflow_dir, description, nc_path, zlib=False):
     make_cellbud_netcdf(nsmc_nums, sfo_paths, cbc_paths, description, nc_path, zlib)
 
 
-pc5_ftl_repo = env.gw_met_data("mh_modeling/pc580_ftls") #todo manage this, maybe put a zipped version into recommended
+pc5_ftl_repo = env.pc5_ftl_repo
 if __name__ == '__main__':
     pass

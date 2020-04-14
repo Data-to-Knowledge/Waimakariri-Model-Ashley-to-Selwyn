@@ -319,6 +319,8 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)  # remove old files to prevent file mix ups
         m._set_name(name)
+        m.lmt6.output_file_name = '{}.ftl'.format(name) # set the ftl output name, so it's simple.
+
         m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp_required)
         units = deepcopy(m.output_units)
         for u in units:
@@ -415,9 +417,6 @@ def get_stocastic_set(return_model_ids=True):
 
 
 if __name__ == '__main__':
-    # todo either it didnt save or it deleted the finished model, either way is problematic!!!, I think i fixed this
-    # todo what is with teh ftl name, fix that???? check in already loaded models...
-
     t = get_model_name_path('NsmcReal{:06d}'.format(17))
     print t
     print('done')

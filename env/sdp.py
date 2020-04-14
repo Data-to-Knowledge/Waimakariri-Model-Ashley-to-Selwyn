@@ -4,9 +4,8 @@
  """
 
 from __future__ import division
-from env.env_paths import  sci, transfers
 import os
-import socket
+import warnings
 
 # todo document this when it is all said and done and set to None... and document in scripts section.
 sdp_required = r"D:\Waimakariri_model_input_data\required"
@@ -23,6 +22,10 @@ assert temp_file_dir is not None, 'temp file dir must be set'
 
 loaded_model_realisation_dir = r"C:\Users\Matt Hanson\Downloads\temp_loaded_realisations"
 assert loaded_model_realisation_dir is not None, 'loaded model realisation dir must be set'
+
+pc5_ftl_repo = None # note the pc5 ftl, pc5 + eyre mar, base ftl repos are compressed in the recommended folder.
+if pc5_ftl_repo is None:
+    warnings.warn('pc5_ftl_repo is not set  in env.sdp.  This could cause problems for some transport modelling')
 
 if not os.path.exists(temp_file_dir):
     os.makedirs(temp_file_dir)

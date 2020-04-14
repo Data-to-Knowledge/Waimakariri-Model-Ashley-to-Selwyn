@@ -13,6 +13,7 @@ from waimak_extended_boundry import smt
 from copy import deepcopy
 import itertools
 from future.builtins import input
+import time
 import datetime
 import psutil
 
@@ -391,28 +392,6 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
     print('{} runs completed in {} minutes'.format(len(runs), ((time.time() - t) / 60)))
     return pool_outputs
 
-# todo move to modelling?????
+# todo move to modelling????? check for problematic things...
 if __name__ == '__main__':
-    # tests run in the run script for forward runs
-    safemode = True
-    # define the two below before each run
-    dir_path = r"D:\mh_model_runs\forward_runs_2017_10_10"  # path on rdsprod03
-    notes = """ 
-    LSR senario changes applied to full domain, CC component of LSR changes applied to whole domain, but ccmult and missing h20 is waimak only
-    pumping changes only applied to Waimakariri with the exception of the pc5 adjustment which is applied in the full domain,
-    run in {}
-    """.format(dir_path)
-    if safemode:
-        if os.path.exists(dir_path):
-            cont = input(
-                'run all forward runs, this could overwrite item in :\n {} \n continue y/n\n'.format(dir_path)).lower()
-            if cont != 'y':
-                raise ValueError('script aborted so as not to potentially overwrite {}'.format(dir_path))
-    runs = setup_run_args('opt', dir_path, cc_to_waimak_only=False)
-    import time
-
-    t = time.time()
-    run_forward_runs(runs, dir_path, notes)
-    print('{} runs in __ min'.format(len(runs)))
-    print (time.time() - t) / 60
-    print('done')
+    pass
