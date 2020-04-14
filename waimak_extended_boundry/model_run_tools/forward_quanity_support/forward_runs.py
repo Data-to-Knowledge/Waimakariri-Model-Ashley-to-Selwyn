@@ -12,7 +12,6 @@ import logging
 from waimak_extended_boundry import smt
 from copy import deepcopy
 import itertools
-from future.builtins import input
 import time
 import datetime
 import psutil
@@ -384,7 +383,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
     with open("{}/forward_run_log/{}_forward_run_status_{}_{:02d}_{:02d}_{:02d}_{:02d}.txt".format(smt.sdp, model_id,
                                                                                                    now.year, now.month,
                                                                                                    now.day, now.hour,
-                                                                                                   now.minute),
+                                                                                                   now.minute), #todo manage the forward run log
               'w') as f:
         f.write(str(notes) + '\n')
         wr = ['{}: {}\n'.format(e[0], e[1]) for e in pool_outputs]
@@ -392,6 +391,5 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
     print('{} runs completed in {} minutes'.format(len(runs), ((time.time() - t) / 60)))
     return pool_outputs
 
-# todo move to modelling????? check for problematic things...
 if __name__ == '__main__':
     pass

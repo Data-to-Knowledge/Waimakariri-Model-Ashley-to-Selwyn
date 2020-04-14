@@ -9,8 +9,7 @@ import env
 import netCDF4 as nc
 import flopy_mh as flopy
 import numpy as np
-from waimak_extended_boundry.model_run_tools import \
-    _get_kstkpers
+from waimak_extended_boundry.model_run_tools import _get_kstkpers
 from waimak_extended_boundry import smt
 from warnings import warn
 import sys
@@ -22,7 +21,6 @@ import gc
 import os
 
 
-# todo check this for problematic references, ect
 def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_no_value=-1, sobs=None):
     """
     creates as netcdf file for all of the ucn data
