@@ -178,14 +178,14 @@ def big_nc_to_array(inpath, base_outdir, variables=None, crop_by_noflow=False, n
             if dataset.variables[var].ndim == 3:
                 _3d = False
 
-            if f is not None and _3d:# todo delete this loop, using it to speed up bug fix.
+            if f is not None or _3d:# todo delete this loop, using it to speed up bug fix.
                 print('skipping {} {} as 3d and a function'.format(var, fn))
                 continue
 
             if not _3d:
                 temp = np.array(dataset.variables[var][nidx])
                 if f is None:
-                    temp_data = temp
+                    temp_data = temp[0]
                 else:
                     temp_data = f(temp, axis=0)
 
@@ -359,24 +359,24 @@ def create_thickness(outdir=r"D:\Waimakariri_model_input_data\gis_database\from_
     thickness = tops - bottoms
 
     _save_to_array(thickness, os.path.join(outdir, "elv_db"), 'thickness', False, os.path.join(indir,"required/elv_db.nc"))
-    _save_plot(thickness, os.path.join(outdir,), "plots_elv_db", False, os.path.join(indir,"required/elv_db.nc"))
+    _save_plot(thickness, os.path.join(outdir, "plots_elv_db"),'thickness', False, os.path.join(indir,"required/elv_db.nc"))
 
 
 def rename_folders(indir):
     paths = glob.glob(os.path.join(indir,'*'))
 
     for p in paths:
-        assert os.path.isdir(p)
+        assert os.path.isdir(p), p
         os.rename(p, p.replace('stochastic', 'emma_no_wt').replace('all', 'filter1'))
 
 if __name__ == '__main__':
     import subprocess
-
+    # todo check the datasets
     subprocess.call('powercfg -change standby-timeout-ac 0')  # stop it from sleeping...
 
     #create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
     print('creating from ncs')
-    create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
-    #create_thickness() # todo create layer thickness tifs.
+    #create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
+    create_thickness() # todo create layer thickness tifs.
     #rename_folders(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")# todo rename after making a copy of the data
     subprocess.call('powercfg -change standby-timeout-ac 30')  # and start it sleeping again
