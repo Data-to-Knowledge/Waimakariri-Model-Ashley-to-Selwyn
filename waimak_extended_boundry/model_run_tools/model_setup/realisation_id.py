@@ -21,7 +21,7 @@ import pandas as pd
 temp_pickle_dir = None  # todo manage almost gone
 
 
-def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test and compare to loaded model
+def get_base_well(model_id, org_pumping_wells, recalc=False):
     """
     applies the NSMC pumping mulitpliers
     :param model_id: the NSMC realisation
@@ -34,6 +34,21 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test and c
         all_wells = pd.read_hdf(well_path, 'model_period')  # usage for the model period as passed to the optimisation
     else:
         all_wells = pd.read_hdf(well_path, 'pump_2014_2015')  # usage for 2014/2015 period in waimak zone
+
+    dataset = nc.Dataset(os.path.join(sdp_required, 'nsmc_params_obs_metadata.nc'))
+
+    mult_groups = ['pump_c', 'pump_s', 'pump_w', 'sriv', 'n_race', 's_race', 'nbndf']
+    well_mults = {}
+    nsmc_num = int(model_id[-6:])
+    nidx = np.where(dataset.variables['nsmc_num'][:] == nsmc_num)[0][0]
+
+    for m in mult_groups:
+        well_mults[m] = float(dataset.variables[m][nidx])
+
+    well_adds = {}
+    for a in ['llrzf', 'ulrzf']:
+        well_adds[a] = float(dataset.variables[a][nidx])
+
 
     all_wells.loc[:, 'nsmc_type'] = ''
 
@@ -54,22 +69,16 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):  # todo test and c
     all_wells.loc[all_wells.type == 'ulr_boundry_flux', 'nsmc_type'] = 'ulrzf'
     all_wells.loc[all_wells.type == 'boundry_flux', 'nsmc_type'] = 'nbndf'
 
-    base_dir = os.path.dirname(get_model_name_path(model_id))  # todo update from netcdf instead of the well adjust
-    mult_path = '{}/wel_adj.txt'.format(base_dir)  # figure out what the pest control file will populate
-    multipliers = pd.read_table(mult_path, index_col=0, delim_whitespace=True, names=['value'])
+    for group, mult in well_mults.items():
+        all_wells.loc[all_wells.nsmc_type == group, 'flux'] *= mult
 
-    mult_groups = ['pump_c', 'pump_s', 'pump_w', 'sriv', 'n_race', 's_race', 'nbndf']
-    for group in mult_groups:
-        all_wells.loc[all_wells.nsmc_type == group, 'flux'] *= multipliers.loc[group, 'value']
-
-    add_groups = ['llrzf', 'ulrzf']
-    for group in add_groups:
-        all_wells.loc[all_wells.nsmc_type == group, 'flux'] = multipliers.loc[group, 'value'] / (
+    for group, a in well_adds.items():
+        all_wells.loc[all_wells.nsmc_type == group, 'flux'] = a / (
                 all_wells.nsmc_type == group).sum()
     return all_wells
 
 
-def get_rch_multipler(model_id):  # todo test
+def get_rch_multipler(model_id):
     """
     get the recharge multipler if it does not exist in the file then create it with fac2real
     :param model_id: the NSMC realisation
@@ -83,7 +92,7 @@ def get_rch_multipler(model_id):  # todo test
     return outdata
 
 
-def get_model_name_path(model_id):  # todo test
+def get_model_name_path(model_id):
     """
     get the path to a model_id base model only NSMCs are currently supported e.g. 'NsmcReal{nsmc_num:06d}'
 
@@ -97,6 +106,8 @@ def get_model_name_path(model_id):  # todo test
     model_dict = {}
 
     old_model_id = {
+        # these can be found in "...\required\pre-stocastic_extended_models.zip"
+
         # this is here to support documentation in the future if needed
         # a place holder to test the scripts
         'test': r"C:\Users\MattH\Desktop\Waimak_modeling\ex_bd_tester\test_import_gns_mod\mf_aw_ex.nam",
@@ -145,7 +156,7 @@ def get_model_name_path(model_id):  # todo test
     return name_path
 
 
-def _get_nsmc_realisation(model_id, save_to_dir=False):  # todo test
+def _get_nsmc_realisation(model_id, save_to_dir=False):
     """
     wrapper to get model from a NSMC realisation saving the model takes c. 1.2 gb per model this includes many
     duplicate files, but some  are used for additional functions
@@ -155,7 +166,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):  # todo test
     :return:
     """
     # todo in future this could be simplified to only pull from the netcdfs instead of the converter dirs,
-    # todo this would allow significant savings in time and space required to load a new model realisation.
+    # todo this would allow significant savings in time.
 
 
     assert 'NsmcReal' in model_id, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
@@ -165,9 +176,8 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):  # todo test
     save_dir = loaded_model_realisation_dir
     if save_dir is None:
         raise ValueError(
-            'loaded model realisation dir is NONE, please set in waimak_extended_boundry/extended_boundry_model_tools.py')
+            'loaded model realisation dir is NONE, please set in env/sdp.py')
 
-    converter_dir = os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -177,6 +187,8 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):  # todo test
         m = flopy.modflow.Modflow.load(name_file_path, model_ws=os.path.dirname(name_file_path), forgive=False,
                                        check=False)
         return m
+    # if cannot load then run the model to get the data needed
+    converter_dir = os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
 
     # copy the base converter dir to the temporary converter dir
     shutil.copytree(base_converter_dir, converter_dir)
@@ -405,4 +417,6 @@ def get_stocastic_set(return_model_ids=True):
 
 
 if __name__ == '__main__':
+    t = get_model_name_path('NsmcReal{:06d}'.format(17)) # todo either it didnt save or it deleted the finished model, either way is problematic!!!
+    print t
     print('done')

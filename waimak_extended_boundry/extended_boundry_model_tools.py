@@ -10,6 +10,7 @@ from osgeo.gdal import Open as gdalOpen
 import numpy as np
 import os
 import netCDF4 as nc
+from env.sdp import loaded_model_realisation_dir # used else where basically I moved this up to sdp
 
 
 layers, rows, cols = 11, 364, 365
@@ -252,7 +253,6 @@ smt = ModelTools(
     base_map_path=os.path.join(env.sdp_required,'topo250small.tif')
 )
 
-loaded_model_realisation_dir = None #todo this must be set before running models
 
 # quick versioning
 model_version = 'a'

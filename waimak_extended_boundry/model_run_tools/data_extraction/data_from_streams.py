@@ -324,7 +324,7 @@ def _get_flux_flow_arrays(site, sw_samp_pts_dict, sw_samp_pts_df):
     return drn_array, sfr_array
 
 
-def get_samp_points_df(recalc=False): #todo test when I get the env sorted
+def get_samp_points_df(recalc=False):
     """
     generate a dataframe with useful info about sampling points
     bc_type: drn or sfr, comb

@@ -50,14 +50,13 @@ def get_race_data(model_id):
 def get_full_consent(model_id, org_pumping_wells=False, missing_sd_wells=False,
                      recalc=False):
     """
-    EAV/consented annual volume I need to think about this one
+    EAV/consented annual volume I need to think about this one, note that this takes c. 2.5 s
     :param model_id: the NSMC realisation
     :param org_pumping_wells: Boolean if true use the model period wells else use the 2014/2015 pumping
     :param missing_sd_wells: bool if True include the wells that mark found missing
     :param recalc: Boolean, if true recalculate otherwise load from a pickle, deprecidated
     :return: the full dataframe with just the flux converted
     """
-    # todo how long does it take to run??? could I just get rid of the pickling... I've managed the input see how long it takes test
 
     outdata = get_base_well(model_id, org_pumping_wells=org_pumping_wells)
     allo = pd.read_csv(os.path.join(sdp_required, "allo_gis.csv"))
@@ -103,13 +102,13 @@ def get_max_rate(model_id, org_pumping_wells=False, missing_sd_wells=False,
                  recalc=False):
     """
     replaces the flux value with the full consented volumes for the wells north of the waimakariri
+    note that this takes c. 2.5 s
     :param model_id: the NSMC realisation
     :param org_pumping_wells: Boolean if true use the model period wells else use the 2014/2015 pumping
     :param missing_sd_wells: bool if True include the wells that mark flagged as missing from the waimakariri zone
     :param recalc: Boolean, if true recalculate otherwise load from a pickle, depreciated
     :return: the full dataframe with just the flux converted
     """
-    # todo how long does it take to run??? could I just get rid of the pickling... I've modified it, just see how long it takes to run test
 
     outdata = get_base_well(model_id, org_pumping_wells)
     allo = pd.read_csv(os.path.join(sdp_required, "allo_gis.csv"))
@@ -313,4 +312,8 @@ def get_full_allo_multipler(org_pumping_wells, recalc=False):
 
 if __name__ == '__main__':
     # ran this to look at changes between current and abstraction
+    import time
+    t = time.time()
+    get_max_rate('NsmcReal{:06d}'.format(17))
+    print('took {} s'.format(time.time()-t))
     pass

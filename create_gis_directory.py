@@ -13,6 +13,7 @@ from waimak_extended_boundry.extended_boundry_model_tools import smt
 import os
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
 import matplotlib.pyplot as plt
+import glob
 
 
 def _save_to_array(temp_data, outdir, var, crop_by_noflow, inpath):
@@ -196,7 +197,7 @@ def big_nc_to_array(inpath, base_outdir, variables=None, crop_by_noflow=False, n
             _save_plot(temp_data, outdir_plots, '{}'.format(var), crop_by_noflow, inpath)
 
 
-def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):  # todo test!!!!
+def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
     """
     handle the netcdfs big and small
     :param outdir:
@@ -261,6 +262,7 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):  # tod
 
         big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='optimised')
 
+    create_thickness(outdir, indir)
 
 def create_from_hdfs(outdir, indir=r"D:\Waimakariri_model_input_data"):
     if not os.path.exists(outdir):
@@ -335,8 +337,29 @@ def create_from_hdfs(outdir, indir=r"D:\Waimakariri_model_input_data"):
             except KeyError:
                 continue
 
+def create_thickness(outdir=r"D:\Waimakariri_model_input_data\gis_database\from_ncs",  indir=r"D:\Waimakariri_model_input_data"):
+
+    temp = nc.Dataset(os.path.join(indir,"required/elv_db.nc"))
+
+    elv_db = np.concatenate((
+        np.array(temp.variables['top'])[np.newaxis, :],
+        np.array(temp.variables['bottom'])
+    ))
+
+    tops = elv_db[:-1]
+    bottoms = elv_db[1:]
+    thickness = tops - bottoms
+
+    _save_to_array(thickness, os.path.join(outdir, "elv_db"), 'thickness', False, os.path.join(indir,"required/elv_db.nc"))
+    _save_plot(thickness, os.path.join(outdir,), "plots_elv_db", False, os.path.join(indir,"required/elv_db.nc"))
 
 
+def rename_folders(indir):
+    paths = glob.glob(os.path.join(indir,'*'))
+
+    for p in paths:
+        assert os.path.isdir(p)
+        os.rename(p, p.replace('stochastic', 'emma_no_wt').replace('all', 'filter1'))
 
 if __name__ == '__main__':
     import subprocess
@@ -345,6 +368,7 @@ if __name__ == '__main__':
 
     create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
     print('creating from ncs')
-    create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
-
+    #create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
+    create_thickness() # todo create layer thickness tifs.
+    #rename_folders(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")# todo rename after making a copy of the data
     subprocess.call('powercfg -change standby-timeout-ac 30')  # and start it sleeping again
