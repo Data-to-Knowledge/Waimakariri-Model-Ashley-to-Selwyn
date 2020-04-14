@@ -177,7 +177,10 @@ def big_nc_to_array(inpath, base_outdir, variables=None, crop_by_noflow=False, n
             _3d = True
             if dataset.variables[var].ndim == 3:
                 _3d = False
-            temp_data = smt.get_empty_model_grid(_3d) * np.nan
+
+            if f is not None and _3d:# todo delete this loop, using it to speed up bug fix.
+                print('skipping {} {} as 3d and a function'.format(var, fn))
+                continue
 
             if not _3d:
                 temp = np.array(dataset.variables[var][nidx])
@@ -186,12 +189,14 @@ def big_nc_to_array(inpath, base_outdir, variables=None, crop_by_noflow=False, n
                 else:
                     temp_data = f(temp, axis=0)
 
-            for l in range(smt.layers):
-                temp = np.array(dataset.variables[var][nidx, l])
-                if f is None:
-                    temp_data[l] = f
-                else:
-                    temp_data[l] = f(temp, axis=0)
+            else:
+                temp_data = smt.get_empty_model_grid(_3d) * np.nan
+                for l in range(smt.layers):
+                    temp = np.array(dataset.variables[var][nidx, l])
+                    if f is None:
+                        temp_data[l] = f
+                    else:
+                        temp_data[l] = f(temp, axis=0)
 
             _save_to_array(temp_data, outdir, '{}'.format(var), crop_by_noflow, inpath)
             _save_plot(temp_data, outdir_plots, '{}'.format(var), crop_by_noflow, inpath)
@@ -221,6 +226,7 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
         ['opt_rch']]
 
     for nc, var in zip(small_ncs, small_nc_vars):
+        continue # to prevent rerun #todo
 
         if 'no_flow' in nc:
             crop = False
@@ -239,16 +245,18 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
     ]
 
     for f in stocastic_ncs:
+        continue #todo to prevent rerun
+
         big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='stochastic',
                         functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
 
         big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='optimised')
 
     post_filter1_ncs = [
-        'recommended/post_filter1_mednload_unc.nc',
-        'recommended/post_filter1_hydraulic_properties.nc',
-        'recommended/post_filter1_emma_unc_riv.nc',
-        'recommended/post_filter1_hds.nc',
+        #'recommended/post_filter1_mednload_unc.nc', #todo to prevent rerun
+        #'recommended/post_filter1_hydraulic_properties.nc',
+        #'recommended/post_filter1_emma_unc_riv.nc',
+        #'recommended/post_filter1_hds.nc',
         'recommended/post_filter1_cell_budgets.nc',
 
     ]
@@ -366,9 +374,9 @@ if __name__ == '__main__':
 
     subprocess.call('powercfg -change standby-timeout-ac 0')  # stop it from sleeping...
 
-    create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
+    #create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
     print('creating from ncs')
-    #create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
-    create_thickness() # todo create layer thickness tifs.
+    create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")
+    #create_thickness() # todo create layer thickness tifs.
     #rename_folders(r"D:\Waimakariri_model_input_data\gis_database\from_ncs")# todo rename after making a copy of the data
     subprocess.call('powercfg -change standby-timeout-ac 30')  # and start it sleeping again
