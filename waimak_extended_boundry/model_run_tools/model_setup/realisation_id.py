@@ -18,8 +18,6 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from copy import deepcopy
 import pandas as pd
 
-temp_pickle_dir = None  # todo manage almost gone
-
 
 def get_base_well(model_id, org_pumping_wells, recalc=False):
     """
@@ -333,15 +331,15 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         for fn, fu, fb, fp, in zip(fnames, funits, fbinflag, fpackage):
             m.add_output(fn, fu, fb, fp)
 
+        m.change_model_ws(
+            dir_path)  # to flopy update add an update that changes teh namefile when the directory changes
         m.write_name_file()
         m.write_input()
         success, buff = m.run_model()
-        con = modflow_converged(os.path.join(converter_dir, m.lst.file_name[0]))
-        m.change_model_ws(
-            dir_path)  # to flopy update add an update that changes teh namefile when the directory changes
+        con = modflow_converged(os.path.join(dir_path, m.lst.file_name[0]))
         m.namefile = os.path.join(m.model_ws, m.namefile)
         if not con or not success:
-            os.remove(os.path.join(converter_dir, '{}.hds'.format(m.name)))
+            os.remove(os.path.join(dir_path, '{}.hds'.format(m.name)))
             shutil.rmtree(converter_dir)
             raise ValueError('the model did not converge: \n'
                              '{}\n, headfile deleted to prevent running'.format(os.path.join(dir_path, name)))
@@ -417,6 +415,9 @@ def get_stocastic_set(return_model_ids=True):
 
 
 if __name__ == '__main__':
-    t = get_model_name_path('NsmcReal{:06d}'.format(17)) # todo either it didnt save or it deleted the finished model, either way is problematic!!!
+    # todo either it didnt save or it deleted the finished model, either way is problematic!!!, I think i fixed this
+    # todo what is with teh ftl name, fix that???? check in already loaded models...
+
+    t = get_model_name_path('NsmcReal{:06d}'.format(17))
     print t
     print('done')

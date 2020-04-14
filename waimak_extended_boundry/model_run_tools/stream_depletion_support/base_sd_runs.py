@@ -8,7 +8,7 @@ from __future__ import division
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.stream_depletion_model_setup import setup_and_run_stream_dep
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.starting_hds_ss_sy import get_ss_sy, get_sd_starting_hds
 import os
-from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import temp_pickle_dir
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import temp_pickle_dir #todo this is no more, manage
 import multiprocessing
 import time
 import psutil

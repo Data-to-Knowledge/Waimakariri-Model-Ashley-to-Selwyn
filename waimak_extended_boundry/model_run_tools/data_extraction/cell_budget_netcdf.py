@@ -18,6 +18,7 @@ import gc
 import pandas as pd
 from itertools import izip_longest
 
+# todo check for problematic references
 
 def make_cellbud_netcdf(nsmc_nums, sfo_paths, cbc_paths, description, nc_path, zlib):
     """

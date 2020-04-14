@@ -391,7 +391,7 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
     print('{} runs completed in {} minutes'.format(len(runs), ((time.time() - t) / 60)))
     return pool_outputs
 
-
+# todo move to modelling?????
 if __name__ == '__main__':
     # tests run in the run script for forward runs
     safemode = True

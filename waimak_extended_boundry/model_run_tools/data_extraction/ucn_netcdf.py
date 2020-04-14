@@ -19,6 +19,8 @@ import pandas as pd
 from itertools import izip_longest
 import psutil
 import gc
+
+# todo check this for problematic references, ect
 def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_no_value=-1, sobs=None):
     """
     creates as netcdf file for all of the ucn data
