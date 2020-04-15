@@ -43,6 +43,7 @@ if run_add_str_obs:
 
     temp_dataset = nc.Dataset(mednload_paths[0])
     nsmc_nums = np.array(temp_dataset.variables['nsmc_num'][:])
+    temp_dataset.close()
 
     nidx = np.where(nsmc_nums == -1)[0][0]
     philow_path = r"C:\matt_modelling_unbackedup\add_to_ncs\mt_aw_ex_mednload_philow_tvd\mt_aw_ex_mednload.ucn"
@@ -52,6 +53,8 @@ if run_add_str_obs:
     str_obs = np.zeros((len(nsmc_nums), smt.rows, smt.cols)) * np.nan
 
     for i, n in enumerate(nsmc_nums):
+        if i%100 == 0:
+            print('reading sobs {} of {}'.format(i, len(nsmc_nums)))
         if n == -1:
             sobpath = r"C:\matt_modelling_unbackedup\add_to_ncs\mt_aw_ex_mednload_philow_tvd\mt_aw_ex_mednload.sobs"
         elif n == -2:
@@ -60,19 +63,25 @@ if run_add_str_obs:
             sobpath = r"C:\matt_modelling_unbackedup\add_to_ncs\MedNload_sobsrepo_files\mt_aw_ex_mednload_{}.sobs".format(
                 n)
 
-        str_obs[i] = _get_sfr_con_map(sobpath)
+        temp = _get_sfr_con_map(sobpath)
+        str_obs[i] = temp
 
     for p in mednload_paths:
+        print('writing to {}'.format(p))
         dataset = nc.Dataset(p, 'a')
 
         # add philow ucn
         dataset.variables['mednload'][nidx] = philow
 
         # add str_obs
-        temp = dataset.createVariable('sobs_mednload', 'f4', ('nsmc_num', 'row', 'col'), fill_value=np.nan,
-                                      zlib=False)
-        temp.setncatts({'units': 'mg/L',
-                        'long_name': 'SFR concentarations for mednload',
-                        'missing_value': np.nan})
+        try:
+            dataset.variables['sobs_mednload'][:] = str_obs
 
-        temp = str_obs
+        except:
+            temp = dataset.createVariable('sobs_mednload', 'f4', ('nsmc_num', 'row', 'col'), fill_value=np.nan,
+                                          zlib=False)
+            temp.setncatts({'units': 'mg/L',
+                            'long_name': 'SFR concentarations for mednload',
+                            'missing_value': np.nan})
+
+            temp[:] = str_obs

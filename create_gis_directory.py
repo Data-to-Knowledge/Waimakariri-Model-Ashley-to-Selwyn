@@ -174,6 +174,9 @@ def big_nc_to_array(inpath, base_outdir, variables=None, crop_by_noflow=False, n
                 print('skipping {} as weird dimentions {} in {}'.format(var, dataset.variables[var].dimensions, inpath))
                 continue
 
+            if f is not None and var != 'sobs_mednload':
+                continue
+
             _3d = True
             if dataset.variables[var].ndim == 3:
                 _3d = False
@@ -247,20 +250,20 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
                         functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
 
     post_filter1_ncs = [
+        'recommended/post_filter1_mednload_unc.nc',
         'recommended/post_filter1_hds.nc',
-        #'recommended/post_filter1_hydraulic_properties.nc',
-        #'recommended/post_filter1_mednload_unc.nc', #todo to prevent rerun
-        #'recommended/post_filter1_emma_unc_riv.nc',
+        'recommended/post_filter1_hydraulic_properties.nc',
+        'recommended/post_filter1_emma_unc_riv.nc',
         'recommended/post_filter1_cell_budgets.nc',
 
     ]
 
     for f in post_filter1_ncs:
-        #big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='stochastic',
-        #                functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
+        big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='stochastic',
+                        functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
 
-        #big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='all',
-        #                functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
+        big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='all',
+                        functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
 
         big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='optimised')
 
