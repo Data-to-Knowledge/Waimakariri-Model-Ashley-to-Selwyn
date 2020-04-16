@@ -18,6 +18,7 @@ from waimak_extended_boundry.extended_boundry_model_tools import smt
 hds_no_data = 1e30
 unc_no_data = -1
 
+#todo look through documentation
 
 def get_well_positions(well_list, missing_handeling='warn'):
     """

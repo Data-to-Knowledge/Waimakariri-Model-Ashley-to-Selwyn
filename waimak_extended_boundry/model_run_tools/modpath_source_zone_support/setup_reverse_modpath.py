@@ -13,6 +13,7 @@ import itertools
 import numpy as np
 import os
 
+#todo look through documentation
 
 def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     """

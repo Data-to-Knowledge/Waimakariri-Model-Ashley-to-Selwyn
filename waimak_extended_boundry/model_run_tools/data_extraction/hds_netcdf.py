@@ -18,6 +18,7 @@ import pandas as pd
 import gc
 from itertools import izip_longest
 
+#todo look through documentation
 
 def make_hds_netcdf(nsmc_nums, hds_paths, description, nc_path, zlib):
     """

@@ -8,6 +8,7 @@ import env
 import pandas as pd
 import os
 
+#todo look through documentation
 
 def get_all_well_row_col(recalc=False):
     save_path = os.path.join(env.sdp_required,'all_wells_row_col_layer.hdf')

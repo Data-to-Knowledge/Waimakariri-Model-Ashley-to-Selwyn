@@ -16,6 +16,8 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index impor
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
 
+#todo look through documentation
+
 rch_data_path = os.path.join(env.sdp_required,'recharge_arrays.nc')
 
 def get_optimisation_recharge():

@@ -18,6 +18,8 @@ from warnings import warn
 from traceback import format_exc
 from env import sdp_required
 
+#todo look through documentation
+
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 ssm_crch=None, ssm_stress_period_data=None,
                 sft_spd=None, obs_sf=range(1, 1228 + 1),

@@ -23,6 +23,7 @@ from waimak_extended_boundry.model_run_tools.model_setup.modpath_wrapper import 
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modpath_converged
 import gc
 
+#todo look through documentation
 
 def define_source_from_forward(emulator_path, bd_type_path, indexes, return_packed_bits=False):
     """

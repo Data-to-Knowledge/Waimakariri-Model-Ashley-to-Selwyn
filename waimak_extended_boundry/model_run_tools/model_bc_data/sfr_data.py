@@ -9,6 +9,7 @@ import os
 import env
 import netCDF4 as nc
 
+#todo look through documentation
 
 def get_base_sfr_data():
     """

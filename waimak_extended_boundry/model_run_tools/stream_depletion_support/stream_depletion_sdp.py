@@ -4,6 +4,8 @@
  """
 import warnings
 
+#todo look through documentation
+
 base_sd_dir = None
 
 if base_sd_dir is None:

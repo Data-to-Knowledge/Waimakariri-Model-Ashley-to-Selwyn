@@ -13,6 +13,8 @@ import geopandas as gpd
 import shutil
 import netCDF4 as nc
 
+#todo look through documentation
+
 def get_gmp_con_layer(recalc=False):
     """
     'recharge concentration under good managment practices GMP'

@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 
 depths = [10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 225]
 
+#todo look through documentation
 
 def get_mask():
     """

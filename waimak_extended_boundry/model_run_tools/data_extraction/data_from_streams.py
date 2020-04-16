@@ -17,6 +17,7 @@ from warnings import warn
 import netCDF4 as nc
 from env import sdp_required
 
+#todo look through documentation
 
 def get_flux_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None, skip_1_sfr=True):
     """

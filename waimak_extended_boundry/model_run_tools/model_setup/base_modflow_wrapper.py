@@ -17,7 +17,7 @@ from env import sdp_required
 from realisation_id import get_base_well, get_model
 import zipfile
 
-org_data_dir = "{}/from_GNS".format(sdp_required)
+#todo look through documentation
 
 
 # as part of this make another function which gets the name file (or copies the files across)

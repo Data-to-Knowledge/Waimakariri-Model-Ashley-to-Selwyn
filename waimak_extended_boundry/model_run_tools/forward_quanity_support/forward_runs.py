@@ -16,6 +16,7 @@ import datetime
 import psutil
 from env import log_dir
 
+#todo look through documentation
 
 def run_cc_senarios(base_kwargs, cc_to_waimak_only=False):
     """

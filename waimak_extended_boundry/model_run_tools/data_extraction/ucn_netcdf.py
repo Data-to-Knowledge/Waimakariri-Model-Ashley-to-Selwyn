@@ -20,6 +20,7 @@ import psutil
 import gc
 import os
 
+#todo look through documentation
 
 def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_no_value=-1, sobs=None):
     """

@@ -16,6 +16,8 @@ import os
 import psutil
 import geopandas as gpd
 
+#todo look through documentation
+
 base_receptors_path = os.path.join(env.sdp_required, 'shp', 'interzone_receptors.shp')
 
 p = psutil.Process(os.getpid())

@@ -12,6 +12,7 @@ from waimak_extended_boundry.model_run_tools.model_setup.modpath_wrapper import 
 import os
 import pandas as pd
 
+#todo look through documentation
 
 def _part_group_cell_mapper(bd_type):
     """

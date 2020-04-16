@@ -15,6 +15,7 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
     modflow_converged
 from traceback import format_exc
 
+#todo look through documentation
 
 # make something to run modpath simulations with particles in the top most active cells.
 

@@ -10,6 +10,8 @@ import pandas as pd
 from env import sdp_required
 import netCDF4 as nc
 
+#todo look through documentation
+
 def get_base_drn_spd(ncars=True):
     """
     get the drain data, but without the correct conductance values...

@@ -14,6 +14,7 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import get_flux_at_points, get_samp_points_df
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.ss_grid_sd_setup import grid_wells, get_base_grid_sd_path
 
+#todo look through documentation
 
 def calc_stream_dep_grid(model_path):
     """

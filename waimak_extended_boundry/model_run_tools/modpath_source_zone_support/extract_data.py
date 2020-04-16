@@ -10,6 +10,7 @@ from waimak_extended_boundry import smt
 import numpy as np
 import flopy_mh as flopy
 
+#todo look through documentation
 
 # particle id moves to 0 indexed
 # particle id links the endpoint file and path file

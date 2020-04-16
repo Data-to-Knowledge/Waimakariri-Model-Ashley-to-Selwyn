@@ -11,6 +11,8 @@ import os
 import netCDF4 as nc
 from env import sdp_required
 
+#todo look through documentation
+
 def get_zone_array_index(zones, recalc=False):
     """
     returns a boolean array with true for the zones listed

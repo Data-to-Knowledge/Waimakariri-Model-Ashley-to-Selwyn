@@ -15,6 +15,7 @@ import logging
 import itertools
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.stream_depletion_sdp import base_sd_dir
 
+#todo look through documentation
 
 def _get_str_dep_base_path_mp(kwargs):
     """

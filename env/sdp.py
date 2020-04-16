@@ -7,6 +7,8 @@ from __future__ import division
 import os
 import warnings
 
+#todo look through documentation
+
 # todo document this when it is all said and done and set to None... and document in scripts section.
 sdp_required = r"D:\Waimakariri_model_input_data\required"
 

@@ -10,6 +10,8 @@ import zipfile
 
 #todo add to ModelTools
 
+#todo look through documentation
+
 def zipped_modflow_converged(name_File_path, zipped_file_name ='non_essential_components.zip', return_nans = False):
     """
     check if a path converged, if retun nan's then if the path is missing retuns a nan otherwise raises an ioerror

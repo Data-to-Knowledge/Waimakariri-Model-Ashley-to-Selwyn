@@ -20,6 +20,7 @@ from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_r
     get_n_at_points_nc, get_str_ids, get_well_ids
 
 # todo it needs a touch more documenations, out of scope???
+#todo look through documentation
 
 emma_dir = os.path.join(env.sdp_required, 'emma_for_n_adjustment')
 

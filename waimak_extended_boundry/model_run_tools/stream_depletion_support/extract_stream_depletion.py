@@ -16,6 +16,7 @@ from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams i
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
+#todo look through documentation
 
 def calc_stream_dep(model_path, ss_sy_version, sd_version='sd150'):
     """

@@ -18,6 +18,7 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from copy import deepcopy
 import pandas as pd
 
+#todo look through documentation
 
 def get_base_well(model_id, org_pumping_wells, recalc=False):
     """

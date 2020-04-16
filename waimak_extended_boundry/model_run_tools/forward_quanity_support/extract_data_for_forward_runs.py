@@ -21,6 +21,8 @@ import itertools
 import netCDF4 as nc
 import sys
 
+#todo look through documentation
+
 sw_site_groups = {
     'cust': ['cust_oxford',  # cust at oxford often goes dry, check in new set of simlulations
              'cust_threlkelds'],
