@@ -19,15 +19,17 @@ from waimak_extended_boundry.model_run_tools.n_analysis_support.interzone_n impo
 from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
 
-#todo I need to get a better handle on what this script does and it needs a touch more documenations
+# todo it needs a touch more documenations, out of scope???
 
-def get_alpine_fractions(site=None, return_paths=False, number=1000): #todo this whole thing is going to be a bit tricky
+emma_dir = os.path.join(env.sdp_required, 'emma_for_n_adjustment')
+
+
+def get_alpine_fractions(site=None, return_paths=False, number=1000):
     # number is the number of samples to pull out
     # if path then just send out the data (to replace alpine fraction so that I can patch this thing
     # if site is not None get teh value
 
-    base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Groundwater Quality\End member "
-                       r"mixing model\emma_for_n_adjustment\4_endmembers\raw_data") # todo manage dataset
+    base_dir = os.path.join(emma_dir, "4_endmembers/raw_data")
     paths = {
         # site name: path to the stocastic data
 
@@ -184,7 +186,7 @@ sites = {
     'northbrook_marshes_s',
     'ohoka_island_s',
     'southbrook_marshes_s',
-    # todo to add ashley output I simply need to add the sites here., do this
+    # to add ashley output I simply need to add the sites here., do this
 
     # wdc_wells
     'wdc_Kairaki',
@@ -303,12 +305,10 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
                                                                   names=['scenario', 'stat']), dtype=float)
     well_sites = get_well_nums_for_group()
     cmp_waimak_data = {  # the alpine river fractions
-        'stream': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations an"
-                                      r"d results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set"
-                                      r"_str_data.csv"), index_col=0).transpose(), #todo manage dataset
-        'well': pd.read_csv(env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations a"
-                                    r"nd results\ex_bd_va\n_results\waimak_per_results_at_points\raw_stocastic_set_"
-                                    r"well_data.csv"), index_col=0).transpose() #todo manage dataset
+        'stream': pd.read_csv(os.path.join(emma_dir, "waimak_per_results_at_points/raw_stocastic_set_str_data.csv"),
+                              index_col=0).transpose(),
+        'well': pd.read_csv(os.path.join(emma_dir, "waimak_per_results_at_points/raw_stocastic_set_well_data.csv"),
+                            index_col=0).transpose()
     }
     for scen, path in scenario_paths.items():
         raw_dir = os.path.join(intrazone_dir, 'raw_model_data', scen)
@@ -330,7 +330,7 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
                            cbc_nc_path=use_cbc_path,
                            missing_str_obs='raise')
 
-        all_well_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_well_data.csv'), index_col=0).transpose() #todo manage??
+        all_well_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_well_data.csv'), index_col=0).transpose()
         all_str_data = pd.read_csv(os.path.join(raw_dir, 'raw_stocastic_set_str_data.csv'), index_col=0).transpose()
         for site in sites:
             if site in get_str_ids():
@@ -405,20 +405,15 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 def add_stocastic_load(site, base_data):
     base_data = np.atleast_1d(base_data)
     if site in get_str_ids():
-        # stream
-        base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
-                           r"results\ex_bd_va\n_results\nwaimak_springfeds\stocastic_n_nwaimak_springfeds\without_"
-                           r"trans\nconc_cmp_second_tranche\raw_data")  # cmp as gmp has a reduction associated
+        # stream  # cmp as gmp has a reduction associated
+        base_dir = os.path.join(emma_dir, 'nwai_sfeds_nconc_wo_trans_raw_data')
     elif 'wdc' in site:
-        # wdc_well
-        base_dir = env.sci(r"Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
-                           r"s\ex_bd_va\n_results\wdc_use_mix\stocastic_n_wdc_use_mix\without_trans\nconc_cmp_wdc_use"
-                           r"_mix\raw_data")  # cmp as gmp has a reduction associated
+        # wdc_well # cmp as gmp has a reduction associated
+        base_dir = os.path.join(emma_dir,'wdc_well_sfeds_nconc_wo_trans_raw_data')
     else:
         # private well # path must not be ucn as it is more than the maxpath length
-        base_dir = (r"P:/Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_"
-                    r"bd_va\n_results\private_wells_90\stocastic_n_private_wells_90\without_trans\nconc_cmp_"
-                    r"private_wells_90_named_right\raw_data")  # cmp as gmp has a reduction associated
+        base_dir = os.path.join(emma_dir,'private_well_sfeds_nconc_wo_trans_raw_data')
+
     modifiers = np.loadtxt(os.path.join(base_dir, '{}.txt'.format(site.replace('wdc_', ''))))
 
     raw_data = base_data.copy().flatten()
