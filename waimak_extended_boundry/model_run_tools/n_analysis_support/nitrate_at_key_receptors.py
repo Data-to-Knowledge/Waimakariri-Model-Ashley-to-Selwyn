@@ -8,27 +8,22 @@ from __future__ import division
 import env
 import pandas as pd
 import os
-from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import calculate_con_from_netcdf_well, calculate_con_from_netcdf_str, \
     get_con_at_wells, get_con_at_str, get_stocastic_set
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
-#todo this one is hard as well, basically this is really poorly managed
+
 def get_well_ids():
     """
     the well number and other key info
     :return: pd.Dataframe
     """
-    wdc_wells = pd.read_csv(
-        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\WDC_wells.csv",
-        index_col=0)
+    wdc_wells = pd.read_csv(os.path.join(env.sdp_required, "WDC_wells.csv"), index_col=0)
 
     all_wells = get_all_well_row_col()
 
-    private_wells = pd.read_csv(
-        r"\\gisdata\projects\SCI\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model build and optimisation\Nitrate\PrivateWellZones.csv",
-        index_col=0)
+    private_wells = pd.read_csv(os.path.join(env.sdp_required, "PrivateWellZones.csv"), index_col=0)
     private_wells = pd.merge(private_wells, all_wells.loc[:, ['layer', 'row', 'col']], right_index=True,
                              left_index=True)
     private_wells = private_wells.dropna()
@@ -111,8 +106,8 @@ def get_n_at_points_single_model(outdir, model_id, ucn_file_path, sobs_path, cbc
 
 
 def get_n_at_points_nc(outdir, nsmc_nums, ucn_var_name='mednload',
-                       ucn_nc_path=r"C:\mh_waimak_model_data\mednload_ucn.nc",
-                       cbc_nc_path="C:\mh_waimak_model_data\post_filter1_budget.nc",
+                       ucn_nc_path=os.path.join(env.sdp_recommended, 'post_filter1_mednload_unc.nc'),
+                       cbc_nc_path=os.path.join(env.sdp_recommended, 'post_filter1_cell_budgets.nc'),
                        missing_str_obs='raise'):
     """
     pulls out the concentration data from a netcdf file for the given nsmc_nums save both grouped and raw data
@@ -163,19 +158,16 @@ def get_n_ash_opt_stocastic_set(outdir):
     :param outdir:
     :return:
     """
+    ash_dir = os.path.join(env.sdp_recommended, "ash_opt_median_n")
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     nsmc_nums = get_stocastic_set(False)
     get_n_at_points_nc(outdir, nsmc_nums)
     get_n_at_points_single_model(outdir, model_id='AshOpt',
-                                 ucn_file_path=env.gw_met_data(
-                                     r"mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mt_aw_ex_mednload.ucn"),
-                                 sobs_path=env.gw_met_data(
-                                     r"mh_modeling\data_from_gns\AshOpt_medianN\AWT20180103_Ash0\AWT20180103_Ash0\mt_aw_ex_mednload.sobs"),
-                                 cbc_path=r"{}\from_gns\AshOpt\AW20180103_Ash0_Opt\AW20180103_Ash0_Opt\mf_aw_ex.cbc".format(
-                                     smt.sdp),
-                                 sfo_path=r"{}\from_gns\AshOpt\AW20180103_Ash0_Opt\AW20180103_Ash0_Opt\mf_aw_ex.sfo".format(
-                                     smt.sdp))
+                                 ucn_file_path=os.path.join(ash_dir, "mt_aw_ex_mednload.ucn"),
+                                 sobs_path=os.path.join(ash_dir, "mt_aw_ex_mednload.sobs"),
+                                 cbc_path=os.path.join(ash_dir, "mf_aw_ex.cbc"),
+                                 sfo_path=os.path.join(ash_dir, "mf_aw_ex.sfo"))
 
 
 if __name__ == '__main__':

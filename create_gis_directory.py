@@ -225,8 +225,6 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
         ['opt_rch']]
 
     for nc, var in zip(small_ncs, small_nc_vars):
-        continue # to prevent rerun #todo
-
         if 'no_flow' in nc:
             crop = False
         else:
@@ -244,8 +242,6 @@ def create_nc_datasets(outdir, indir=r"D:\Waimakariri_model_input_data"):
     ]
 
     for f in stocastic_ncs:
-        continue #todo to prevent rerun
-
         big_nc_to_array(os.path.join(indir, f), outdir, variables=None, crop_by_noflow=True, nsmc_nums_nm='stochastic',
                         functions=(np.nanmedian, np.nanstd), functions_nm=('nanmedian', 'nanstd'))
 
@@ -368,12 +364,10 @@ def rename_folders(indir):
 
 if __name__ == '__main__':
     import subprocess
-    # todo check the datasets that caused problems...
     subprocess.call('powercfg -change standby-timeout-ac 0')  # stop it from sleeping...
 
-    #create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
+    create_from_hdfs(r"D:\Waimakariri_model_input_data\gis_database\from_hdfs")
     print('creating from ncs')
     create_nc_datasets(r"D:\Waimakariri_model_input_data\gis_database\from_ncs2")
-    rename_folders(r"D:\Waimakariri_model_input_data\gis_database\from_ncs2")# todo rename after making a copy of the data
-    #rename_folders(r"D:\Waimakariri_model_input_data\gis_database\plots_from_ncs")# todo rename after making a copy of the data
+    rename_folders(r"D:\Waimakariri_model_input_data\gis_database\from_ncs2")
     subprocess.call('powercfg -change standby-timeout-ac 30')  # and start it sleeping again

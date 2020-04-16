@@ -16,8 +16,7 @@ import os
 import psutil
 import geopandas as gpd
 
-base_receptors_path = env.sci( #todo manage this
-    r"Groundwater\Waimakariri\Groundwater\Numerical GW model\supporting_data_for_scripts\ex_bd_va_sdp\m_ex_bd_inputs\shp\interzone_receptors.shp")
+base_receptors_path = os.path.join(env.sdp_required, 'shp', 'interzone_receptors.shp')
 
 p = psutil.Process(os.getpid())
 # set to lowest priority, this is windows only, on Unix use ps.nice(19)
@@ -32,17 +31,6 @@ layer_names = {
     9: 'deep unnamed',
     10: 'who knows whats happening here'
 
-}
-
-scenario_paths = { #todo manage this
-    'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc",
-    # this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
-    'gmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc"),
-    'interzone_8kgha': env.gw_met_data(
-        r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
-    'chch_8kgha': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc"),
-    'gmp_eyre_mar': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc"),
-    'interzone_50_red': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_50_reduc_interzone.nc")
 }
 
 
@@ -119,16 +107,15 @@ def get_raw_model_results(scenario_path, layers, index):
     return out_data
 
 
-def apply_nload_uncertainty(raw_data, scenario): #todo manage this
+def apply_nload_uncertainty(raw_data, scenario):
     if 'gmp' in scenario:
-        modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
-                               r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\without_trans\nload_cmp_"
-                               r"interzone\raw_data\conservative_interzone.txt")[
+        modifiers = np.loadtxt(os.path.join(env.sdp_required, 'nload_uncertainty',
+                                            'nload_cmp_conservative_interzone.txt'))[
                     0:1000]  # cmp because it's referenced to cmp
     elif 'cmp' in scenario:
-        modifiers = np.loadtxt(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and "
-                               r"results\ex_bd_va\n_results\interzone\stocastic_n_interzone\with_trans\nconc_cmp_"
-                               r"interzone\raw_data\conservative_interzone.txt")[0:1000]
+        modifiers =np.loadtxt(os.path.join(env.sdp_required, 'nload_uncertainty',
+                                            'ncon_cmp_conservative_interzone.txt'))[
+                    0:1000]
     else:
         return raw_data
     max_size = 2000 * 165 * 2
@@ -156,7 +143,7 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
     return outdata
 
 
-def make_shpfile_with_data(n_data_path, outdir):
+def make_shpfile_with_data(n_data_path, outdir, scenario_dict):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     names = {
@@ -196,7 +183,7 @@ def make_shpfile_with_data(n_data_path, outdir):
             temp.loc[:, 'grouper'] = 1
             temp = temp.dissolve(by='grouper')
 
-            for scen, per in itertools.product(scenario_paths.keys(), ['50%', '95%']):
+            for scen, per in itertools.product(scenario_dict.keys(), ['50%', '95%']):
                 temp.loc[1, '{}_{}'.format(scen, per)] = all_data.loc[(lay_name, site), (scen, per)]
 
             for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp', 'interzone_50_red']:
@@ -208,9 +195,21 @@ def make_shpfile_with_data(n_data_path, outdir):
 
 
 if __name__ == '__main__':
+    scenario_paths = {
+        'cmp': r"C:\mh_waimak_model_data\mednload_ucn.nc",
+        # this one is compressed! env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\mednload_unc.nc"),
+        'gmp': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn.nc"),
+        'interzone_8kgha': env.gw_met_data(
+            r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_interzone.nc"),
+        'chch_8kgha': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_8kg_ha_chch.nc"),
+        'gmp_eyre_mar': env.gw_met_data(r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_eyre_mar_ucn.nc"),
+        'interzone_50_red': env.gw_met_data(
+            r"mh_modeling\netcdfs_of_key_modeling_data\GMP_mednload_ucn_50_reduc_interzone.nc")
+    }
+
     if False:
         make_shapefiles(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex"
-                        r"_bd_va\n_results\interzone_n_results\chch_wm_receptor_shapes")
+                        r"_bd_va\n_results\interzone_n_results\chch_wm_receptor_shapes", scenario_paths)
 
     if False:
         get_interzone_n(scenario_paths,
@@ -218,8 +217,8 @@ if __name__ == '__main__':
                         r"s\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv")
         data = pd.read_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
                            r"s\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv",
-                           index_col=[0,1], header=[0,1])
-        data = data.reorder_levels(['stat','scenario'],axis=1)
+                           index_col=[0, 1], header=[0, 1])
+        data = data.reorder_levels(['stat', 'scenario'], axis=1)
         data['50%'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
                            r"s\ex_bd_va\n_results\interzone_n_results\n_data_50ths_v2.csv")
         data['95%'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
@@ -227,5 +226,6 @@ if __name__ == '__main__':
         data['mean'].to_csv(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and result"
                             r"s\ex_bd_va\n_results\interzone_n_results\n_data_means_v2.csv")
     if True:
-        make_shpfile_with_data(r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv",
+        make_shpfile_with_data(
+            r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\n_data_v2.csv",
             r"P:\Groundwater\Waimakariri\Groundwater\Numerical GW model\Model simulations and results\ex_bd_va\n_results\interzone_n_results\receptors_with_data_inc_50_red")

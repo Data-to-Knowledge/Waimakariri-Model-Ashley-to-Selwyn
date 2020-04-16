@@ -19,9 +19,11 @@ assert os.path.exists(sdp_recommended), 'sdp_recommended does not exist, it must
 
 temp_file_dir =r"C:\Users\Matt Hanson\Downloads\temp_waimak_files"
 assert temp_file_dir is not None, 'temp file dir must be set'
+assert os.path.exists(temp_file_dir), 'temp file dir must exist'
 
 loaded_model_realisation_dir = r"C:\Users\Matt Hanson\Downloads\temp_loaded_realisations"
 assert loaded_model_realisation_dir is not None, 'loaded model realisation dir must be set'
+assert os.path.exists(loaded_model_realisation_dir), 'loaded model realisation dir must exist'
 
 pc5_ftl_repo = None # note the pc5 ftl, pc5 + eyre mar, base ftl repos are compressed in the recommended folder.
 if pc5_ftl_repo is None:
