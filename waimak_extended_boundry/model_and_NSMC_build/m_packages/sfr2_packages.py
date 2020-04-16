@@ -7,7 +7,7 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 import flopy_mh as flopy
-#todo this needs to be fixed from Waimak_modeling_non_extended.model_tools.get_str_rch_values import get_base_str, get_base_seg_data, get_stream_seg_dict, aqualinc_seg_dict, get_base_drn_cells
+from Waimak_modeling_non_extended.model_tools.get_str_rch_values import get_base_str, get_base_seg_data, get_stream_seg_dict, aqualinc_seg_dict, get_base_drn_cells
 from env import sdp_required
 import geopandas as gpd
 from copy import deepcopy

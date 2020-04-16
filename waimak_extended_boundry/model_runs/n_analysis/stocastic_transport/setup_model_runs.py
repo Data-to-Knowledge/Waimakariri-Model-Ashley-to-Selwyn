@@ -2,8 +2,17 @@
  Author: Matt Hanson
  Created: 14/04/2020 3:03 PM
  """
-from waimak_extended_boundry.model_run_tools.n_analysis_support.setup_run_models import *
-# todo mange the imports here so that I can clean up waimak_extended_boundry/model_run_tools/n_analysis_support/setup_run_models.py
+
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
+import shutil
+import env
+import numpy as np
+from waimak_extended_boundry.extended_boundry_model_tools import smt
+from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import get_lsrm_base_array
+from waimak_extended_boundry.model_run_tools.model_setup.mt3d_wrapper import get_sft_stress_period_data, get_ssm_stress_period_data
+from waimak_extended_boundry.model_run_tools.model_bc_data.n_load_layers import get_gmp_con_layer
+from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
+from waimak_extended_boundry.model_run_tools.n_analysis_support.setup_run_models import extract_data, extract_cbc_data,pc5_ftl_repo,setup_pc5_ftl_repository, setup_run_mt3d_suite
 
 if __name__ == '__main__':
     # ####PC5/GMP flow ####

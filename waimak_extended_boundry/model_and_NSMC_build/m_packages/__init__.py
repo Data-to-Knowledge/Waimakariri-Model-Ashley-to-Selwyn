@@ -19,5 +19,4 @@ from lpf_packages import create_lay_prop_package
 from rch_packages import create_rch_package
 from dis_packages import create_dis_package
 
-#todo get rid of all links to these from  model_run_tools
 

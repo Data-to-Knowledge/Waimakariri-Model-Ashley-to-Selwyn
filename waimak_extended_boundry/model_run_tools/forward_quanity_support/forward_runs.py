@@ -9,12 +9,12 @@ from waimak_extended_boundry.model_run_tools.forward_quanity_support.base_forwar
 import os
 import multiprocessing
 import logging
-from waimak_extended_boundry import smt
 from copy import deepcopy
 import itertools
 import time
 import datetime
 import psutil
+from env import log_dir
 
 
 def run_cc_senarios(base_kwargs, cc_to_waimak_only=False):
@@ -380,10 +380,10 @@ def run_forward_runs(runs, forward_run_dir, notes=None):
     pool.close()  # no more tasks
     pool.join()
     now = datetime.datetime.now()
-    with open("{}/forward_run_log/{}_forward_run_status_{}_{:02d}_{:02d}_{:02d}_{:02d}.txt".format(smt.sdp, model_id,
+    with open("{}/forward_run_log/{}_forward_run_status_{}_{:02d}_{:02d}_{:02d}_{:02d}.txt".format(log_dir, model_id,
                                                                                                    now.year, now.month,
                                                                                                    now.day, now.hour,
-                                                                                                   now.minute), #todo manage the forward run log
+                                                                                                   now.minute),
               'w') as f:
         f.write(str(notes) + '\n')
         wr = ['{}: {}\n'.format(e[0], e[1]) for e in pool_outputs]

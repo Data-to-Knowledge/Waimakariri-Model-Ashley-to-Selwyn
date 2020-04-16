@@ -251,26 +251,29 @@ def start_process():
     p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
-def get_modeflow_dir_for_source(version=1): #todo raise an exception??
+def get_modeflow_dir_for_source(version=1):
     """
     somethign to keep the modflow dirs for the modpath sernarios straight
     :param version: which version (so far only 1 version)
     :return:
     """
     if version == 1:
-        path = env.gw_met_data("mh_modeling/modflow_dir_for_source")
+        raise NotImplementedError ('modflow dir for source is not implemented')
     else:
         raise NotImplementedError('version {} has not been set up'.format(version))
     return path
 
 
-def get_base_results_dir(mode, comp): #todo raise an exception?
+def get_base_results_dir(mode, comp):
     """
     keeps track fo the base dirs for the forward and backward particles
     :param mode:'forward' or 'backward'
     :param comp: the socket host name
     :return:
     """
+
+    raise NotImplementedError('this is a hold out from previous modelling, it is not currently implmented')
+
     if mode == 'forward' and comp == 'GWATER02':
         out = r"D:\mh_waimak_models_from_c\modpath_forward_base"
     elif mode == 'backward' and comp == 'GWATER02':
@@ -288,9 +291,10 @@ def get_base_results_dir(mode, comp): #todo raise an exception?
     return out
 
 
-def get_forward_emulator_paths(model_ids, weak_sink=False): #todo raise exception? or better yet just describe and raise the exceptions earlier
+def get_forward_emulator_paths(model_ids, weak_sink=False):
     """
-    get dictionary of forward emulator paths
+    get dictionary of forward emulator paths, this was a helper to keep track of particle tracking runs, these data
+    were not stored and this is a bit historical.  it could be re-purposed for future work though
     :param model_ids: model_ids
     :param weak_sink: Bool if True capture at weak sink
     :return: {model_id: (emulator_path, bnd_type_path)}

@@ -4,7 +4,6 @@ Date Created: 7/09/2017 4:19 PM
 """
 
 from __future__ import division
-import pickle
 import os
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools import \
@@ -12,6 +11,7 @@ from waimak_extended_boundry.model_run_tools import \
 import flopy_mh as flopy
 import numpy as np
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
+from stream_depletion_sdp import starting_heads_dir
 
 
 def get_sd_starting_hds(model_id, sd_version):
@@ -49,10 +49,11 @@ def get_starting_heads_sd7(model_id):
     return hds
 
 
-def _get_no_pumping_ss_hds(model_id, recalc=False): #todo this needs to be managed for datasets
-    pickle_path = "{}/model_{}_sd_starting_hds.p".format(smt.pickle_dir, model_id)
+def _get_no_pumping_ss_hds(model_id, recalc=False):
+
+    pickle_path = "{}/model_{}_sd_starting_hds.txt".format(starting_heads_dir, model_id)
     if (os.path.exists(pickle_path)) and (not recalc):
-        hds = pickle.load(open(pickle_path))
+        hds = np.loadtxt(pickle_path)
         if hds.shape != (smt.layers, smt.rows, smt.cols):
             raise ValueError('unexpected shape for hds {}, expected {}'.format(hds.shape, (smt.layers, smt.rows, smt.cols)))
         return hds
@@ -64,12 +65,13 @@ def _get_no_pumping_ss_hds(model_id, recalc=False): #todo this needs to be manag
     m.write_input()
     suc, buff = m.run_model()
     if not suc:
+
         raise ValueError('starting heads model for model_id: {} did not run'.format(model_id))
     hds_path = get_hds_file_path(m=m)
     hds = flopy.utils.HeadFile(hds_path).get_alldata(nodata=hds_no_data)[-1, :, :, :]
     if hds.shape != (smt.layers, smt.rows, smt.cols):
         raise ValueError('unexpected shape for hds {}, expected {}'.format(hds.shape, (smt.layers, smt.rows, smt.cols)))
-    pickle.dump(hds, open(pickle_path, 'w'))
+    np.savetxt(pickle_path, hds)
     return hds
 
 

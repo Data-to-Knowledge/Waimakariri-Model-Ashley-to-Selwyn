@@ -8,12 +8,12 @@ from __future__ import division
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.stream_depletion_model_setup import setup_and_run_stream_dep
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.starting_hds_ss_sy import get_ss_sy, get_sd_starting_hds
 import os
-from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import temp_pickle_dir #todo this is no more, manage
 import multiprocessing
 import time
 import psutil
 import logging
 import itertools
+from stream_depletion_sdp import base_sd_dir
 
 
 def _get_str_dep_base_path_mp(kwargs):
@@ -24,7 +24,7 @@ def _get_str_dep_base_path_mp(kwargs):
     """
     return get_str_dep_base_path(**kwargs)
 
-def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False): #todo how to manage
+def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False):
     """
     function to return the model path for the fully naturalized fully transient run and ensure that the model has been
     run this run has a ss and then full year run from july to end of june  ## for SD 7
@@ -37,7 +37,7 @@ def get_str_dep_base_path(model_id, sd_version, ss_sy_version=1, recalc=False): 
     if sd_version not in ["sd150", "sd30", "sd7"]:
         raise ValueError('unexpected argument for version {} expected one of ["sd150", "sd30", "sd7"]'.format(sd_version))
 
-    base_path = os.path.join(temp_pickle_dir,'base_sd_runs')
+    base_path = base_sd_dir
     name = '{}_base_run_sv_{}'.format(sd_version,ss_sy_version)
     if not os.path.exists(base_path):
         os.makedirs(base_path)

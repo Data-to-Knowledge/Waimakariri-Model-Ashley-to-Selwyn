@@ -263,9 +263,9 @@ def _create_all_lsrm_arrays():
     saves arrays for all of the periods and types ect as needed saves both rch and ird arrays
     :return:
     """
+    raise NotImplementedError('this is left of documentation purposes only')
     from waimak_extended_boundry.non_model_work.lsr_support.map_rch_to_model_array import \
         map_rch_to_array
-    raise NotImplementedError('this is left of documentation purposes only')
     if not os.path.exists(os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow')):
         os.makedirs(os.path.join(lsrm_rch_base_dir, 'arrays_for_modflow'))
     zidx = get_zone_array_index('waimak')

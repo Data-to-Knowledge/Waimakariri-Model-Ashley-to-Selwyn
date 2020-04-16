@@ -27,6 +27,11 @@ pc5_ftl_repo = None # note the pc5 ftl, pc5 + eyre mar, base ftl repos are compr
 if pc5_ftl_repo is None:
     warnings.warn('pc5_ftl_repo is not set  in env.sdp.  This could cause problems for some transport modelling')
 
+log_dir = None
+
+if log_dir is None:
+    warnings.warn('log directory is not set in sdp, this may cause exceptions in some model runs')
+
 if not os.path.exists(temp_file_dir):
     os.makedirs(temp_file_dir)
 
