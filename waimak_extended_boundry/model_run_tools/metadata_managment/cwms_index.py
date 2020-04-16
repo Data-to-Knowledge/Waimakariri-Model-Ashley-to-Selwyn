@@ -11,12 +11,14 @@ import os
 import netCDF4 as nc
 from env import sdp_required
 
-#todo look through documentation
 
 def get_zone_array_index(zones, recalc=False):
     """
-    returns a boolean array with true for the zones listed
+    returns a boolean array with true for the sum of the zones listed
+    e.g. get_zone_array_index(['chch','waimak'] will return a boolean array where the geospatial regions set as CHCH
+    and Waimakariri are set to True
     :param zones: one or more of chch, waimak, selwyn, inland_waimak, coastal_waimak
+    :param recalc: depreciated, keep set to False
     :return:
     """
 

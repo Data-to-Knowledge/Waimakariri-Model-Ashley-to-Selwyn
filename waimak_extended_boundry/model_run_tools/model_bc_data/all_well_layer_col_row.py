@@ -8,16 +8,48 @@ import env
 import pandas as pd
 import os
 
-#todo look through documentation
 
 def get_all_well_row_col(recalc=False):
-    save_path = os.path.join(env.sdp_required,'all_wells_row_col_layer.hdf')
+    """
+    get all of the wells that are present in the model
+    metadata on the dataset:
+    the dataset of all true wells in the model domain from ECAN database columns:
+                 'nztmx' : NZTM x location actual
+                 'nztmy' : NZTM Y location actual
+                 'depth' : depth from surface
+                 'num_screens' : number of screens
+                 'aq_name' : aquifer name, used to repostion wells into the right layer in the chch area
+                 'qar_rl' :
+                 'ref_ac' :
+                 'ref_level' :
+                 'ground_level' : ground elevation
+                 'mid_screen_depth' : depth to the middle of the screen(s)
+                 'distance_between_screen' :  distance between screens
+                 'mid_screen_elv' : elevation of the middle of the screen(s)
+                 'layer_by_depth' : the layer in the model by the depth (used unless in the confined system)
+                 'row' : model row
+                 'col' : model col
+                 'aquifer_in_confined' : aquifer in the confiend system
+                 'layer_by_aq' : (layer by which aquifer it is in (from leapfrog model)
+                 'layer' : layer in the model, made such that pumping wells that ended up in the aquitard in the
+                           confined system were moved to the proper noted aquifer (e.g. well in the ricciton
+                           (from our database) that happens to fall in the chch formation(layer 0) due to our
+                           geology simplification will be moved to layer 1 which is the modelled version of the
+                           ricciton gravel
+                 'mx' : center of model cell x
+                 'my' : center of model cell y
+                 'mz' : center of model cell elevation
+    :param recalc:depreciated
+    :return: dataframe with well numbers and associated metadata
+    """
+    save_path = os.path.join(env.sdp_required, 'all_wells_row_col_layer.hdf')
     if os.path.exists(save_path) and not recalc:
-        out_data = pd.read_hdf(save_path,'wells_2014_2015')
+        out_data = pd.read_hdf(save_path, 'wells_2014_2015')
         return out_data
 
     raise NotImplementedError('below is here only for documentation')
-    cont = input('are you sure you want to calculate all wells layer, row, col this takes several hours:\n {} \n continue y/n\n').lower()
+    cont = input(
+        'are you sure you want to calculate all wells layer, row, col this takes several hours:\n {} \n continue y/n\n').lower()
     if cont != 'y':
         raise ValueError('script aborted')
 
@@ -25,7 +57,7 @@ def get_all_well_row_col(recalc=False):
         env.sci('Groundwater/Waimakariri/Groundwater/Numerical GW model/Model build and optimisation/targets/xyz.xlsx'),
         index_Col=0)
     elv_sheet = elv_sheet.set_index('well')
-    elv_sheet.loc[:,'accuracy_use'] = elv_sheet['ACCURACY (m)']
+    elv_sheet.loc[:, 'accuracy_use'] = elv_sheet['ACCURACY (m)']
 
     well_details_org = rd_sql(**sql_db.wells_db.well_details)
     well_details = well_details_org[(well_details_org['WMCRZone'] == 4) | (well_details_org['WMCRZone'] == 7) |
@@ -48,9 +80,9 @@ def get_all_well_row_col(recalc=False):
         out_data.loc[well, 'nztmy'] = well_details.loc[well, 'NZTMY']
         out_data.loc[well, 'depth'] = well_details.loc[well, 'DEPTH']
         out_data.loc[well, 'num_screens'] = well_details.loc[well, 'Screens']
-        out_data.loc[well,'aq_name'] = well_details.loc[well, 'AQUIFER_NAME']
+        out_data.loc[well, 'aq_name'] = well_details.loc[well, 'AQUIFER_NAME']
         qarrl = out_data.loc[well, 'qar_rl'] = well_details.loc[well, 'QAR_RL']
-        out_data.loc[well,'ref_ac'] = 0.1
+        out_data.loc[well, 'ref_ac'] = 0.1
 
         ref_level = well_details.loc[well, 'REFERENCE_RL']
         ground_ref_level = well_details.loc[well, 'GROUND_RL']
@@ -74,10 +106,10 @@ def get_all_well_row_col(recalc=False):
             bot = np.max(screen_details.loc[well, 'BOTTOM_SCREEN'])
             out_data.loc[well, 'mid_screen_depth'] = (bot + top) / 2
 
-            if out_data.loc[well,'num_screens'] == 2:
+            if out_data.loc[well, 'num_screens'] == 2:
                 top = np.atleast_1d(screen_details.loc[well, 'TOP_SCREEN']).max()
                 bot = np.atleast_1d(screen_details.loc[well, 'BOTTOM_SCREEN']).min()
-                out_data.loc[well,'distance_between_screen'] = top-bot
+                out_data.loc[well, 'distance_between_screen'] = top - bot
 
         else:
             out_data.loc[well, 'mid_screen_depth'] = well_details.loc[well, 'DEPTH'] - 2
@@ -99,17 +131,19 @@ def get_all_well_row_col(recalc=False):
                    'Wainoni Gravel': 7}
     leapfrog_aq = gpd.read_file("{}/m_ex_bd_inputs/shp/layering/gis_aq_name_clipped.shp".format(smt.sdp))
     leapfrog_aq = leapfrog_aq.set_index('well')
-    leapfrog_aq.loc[:,'use_aq_name'] = leapfrog_aq.loc[:,'aq_name']
-    leapfrog_aq.loc[leapfrog_aq.use_aq_name.isnull(),'use_aq_name'] = leapfrog_aq.loc[leapfrog_aq.use_aq_name.isnull(),'aq_name_gi']
+    leapfrog_aq.loc[:, 'use_aq_name'] = leapfrog_aq.loc[:, 'aq_name']
+    leapfrog_aq.loc[leapfrog_aq.use_aq_name.isnull(), 'use_aq_name'] = leapfrog_aq.loc[
+        leapfrog_aq.use_aq_name.isnull(), 'aq_name_gi']
 
-    for num,i in enumerate(out_data.index):
-        if num%100 == 0:
-            print ('completed {} of {}'.format(num,number_of_values))
+    for num, i in enumerate(out_data.index):
+        if num % 100 == 0:
+            print ('completed {} of {}'.format(num, number_of_values))
         try:
-            layer_by_depth, row, col = smt.convert_coords_to_matix(out_data.loc[i,'nztmx'],out_data.loc[i,'nztmy'],out_data.loc[i,'mid_screen_elv'])
-            out_data.loc[i,'layer_by_depth'] = layer_by_depth
-            out_data.loc[i,'row'] = row
-            out_data.loc[i,'col'] = col
+            layer_by_depth, row, col = smt.convert_coords_to_matix(out_data.loc[i, 'nztmx'], out_data.loc[i, 'nztmy'],
+                                                                   out_data.loc[i, 'mid_screen_elv'])
+            out_data.loc[i, 'layer_by_depth'] = layer_by_depth
+            out_data.loc[i, 'row'] = row
+            out_data.loc[i, 'col'] = col
 
         except AssertionError as val:
             print(val)
@@ -121,13 +155,13 @@ def get_all_well_row_col(recalc=False):
         except KeyError:
             pass
 
-    out_data.loc[:,'layer'] = out_data.loc[:, 'layer_by_depth']
+    out_data.loc[:, 'layer'] = out_data.loc[:, 'layer_by_depth']
     idx = out_data.layer_by_aq.notnull()
-    out_data.loc[idx,'layer'] = out_data.loc[idx, 'layer_by_aq']
+    out_data.loc[idx, 'layer'] = out_data.loc[idx, 'layer_by_aq']
 
     for num, i in enumerate(out_data.index):
-        row,col,layer = out_data.loc[i,['row', 'col', 'layer']]
-        if any(pd.isnull([row,col,layer])):
+        row, col, layer = out_data.loc[i, ['row', 'col', 'layer']]
+        if any(pd.isnull([row, col, layer])):
             continue
         mx, my, mz = smt.convert_matrix_to_coords(int(row), int(col), int(layer), elv)
         out_data.loc[i, 'mx'] = mx
@@ -136,6 +170,7 @@ def get_all_well_row_col(recalc=False):
 
     out_data.to_csv(save_path)
     return out_data
+
 
 if __name__ == '__main__':
     # note this takes some time to run

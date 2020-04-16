@@ -25,7 +25,7 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
     applies the NSMC pumping mulitpliers
     :param model_id: the NSMC realisation
     :param org_pumping_wells: if True use the model peiod wells if false use the 2014-2015 usage
-    :param recalc: usual recalc
+    :param recalc: depreciated
     :return:
     """
     well_path = os.path.join(sdp_required, 'base_well_data.hdf')

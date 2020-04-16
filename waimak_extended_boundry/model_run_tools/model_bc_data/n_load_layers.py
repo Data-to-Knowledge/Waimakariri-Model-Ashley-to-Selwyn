@@ -13,20 +13,19 @@ import geopandas as gpd
 import shutil
 import netCDF4 as nc
 
-#todo look through documentation
 
 def get_gmp_con_layer(recalc=False):
     """
-    'recharge concentration under good managment practices GMP'
-    :param recalc:
+    'recharge concentration under good management practices GMP'
+    :param recalc: depreciated, keep set to False
     :return:
     """
-    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    data = nc.Dataset(os.path.join(env.sdp_required, 'N_layers.nc'))
     if (not recalc):
         outdata = np.array(data.variables['gmp_n_conc'])
         return outdata
 
-    raise NotImplementedError ('below is left for documentation only')
+    raise NotImplementedError('below is left for documentation only')
     n_load_path = env.sci('Groundwater\\Waimakariri\\Groundwater\\Numerical GW model\\Model simulations and '
                           'results\\Nitrate\\NloadLayers\\CMP_GMP_PointSources290118_nclass.shp')
     outdata = smt.shape_file_to_model_array(n_load_path, attribute='nconc_gmp', alltouched=True,
@@ -38,12 +37,12 @@ def get_gmp_con_layer(recalc=False):
 
 def get_new_cmp_con(recalc=False):
     """
-    'recharge concentration under current managment practices'
-    :param recalc:
+    'recharge concentration under current management practices CMP'
+    :param recalc: depreciated, keep set to False
     :return:
     """
     # should be similar to the get original cmp layer, but I am unsure how the re-sampling was handled for that layer
-    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    data = nc.Dataset(os.path.join(env.sdp_required, 'N_layers.nc'))
     if (not recalc):
         outdata = np.array(data.variables['cmp_con'])
         return outdata
@@ -61,14 +60,13 @@ def get_new_cmp_con(recalc=False):
 def get_pc5pa_additonal_load(recalc=False):
     """
     get the additional load from pc5pa rules
-    :param recalc:
+    :param recalc: depreciated, keep set to False
     :return:
     """
-    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    data = nc.Dataset(os.path.join(env.sdp_required, 'N_layers.nc'))
     if (not recalc):
         outdata = np.array(data.variables['pc5pa_additional_n_load'])
         return outdata
-
 
     raise NotImplementedError('below is left for documentation only')
     n_load_path = r"P:\Groundwater\Waimakariri\Landuse\Shp\Results_New_WF_rule_May17.gdb\Results_New_WF_rule_May17.gdb"
@@ -81,13 +79,13 @@ def get_pc5pa_additonal_load(recalc=False):
     return outdata
 
 
-def get_pc5pa_additonal_con(recalc=False):#
+def get_pc5pa_additonal_con(recalc=False):  #
     """
     fraction of the additional load with new pc5PA rules
-    :param recalc:
+    :param recalc: depreciated, keep set to False
     :return:
     """
-    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    data = nc.Dataset(os.path.join(env.sdp_required, 'N_layers.nc'))
     if (not recalc):
         outdata = np.array(data.variables['pc5pa_additional_n_con_per'])
         return outdata
@@ -106,10 +104,10 @@ def get_pc5pa_additonal_con(recalc=False):#
 def get_gmp_load_raster(recalc=False):
     """
     array of N load for good management practices (GMP)
-    :param recalc:
+    :param recalc: depreciated, keep set to False
     :return:
     """
-    data = nc.Dataset(os.path.join(env.sdp_required,'N_layers.nc'))
+    data = nc.Dataset(os.path.join(env.sdp_required, 'N_layers.nc'))
     if (not recalc):
         outdata = np.array(data.variables['gmp_load'])
         return outdata
@@ -206,11 +204,12 @@ def get_gmp_plus_con_layer_by_landuse(
 
     return outdata
 
+
 def get_gmp_plus_con_layer_by_load_limit(
         n_load_limit,
         n_reduction,
         add_half_pc5pa=False,
-        exclude_ashley=False,):
+        exclude_ashley=False, ):
     """
     get the concentration layer for reductions beyond gmp applied to landuse above a n load limit
 
@@ -220,7 +219,8 @@ def get_gmp_plus_con_layer_by_load_limit(
     :param n_reduction: percentage (e.g 5 = 5%) array of the amount of reduction to apply limit and reduction are
                         applied positionally
     :param add_half_pc5pa: bool if True, add half (to assume reasonable uptake) of teh additional PA N
-    :param exclude_ashley: boolean, if True exlcude the ashley zone area for reductions (see internal shapefile for zone)
+    :param exclude_ashley: NOT IMPLEMENTED intended to be:
+                           boolean, if True exclude the ashley zone area for reductions
     :return:
     """
     # this takes about 1 minute to run... I'm not pickling because there are too many options, but this
@@ -242,11 +242,12 @@ def get_gmp_plus_con_layer_by_load_limit(
     else:
         for i in range(len(n_load_limit)):
             lower = n_load_limit[i]
-            if i != len(n_load_limit) - 1: # not the last entry
-                upper = n_load_limit[i+1]
+            if i != len(n_load_limit) - 1:  # not the last entry
+                upper = n_load_limit[i + 1]
             else:
-                upper = 999999999999999999999999 # everything is included in the upper
-            base_data.loc[(base_data.nload_gmp >= lower) & (base_data.nload_gmp < upper), 'use_n'] *= (1. - n_reduction[i] / 100.)
+                upper = 999999999999999999999999  # everything is included in the upper
+            base_data.loc[(base_data.nload_gmp >= lower) & (base_data.nload_gmp < upper), 'use_n'] *= (
+                        1. - n_reduction[i] / 100.)
     temp_shp_path = os.path.join(smt.temp_file_dir, 'temp_ncon_shp', 'temp_ncon_shp.shp')
     if not os.path.exists(os.path.dirname(temp_shp_path)):
         os.makedirs(os.path.dirname(temp_shp_path))
@@ -266,9 +267,10 @@ def get_gmp_plus_con_layer_by_load_limit(
 
 
 if __name__ == '__main__':
-    fs=[get_gmp_con_layer, get_new_cmp_con, get_pc5pa_additonal_con,get_pc5pa_additonal_load,get_gmp_load_raster]
-    ts=['get_gmp_con_layer', 'get_new_cmp_con', 'get_pc5pa_additonal_con','get_pc5pa_additonal_load','get_gmp_load_raster']
-    for f, t in zip(fs,ts):
+    fs = [get_gmp_con_layer, get_new_cmp_con, get_pc5pa_additonal_con, get_pc5pa_additonal_load, get_gmp_load_raster]
+    ts = ['get_gmp_con_layer', 'get_new_cmp_con', 'get_pc5pa_additonal_con', 'get_pc5pa_additonal_load',
+          'get_gmp_load_raster']
+    for f, t in zip(fs, ts):
         test = f()
         smt.plt_matrix(test, base_map=True, no_flow_layer=None, title=t)
 
