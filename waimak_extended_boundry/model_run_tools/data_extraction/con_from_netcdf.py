@@ -15,19 +15,19 @@ from waimak_extended_boundry.extended_boundry_model_tools import smt
 from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import get_well_positions
 from warnings import warn
 
-#todo look through documentation
 
 def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites,
                                   outpath=None, missing_str_obs='raise'):
     """
-    create a dataframe(index=nsmc realisation, columns = sites) for each runtype in
+    create a dataframe(index=nsmc realisation, columns = sites) with the concentration data for the sites from a given
+    UCN netcdf (produced by ucn_netcdf.make_ucn_netcdf())
     :param nsmc_nums: the nsmc numbers (list) to use or 'all'
     :param ucn_nc_path: path to netcdf file created by make_ucn_netcdf
     :param ucn_var_name: name of the concentration variable in the ucn netcdf file
     :param cbc_nc_path: path to the cell budget file netcdf (needed for any potential drain sites and joint sfr drn)
-    :param sites: list of sites (stream sites)
-    :param outpath: optional, if None endmember mixing is not saved, else the directory to save 1 csv of the data
-    :param missing_str_obs: action upon missing SFT str_obs, raise Keyerror, warn, or pass
+    :param sites: list of sites (stream sites), see data_from_streams.get_samp_points_df for a list of available sites
+    :param outpath: optional, if None dataframe is not saved, else the path to save the csv of the dataframe
+    :param missing_str_obs: action upon missing SFT str_obs, "raise", "warn", or "pass"
     :return:
     """
     # some checks on sites
@@ -113,12 +113,14 @@ def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_p
 
 def calculate_con_from_netcdf_well(nsmc_nums, ucn_nc_path, ucn_var_name, sites, outpath=None):
     """
-    create a dictionary (keys = runtype) of dataframes(index=nsmc realisation, columns = sites) for each runtype in
+    create a dataframes(index=nsmc realisation, columns = sites) of concentration data
+    from the given UCN netcdf (produced by ucn_netcdf.make_ucn_netcdf())
     :param nsmc_nums: the netcdf numbers to calculate values for or all
     :param ucn_nc_path: path to netcdf file created by make_ucn_netcdf
     :param ucn_var_name: name of the concentration variable in the ucn netcdf file
-    :param sites: list of sites (well_nums)
-    :param outpath: optional, if None endmember mixing is not saved, else the directory to save 1 csv of the data
+    :param sites: list of sites (well_nums), for a full list of wells implemented see:
+                  model_run_tools.model_bc_data.all_well_layer_col_row.get_all_well_layer_col_row()
+    :param outpath: optional, if None dataframe is not saved, else the path to save a csv of the data
     :return:
     """
     ucn_nc_file = nc.Dataset(ucn_nc_path)

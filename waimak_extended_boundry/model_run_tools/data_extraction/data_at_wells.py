@@ -18,11 +18,11 @@ from waimak_extended_boundry.extended_boundry_model_tools import smt
 hds_no_data = 1e30
 unc_no_data = -1
 
-#todo look through documentation
-
 def get_well_positions(well_list, missing_handeling='warn'):
     """
-    get the position for all of the wells
+    get the position for all of the wells in the well list
+    for a full list of wells implemented see:
+    model_run_tools.model_bc_data.all_well_layer_col_row.get_all_well_layer_col_row()
     :param well_list: list of well numbers or a well number
     :param missing_handeling: one of: 'raise' : raise an exception for any nan values with well numbers
                                   'forgive': silently remove nan values
@@ -56,10 +56,10 @@ def get_well_positions(well_list, missing_handeling='warn'):
 
 def get_hds_file_path(name_file_path=None, hds_path=None, m=None):
     """
-    get the head file path from one of the paths below
-    :param name_file_path:
-    :param hds_path:
-    :param m:
+    get the head file path from one of the paths below and do a rudimentary check on the file name
+    :param name_file_path: path to the modflow name file
+    :param hds_path: path to the heads file, checks that it is .hds, this is to simplify multiple input options below
+    :param m: flopy.Modflow instance
     :return:
     """
     loc_inputs = 0
@@ -99,11 +99,12 @@ def get_hds_file_path(name_file_path=None, hds_path=None, m=None):
 def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_path=None, hds_path=None, m=None,
                      add_loc=False, missing_handling='warn', set_hdry=False):
     """
-    return dataframe of heads at wells in well list
+    return dataframe of heads at wells in well list for the hds path defined by the namefile, m, or hds_path
     :param well_list: list of well numbers to export data at
     :param kstpkpers: a list or tuple of A tuple containing the time step and stress period (kstp, kper).
-                      These are zero-based kstp and kper values. kstpkpers or relative kstpkpers must be assigned
-    :param rel_kstpkpers: a list or integer of the relative kstpkpers to be used (as list indexing) or 'all'
+                      These are zero-based kstp and kper values. one of kstpkpers or relative kstpkpers must be assigned
+    :param rel_kstpkpers: a list or integer of the relative kstpkpers to be used (as python list indexing) or 'all'
+                          see _get_kstkpers for more info
     :param name_file_path: None or the path to the name file, must define one of name_file_path, hds_path, m
     :param hds_path:  None or the path to the heads file, must define one of name_file_path, hds_path, m
     :param m: None or a flopy model object, must define one of name_file_path, hds_path, m
@@ -111,7 +112,7 @@ def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_pa
     :param missing_handeling: one of: 'raise' : raise an exception for any nan values with well numbers
                               'forgive': silently remove nan values
                               'warn': remove nan values, but issue a warning with well numbers
-    :param set_hdry: bool if True manually set the dry cells to hdry
+    :param set_hdry: bool if True manually set the dry cells to -888 (e.g. where hdry was not set in the model)
     :return: df of heads (rows: wells  columns:kstpkpers)
     """
     # set up inputs and outdata
@@ -133,12 +134,13 @@ def get_hds_at_wells(well_list, kstpkpers=None, rel_kstpkpers=None, name_file_pa
 
 def get_con_at_wells(well_list, unc_file_path, kstpkpers=None, rel_kstpkpers=None, add_loc=False):
     """
-
+    get the concentration from a UCN file a all wells in the well list
     :param well_list: list of well numbers to export data at
     :param unc_file_path:
     :param kstpkpers: a list or tuple of A tuple containing the time step and stress period (kstp, kper).
                       These are zero-based kstp and kper values. must define only one of kstpkpers or rel_kstpkpers
     :param rel_kstpkpers: a list or integer of the relative kstpkpers to be used (as list indexing) or 'all'
+                          see _get_kstkpers for more info
     :param add_loc: boolean if true add k,i,j, x,y,z to outdata
     :return: df of heads (rows: wells  columns:kstpkpers)
     """
@@ -157,10 +159,10 @@ def get_con_at_wells(well_list, unc_file_path, kstpkpers=None, rel_kstpkpers=Non
 
 def _get_kstkpers(bud_file, kstpkpers=None, rel_kstpkpers=None):
     """
-    get teh kstpkpers to use from either a list of kstpkpers or a list of relative kstpkpers
-    :param bud_file: the budget file for the model in question
+    get the kstpkpers to use from either a list of kstpkpers or a list of relative kstpkpers
+    :param bud_file: the budget file for the model in question, eg. hds, ucn, etc.
     :param kstpkpers: the kstkpers
-    :param rel_kstpkpers:  the relative kstpkpers to use
+    :param rel_kstpkpers:  all or the python list index options of kstkpers relative kstpkpers to use
     :return: 2d np array
     """
     if kstpkpers is not None and rel_kstpkpers is not None:
@@ -191,8 +193,8 @@ def _get_kstkpers(bud_file, kstpkpers=None, rel_kstpkpers=None):
 
 def _fill_df_with_bindata(bin_file, kstpkpers, kstpkper_names, df, nodata_value, locations, set_hdry=False):
     """
-    fills the dataframe with hds or con data
-    :param bin_file: data file either flopy.utils.Headfile or flopy.utils.Uncfile
+    fills the dataframe with hds or con data, with some modification would probably work with a drawdown or cbc file
+    :param bin_file: data file either flopy.utils.Headfile or flopy.utils.Uncfile,
     :param kstpkpers: None or list of the kstpkpers to use
     :param kstpkper_names: names to pass to the kstpkper for the colum of the dataframe
     :param df: dataframe to fill (retuns a copy)

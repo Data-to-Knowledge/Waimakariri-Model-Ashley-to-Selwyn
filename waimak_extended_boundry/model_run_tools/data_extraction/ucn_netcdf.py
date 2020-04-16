@@ -20,17 +20,17 @@ import psutil
 import gc
 import os
 
-#todo look through documentation
 
 def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_no_value=-1, sobs=None):
     """
     creates as netcdf file for all of the ucn data
     :param nsmc_nums: list of nsmc numbers
     :param ucn_paths: dictionary {variable name:[ucn paths]} ucn paths same order as nsmc_nums
+                      This allows multiple containment transport runs to be included in the same NetCDF
     :param units: either string or dictionary variable name: units) to be passed to the netcdf variable attribute\
     :param description: a description (str) to pass to the netcdf attribute
     :param nc_path: the path to save the netcdf files
-    :param zlib: boolean, if True will compress data
+    :param zlib: boolean, if True will compress data, which makes it smaller, but also much slower to read/write
     :param ucn_no_value: the no data value for the ucn file (will be convereted to np.nan)
     :param sobs dictionary {variable name:[ucn paths]} ucn paths same order as nsmc_nums or None if None don't add SFR obs
     :return:
@@ -186,12 +186,25 @@ def make_ucn_netcd(nsmc_nums, ucn_paths, units, description, nc_path, zlib, ucn_
 
 
 def grouper(n, iterable, fillvalue=None):
-    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+    """
+    group up the iterable into groups of size n, fill excess with the fill value
+    grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+    :param n: number of components per group
+    :param iterable: the iterable to group
+    :param fillvalue: the value to fill
+    :return:
+    """
     args = [iter(iterable)] * n
     return izip_longest(fillvalue=fillvalue, *args)
 
 
 def _get_sfr_con_map(path):
+    """
+    transform the SFT stream observations to an array, this assumes that there is only one time period in str obs
+    this was the case for the Waimak modelling but it is not the default for MT3D
+    :param path: path to the SFT stream obs
+    :return:
+    """
     data = pd.read_table(path, delim_whitespace=True)
     data.loc[:, 'SFR-CONCENTRATION'] = pd.to_numeric(data['SFR-CONCENTRATION'], 'coerce')
     data.loc[:, 'row'] = data.loc[:, 'SFR-NODE'] + 1000

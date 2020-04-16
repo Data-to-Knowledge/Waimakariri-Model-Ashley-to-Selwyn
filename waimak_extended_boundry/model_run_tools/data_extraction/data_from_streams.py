@@ -17,17 +17,18 @@ from warnings import warn
 import netCDF4 as nc
 from env import sdp_required
 
-#todo look through documentation
 
 def get_flux_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None, skip_1_sfr=True):
     """
     get fluxes a pre-defined sites for drain and sfr packages. modflow directions apply e.g. negative values are flux
     out of the model cells into the sw feature
+    see get_samp_points_df for established stream sites
     :param sites: pre-defined site identifiers
     :param base_path: name file path with or without extension
-    :param kstpkpers: actual kstpkpers to use (e.g. [(0,0),(0,1)])
-    :param rel_kstpkpers: relative kstpkpers to use as general indexer (e.g. [0,1,2,3]) or all
-    :param skip_1_sfr: boolean if True skip any arrays that have only 1 sfr True
+    :param kstpkpers: actual kstpkpers to use (e.g. [(0,0),(0,1)]); only one of kstpkpers, rel_kstpkpers must be set
+    :param rel_kstpkpers: relative kstpkpers to use as python list indexer (e.g. [0,1,2,3]) or all
+    :param skip_1_sfr: boolean if True skip any arrays that have only 1 sfr,
+                       used to prevent the misuse of sfr flow arrays
     :return: flux for the sites passed as a dataframe index sites, cols = kstpkpers
     """
     base_path = base_path.replace('.nam', '')
@@ -95,10 +96,11 @@ def get_flux_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None, ski
 def get_flow_at_points(sites, base_path, kstpkpers=None, rel_kstpkpers=None):
     """
     get flows a pre-defined sites for drain and sfr packages flows are always postive
+    see get_samp_points_df for established stream sites
     :param sites: pre-defined site identifiers
     :param base_path: name file path with or without extension
-    :param kstpkpers: actual kstpkpers to use (e.g. [(0,0),(0,1)])
-    :param rel_kstpkpers: relative kstpkpers to use as general indexer (e.g. [0,1,2,3]) or all
+    :param kstpkpers: actual kstpkpers to use (e.g. [(0,0),(0,1)]); only one of kstpkpers, rel_kstpkpers must be set
+    :param rel_kstpkpers: relative kstpkpers to use as python list like indexer (e.g. [0,1,2,3]) or all
     :return: flow for the sites passed as a dataframe index sites, cols = kstpkpers
     """
     base_path = base_path.replace('.nam', '')
@@ -165,13 +167,14 @@ def get_con_at_str(sites, ucn_file_path, sobs_path, cbc_path, sfo_path, kstpkper
                    rel_kstpkpers=None):
     """
     get the concentration at stream sites
+    see get_samp_points_df for established stream sites
     :param sites: a list of sites (from the surface feature flow paths)
     :param ucn_file_path: path to the ucn file
     :param sobs_path: path to the stream obs
     :param cbc_path: path to the cell budget file
     :param sfo_path: path to the sfo (sfr outflow file)
-    :param kstpkpers: the kstkpers
-    :param rel_kstpkpers:  the relative kstpkpers to use
+    :param kstpkpers: the actual kstkpers to use; only one of kstpkpers, rel_kstpkpers must be set
+    :param rel_kstpkpers:  the relative python list like kstpkpers to use
     :return: concentrations (dataframe(index=sites, colums=kstpkpers))
     """
     if kstpkpers is not None:
@@ -271,7 +274,7 @@ def _get_sobs_concentration(sfr_idx, sobs_path):
     """
     get the sfr concentration
     :param sfr_idx: the boolean array for the sfr segment (only 1 segment is permissible)
-    :param sobs_path: the path to the stream obs for that model
+    :param sobs_path: the path to the MT3D sft stream flow obs for that model
     :return: concentration
     """
     assert isinstance(sfr_idx, np.ndarray), 'sfr_idx must be np.ndarray'
@@ -288,7 +291,11 @@ def _get_sobs_concentration(sfr_idx, sobs_path):
 
 def _get_flux_flow_arrays(site, sw_samp_pts_dict, sw_samp_pts_df):
     """
-    same as get_flux_arrays for drn only points
+    create the drn_array (boolean drain location) and the sfr_array for the site input
+    in order to query ucn and CBC data
+    :param site: the predetermined stream flow site
+    :param sw_samp_pts_dict: produced by _get_sw_samp_pts_dict
+    :param sw_samp_pts_df: produced by get_samp_points_df
     :return: (drn_array, sfr_array) either could be None but not both
     """
     drn_array, sfr_array = None, None
@@ -327,13 +334,14 @@ def _get_flux_flow_arrays(site, sw_samp_pts_dict, sw_samp_pts_df):
 
 def get_samp_points_df(recalc=False):
     """
-    generate a dataframe with useful info about sampling points
-    bc_type: drn or sfr, comb
+    generate a dataframe with useful info about sampling points. to see the geospatial representation of these points
+    see os.path.join(sdp_required, 'sw_samp_dict.nc'), which can be loaded directly into ArcGIS or QGIS
+    bc_type: drn or sfr, comb (combination of both)
     m_type: min_flow, swaz, comp (component), other
     n: number of points
     comps: if None not a combination if valuse the group of other combination of multiple to use for the flux arrays
 
-    :param recalc: normal pickle thing
+    :param recalc: depreciated, keep set to false
     :return:
     """
     # create a dataframe linking identifiers with key information
@@ -428,10 +436,9 @@ def get_samp_points_df(recalc=False):
 
 def _get_sw_samp_pts_dict(recalc=False):
     """
-    gets a dictionary of boolean arrays for each sampling point.  These are ultimately derived from shape files, but
-    if possible this function will load a pickled dictionary
-    :param recalc: bool if True then the pickled dictionary (if any) will not be re-loaded and instead the dictionary
-                   will be calculated from all avalible shapefiles (in base_shp_path)
+    gets a dictionary of boolean arrays for each sampling point.  These were originally derived from shape files, but
+    now come from an NetCDF
+    :param recalc: depreciated, keep set at False
     :return: dictionary {location: masking array}
     """
     if not recalc:
@@ -463,7 +470,8 @@ def _get_sw_samp_pts_dict(recalc=False):
 
 def _make_swaz_drn_points():
     """
-    a function to make the swaz points from previous data
+    depreciated
+    a function to make the swaz points from previous data, this data is used in sw samp_points_dict
     :return:
     """
     # only run one set

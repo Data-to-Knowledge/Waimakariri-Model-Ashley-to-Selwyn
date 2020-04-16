@@ -18,12 +18,11 @@ import pandas as pd
 import gc
 from itertools import izip_longest
 
-#todo look through documentation
 
 def make_hds_netcdf(nsmc_nums, hds_paths, description, nc_path, zlib):
     """
-    make a cell budget file netcdf for easy use
-    :param nsmc_nums: list the unique identifiers for the netcdfs
+    make a heads file netcdf for easy use
+    :param nsmc_nums: list the unique identifiers for the netcdfs (model realisation number)
     :param hds_paths: list the paths for the hds files of a given netcdf number (same order as nsmc_nums)
     :param nc_path: the path to the outfile
     :param description: a description (str) to set as a netcdf attribute
@@ -132,6 +131,13 @@ def make_hds_netcdf(nsmc_nums, hds_paths, description, nc_path, zlib):
         gc.collect()
 
 def grouper(n, iterable, fillvalue=None):
-    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+    """
+    group up the iterable into groups of size n, fill excess with the fill value
+    grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+    :param n: number of components per group
+    :param iterable: the iterable to group
+    :param fillvalue: the value to fill
+    :return:
+    """
     args = [iter(iterable)] * n
     return izip_longest(fillvalue=fillvalue, *args)
