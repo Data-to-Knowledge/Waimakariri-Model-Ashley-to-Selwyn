@@ -17,10 +17,73 @@ from copy import deepcopy
 import flopy_mh as flopy
 from waimak_extended_boundry import smt
 import matplotlib.pyplot as plt
-from waimak_extended_boundry.model_runs.min_flows_reliability.visualise_data_from_fruns import gw_site_groups
 import itertools
 import netCDF4 as nc
 import sys
+
+sw_site_groups = {
+    'cust': ['cust_oxford',  # cust at oxford often goes dry, check in new set of simlulations
+             'cust_threlkelds'],
+    # also some wells going dry, need to handle but wait to see if it's actually a problem
+    'north_cust': ['cam_youngs',
+                   'northbrook_marsh',
+                   'saltwater_toppings',
+                   'southbrook_marsh',
+                   'taranaki_preeces',
+                   'waikuku_waikuku-beach-rd',
+                   'n7drain_hicklands'],
+
+    'south_cust': ['courtenay_neeves',
+                   'greigs_greigs',
+                   'ohoka_island',
+                   'silverstream_neeves']
+}
+gw_site_groups = {
+    'inland_shallow': ['M34/0306',
+                       'L35/0062',
+                       # I added below
+                       'L35/0004',
+                       'M35/4757',
+                       'M35/0029'],
+    'midplains_shallow': ['M35/0058',
+                          'M35/6295',
+                          'M35/4873',
+
+                          # I added below
+                          'M35/0222',
+                          'M35/2679',
+                          'M35/0596'],
+    'coast_shallow': ['M35/0538',
+
+                      # I added below
+                      'M35/0724',
+                      'M35/17982'
+
+                      ],
+
+    'inland_deep': ['M35/9154',
+                    'L35/0686',
+
+                    # below are things I picked out
+                    'L35/0716',
+                    'BW22/0002',
+                    'L35/0882',
+                    'M34/5704'
+                    ],
+    'midplains_deep': ['BW23/0133',
+                       'BW23/0134',
+                       'M35/11283'],
+    'coast_deep': ['M35/5445',
+                   # below I added
+                   'M34/0734',
+                   'M35/7024'
+                   ]
+}
+
+groups = {}
+groups.update(gw_site_groups)
+groups.update(sw_site_groups)
+
 
 
 def extract_forward_run(name_file_path):
