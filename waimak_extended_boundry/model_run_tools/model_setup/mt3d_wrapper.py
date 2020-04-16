@@ -10,7 +10,7 @@ import flopy_mh as flopy
 import os
 import shutil
 import numpy as np
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from waimak_extended_boundry.model_run_tools.model_bc_data.wells import \
     get_race_data
 import pandas as pd

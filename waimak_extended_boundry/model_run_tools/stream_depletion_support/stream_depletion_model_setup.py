@@ -11,10 +11,13 @@ import os
 import pandas as pd
 import sys
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools import mod_gns_model, get_max_rate, \
-    get_full_consent, get_race_data, zip_non_essential_files, modflow_converged
+from waimak_extended_boundry.model_run_tools.model_setup.base_modflow_wrapper import mod_gns_model, \
+    zip_non_essential_files
+from waimak_extended_boundry.model_run_tools.model_bc_data.wells import get_max_rate, get_full_consent, get_race_data
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modflow_converged
 from traceback import format_exc
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
+
 
 def setup_and_run_stream_dep_multip(kwargs):
     """
@@ -75,7 +78,8 @@ def setup_and_run_stream_dep(model_id, name, base_dir, stress_vals, wells_to_tur
 
     if sd_7_150 == 'sd150':
         full_consent = get_full_consent(model_id, missing_sd_wells=True)
-        full_consent.loc[full_consent.use_type == 'irrigation-sw','flux'] *= 12/5 # scale irrigation wells to CAV over 150 days
+        full_consent.loc[
+            full_consent.use_type == 'irrigation-sw', 'flux'] *= 12 / 5  # scale irrigation wells to CAV over 150 days
     elif sd_7_150 == 'sd7':
         sd7_flux = get_max_rate(model_id, missing_sd_wells=True)
     for sp in range(nper):
@@ -100,7 +104,7 @@ def setup_and_run_stream_dep(model_id, name, base_dir, stress_vals, wells_to_tur
                       safe_mode=False,
                       stress_period_vals=stress_vals,
                       well=wells,
-                      drain={0:drns},  # not modifying these stress period data
+                      drain={0: drns},  # not modifying these stress period data
                       recharge=rch,
                       stream=None,
                       mt3d_link=False,
@@ -176,7 +180,7 @@ def setup_and_run_stream_dep(model_id, name, base_dir, stress_vals, wells_to_tur
     con = None
     if success:
         con = modflow_converged(os.path.join(m.model_ws, m.namefile.replace('.nam', '.list')))
-        zip_non_essential_files(m.model_ws, include_list=False, other_files=['.sfo','.ddn','.hds'])
+        zip_non_essential_files(m.model_ws, include_list=False, other_files=['.sfo', '.ddn', '.hds'])
     if con is None:
         success = 'convergence unknown'
     elif con:

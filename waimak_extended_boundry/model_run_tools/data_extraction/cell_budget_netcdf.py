@@ -8,8 +8,8 @@ from __future__ import division
 import netCDF4 as nc
 import flopy_mh as flopy
 import numpy as np
-from waimak_extended_boundry.model_run_tools import _get_kstkpers
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import _get_kstkpers
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from warnings import warn
 import datetime
 import sys

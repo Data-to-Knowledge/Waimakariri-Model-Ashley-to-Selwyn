@@ -11,7 +11,7 @@ import flopy_mh as flopy
 import pickle
 import os
 import glob
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from data_at_wells import _get_kstkpers, unc_no_data
 from warnings import warn
 import netCDF4 as nc

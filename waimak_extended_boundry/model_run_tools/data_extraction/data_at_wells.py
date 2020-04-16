@@ -13,7 +13,7 @@ from warnings import warn
 from copy import deepcopy
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 
 hds_no_data = 1e30
 unc_no_data = -1

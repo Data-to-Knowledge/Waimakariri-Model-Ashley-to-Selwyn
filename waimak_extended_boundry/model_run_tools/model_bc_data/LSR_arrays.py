@@ -11,7 +11,7 @@ import os
 import numpy as np
 import env
 import netCDF4 as nc
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler

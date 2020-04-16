@@ -12,7 +12,9 @@ import flopy_mh as flopy
 import os
 import sys
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools import mod_gns_model, get_full_consent, get_race_data, zip_non_essential_files, modflow_converged
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modflow_converged
+from waimak_extended_boundry.model_run_tools.model_bc_data.wells import get_full_consent, get_race_data
+from waimak_extended_boundry.model_run_tools.model_setup.base_modflow_wrapper import mod_gns_model, zip_non_essential_files
 from traceback import format_exc
 import pandas as pd
 import pickle

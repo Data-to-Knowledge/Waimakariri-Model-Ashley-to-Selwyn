@@ -9,7 +9,7 @@ import flopy_mh as flopy
 import numpy as np
 from env import sdp_required
 import os
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from base_modflow_wrapper import import_gns_model
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import \
     modflow_converged

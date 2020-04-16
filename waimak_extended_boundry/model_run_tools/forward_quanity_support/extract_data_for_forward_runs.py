@@ -7,8 +7,9 @@ Date Created: 28/09/2017 2:00 PM
 from __future__ import division
 import numpy as np
 import pandas as pd
-from waimak_extended_boundry.model_run_tools import \
-    get_hds_at_wells, get_flow_at_points, get_samp_points_df, zipped_modflow_converged
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import get_hds_at_wells
+from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import get_flow_at_points, get_samp_points_df
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import zipped_modflow_converged
 from glob import glob
 import os
 import datetime

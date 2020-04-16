@@ -11,7 +11,7 @@ import flopy_mh as flopy
 import os
 import shutil
 import warnings
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 from copy import deepcopy
 from env import sdp_required
 from realisation_id import get_base_well, get_model

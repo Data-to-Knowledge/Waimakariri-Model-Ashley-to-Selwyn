@@ -11,7 +11,7 @@ import numpy as np
 import netCDF4 as nc
 import itertools
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools import get_stocastic_set
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
 import os
 import psutil
 import geopandas as gpd

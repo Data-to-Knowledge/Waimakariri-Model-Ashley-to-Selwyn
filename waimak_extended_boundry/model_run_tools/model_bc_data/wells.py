@@ -5,14 +5,10 @@ Date Created: 7/09/2017 3:55 PM
 """
 
 from __future__ import division
-
 import os
 import pickle
-
 import numpy as np
 import pandas as pd
-
-from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
 from waimak_extended_boundry.model_run_tools.model_bc_data.LSR_arrays import \
     get_ird_base_array, get_lsr_base_period_inputs

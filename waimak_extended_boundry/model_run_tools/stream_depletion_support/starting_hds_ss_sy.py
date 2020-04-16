@@ -6,8 +6,9 @@ Date Created: 7/09/2017 4:19 PM
 from __future__ import division
 import os
 from waimak_extended_boundry import smt
-from waimak_extended_boundry.model_run_tools import \
-    mod_gns_model, get_race_data, get_full_consent, get_hds_file_path, hds_no_data
+from waimak_extended_boundry.model_run_tools.model_setup.base_modflow_wrapper import mod_gns_model
+from waimak_extended_boundry.model_run_tools.model_bc_data.wells import  get_race_data, get_full_consent
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import hds_no_data, get_hds_file_path
 import flopy_mh as flopy
 import numpy as np
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd

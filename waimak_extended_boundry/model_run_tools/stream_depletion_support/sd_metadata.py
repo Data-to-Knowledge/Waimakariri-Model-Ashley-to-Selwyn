@@ -5,7 +5,7 @@ Date Created: 25/10/2017 3:17 PM
 """
 
 from __future__ import division
-from waimak_extended_boundry.model_run_tools import modflow_converged
+from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modflow_converged
 from glob import glob
 import pandas as pd
 import os

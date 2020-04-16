@@ -4,7 +4,7 @@ Date Created: 30/09/2017 9:14 AM
 """
 
 from __future__ import division
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 import numpy as np
 import pickle
 import os

@@ -5,7 +5,7 @@ Date Created: 21/12/2017 2:36 PM
 """
 
 from __future__ import division
-from realisation_id import get_model
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_model
 import numpy as np
 import pandas as pd
 

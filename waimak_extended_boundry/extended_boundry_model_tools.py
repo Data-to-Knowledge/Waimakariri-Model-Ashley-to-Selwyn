@@ -12,7 +12,7 @@ import os
 import netCDF4 as nc
 from env.sdp import loaded_model_realisation_dir # used else where basically I moved this up to sdp
 
-
+t = loaded_model_realisation_dir
 layers, rows, cols = 11, 364, 365
 
 _mt = ModelTools('ex_bd_va', sdp=env.sdp_required, ulx=1512162.53275, uly=5215083.5772, layers=layers,

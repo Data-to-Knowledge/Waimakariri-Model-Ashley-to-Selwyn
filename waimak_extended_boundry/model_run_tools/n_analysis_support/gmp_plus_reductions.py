@@ -6,9 +6,9 @@ Date Created: 1/05/2018 8:47 AM
 
 from __future__ import division
 import env
-from setup_run_models import setup_run_mt3d_suite, extract_data, pc5_ftl_repo
-from waimak_extended_boundry.model_run_tools import get_sft_stress_period_data, get_ssm_stress_period_data, \
-    get_stocastic_set
+from waimak_extended_boundry.model_run_tools.n_analysis_support.setup_run_models import setup_run_mt3d_suite, extract_data, pc5_ftl_repo
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
+from waimak_extended_boundry.model_run_tools.model_setup.mt3d_wrapper import get_ssm_stress_period_data, get_sft_stress_period_data
 from waimak_extended_boundry import smt
 import os
 from warnings import warn

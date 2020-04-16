@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import \
     _get_sw_samp_pts_dict, get_samp_points_df, _get_flux_flow_arrays
-from waimak_extended_boundry import smt
-from data_at_wells import get_well_positions
+from waimak_extended_boundry.extended_boundry_model_tools import smt
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import get_well_positions
 from warnings import warn
 
 def calculate_con_from_netcdf_str(nsmc_nums, ucn_nc_path, ucn_var_name, cbc_nc_path, sites,

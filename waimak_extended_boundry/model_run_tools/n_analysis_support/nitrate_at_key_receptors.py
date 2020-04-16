@@ -8,8 +8,10 @@ from __future__ import division
 import env
 import pandas as pd
 import os
-from waimak_extended_boundry.model_run_tools import calculate_con_from_netcdf_well, calculate_con_from_netcdf_str, \
-    get_con_at_wells, get_con_at_str, get_stocastic_set
+from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
+from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import get_con_at_str
+from waimak_extended_boundry.model_run_tools.data_extraction.data_at_wells import get_con_at_wells
+from waimak_extended_boundry.model_run_tools.data_extraction.con_from_netcdf import calculate_con_from_netcdf_str, calculate_con_from_netcdf_well
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 

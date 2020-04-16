@@ -13,8 +13,8 @@ import netCDF4 as nc
 import pandas as pd
 import datetime
 import sys
-from waimak_extended_boundry.model_run_tools import \
-    get_samp_points_df, get_zone_array_index
+from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index import get_zone_array_index
+from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import get_samp_points_df
 import matplotlib.pyplot as plt
 
 depths = [10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 225]

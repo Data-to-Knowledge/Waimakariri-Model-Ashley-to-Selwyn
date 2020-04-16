@@ -6,7 +6,7 @@ Date Created: 18/04/2018 11:20 AM
 
 from __future__ import division
 import env
-from waimak_extended_boundry import smt
+from waimak_extended_boundry.extended_boundry_model_tools import smt
 import numpy as np
 import os
 import geopandas as gpd
