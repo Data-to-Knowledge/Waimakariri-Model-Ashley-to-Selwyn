@@ -17,8 +17,6 @@ from env import sdp_required
 from realisation_id import get_base_well, get_model
 import zipfile
 
-#todo look through documentation
-
 
 # as part of this make another function which gets the name file (or copies the files across)
 
@@ -27,15 +25,14 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
     """
     sets up a model object for a steady state run with the base modflow files from GNS. This serves as a base to be
     modified for other  model runs. DOES NOT Write input Files, name file, or RUN MODFLOW.
-    :param model_id: the id linking to the realisation
+    :param model_id: the id linking to the realisation 'NsmcReal{nsmc_num:06d}'
     :param name: the model name
     :param dir_path: path to the directory to create modflow files it does not need to exist
     :param safe_mode: if true ask for confirmation before deleting dirpath
-    :param model_version: the model to use see supporting data paths for avalible versions. default to m_strong_vert
-                          for backwards compatability
-    :param exe_path: path to the modflow NWT exicutable
+    :param exe_path: path to the modflow NWT exicutable, if None set internally to default
     :param set_hdry: bool if True then IPHDRY will be set to 1 and dry cells will be set to hdry (-888)
-    :return: model object
+                     this will flag all dry cells (e.g. head lower than cell bottom) as -888
+    :return: flopy model object
     """
     # set name to incorporate the model version as the start of the name
     name = '{}_{}'.format(model_id, name)
@@ -60,7 +57,8 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
     m._set_name(name)
     m.change_model_ws(dir_path)
     if exe_path is None:
-        m.exe_name = os.path.join(sdp_required,"models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe")
+        m.exe_name = os.path.join(sdp_required,
+                                  "models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe")
     else:
         m.exe_name = exe_path
 
@@ -98,9 +96,10 @@ def import_gns_model(model_id, name, dir_path, safe_mode=True, mt3d_link=False, 
 def mod_gns_model(model_id, name, dir_path, safe_mode=True, stress_period_vals=None, well=None, drain=None,
                   recharge=None, stream=None, mt3d_link=False, start_heads=None, exe_path=None, set_hdry=True):
     """
-    modify the gns model by changing the stress period data for one of the following packages WEL, DRN, RCH, STR, DIS
-
-    :param model_id: the link to the model realisations
+    modify the gns model by changing the stress period data for one of the following packages WEL, DRN, RCH, STR,
+    DIS (the stress period values and expectiation
+    Note the SFR package changes are NotImplemented and will raise an exception
+    :param model_id: 'NsmcReal{nsmc_num:06d}'
     :param name: name of the model
     :param dir_path: the working directory of the model if it doesn't exist it's created else it's deleted and created
     :param safe_mode: if True it requires user input to delete dir_path
@@ -117,12 +116,14 @@ def mod_gns_model(model_id, name, dir_path, safe_mode=True, stress_period_vals=N
                                  tsmult: the timestep multiplier (float or list or array of floats) 
     :param well: dictionary format stress period data for the WEL package (see flopy.ModflowWell) or None and use
            default GNS data
-    :param drain: dictionary format stress period data for the DRN package (see flopy.ModflowWell) or None and use
+    :param drain: dictionary format stress period data for the DRN package (see flopy.ModflowDrn) or None and use
            default GNS data
-    :param recharge: dictionary format stress period data for the RCH package (see flopy.ModflowWell) or None and use
+    :param recharge: dictionary format stress period data for the RCH package (see flopy.ModflowRch) or None and use
            default GNS data
     :param stream: tuple or list of (segment_data, reach_data) for the SFR package or None and use
-           default model data.  Varying stress period data is not yet implemented.
+           default model data.
+           This is NotImplemented a quick work around was managed to increase the inflows to the head of the Eyre River.
+           See waimak_extended_boundry/model_run_tools/forward_quanity_support/base_forward_runs.py for that hack
     :param mt3d_link: boolean if true write a MT3D-link module
     :param start_heads: None or array for the starting heads of the simulation.
     :param exe_path: path to the modflow NWT exicutable
@@ -360,34 +361,45 @@ def change_stress_period_settings(m, spv):
     dis.steady = flopy.utils.Util2d(m, (nper,), bool, spv['steady'], 'steady')
     dis.tsmult = flopy.utils.Util2d(m, (nper,), np.float32, spv['tsmult'], 'tsmult')
     dis.check()
-    if oc_stress_per_data is None: # I dont' think this works with nwt
+    if oc_stress_per_data is None:  # I dont' think this works with nwt
         oc_stress_per_data = {}
         for per in range(nper):
             for step in range(nstp[per]):
-                oc_stress_per_data[(per, step)]= ['save head', 'save drawdown', 'save budget', 'print budget']
+                oc_stress_per_data[(per, step)] = ['save head', 'save drawdown', 'save budget', 'print budget']
 
     m.oc.stress_period_data = oc_stress_per_data
 
 
-def zip_non_essential_files(model_dir, include_list=False, other_files=None):
+def zip_non_essential_files(model_dir, include_list=False, other_files=None, zip_input_data=True):
     """
     zips up the files with extensions matching the list in zip ext
+
     :param model_dir: the model_ws e.g. working directory
     :param include_list: Boolean if True also compress the list file
     :param other_files: a list of other file extensions to zip up
+    :param zip_input_data: boolean, if True, zip up all input data except name file, specifically:
+                                ['.bas', '.dis', '.drn', '.nwt', '.oc', '.rch', '.sfr','.upw', '.wel']
+
     :return:
     """
+    if not zip_input_data and not include_list and other_files is None:
+        warnings.warn('arguments for zip_non_essential_files will lead to an empty zipfile in {}'.format(model_dir))
+
     paths = os.listdir(model_dir)
-    zip_ext = ['.bas',
-               '.dis',
-               '.drn',
-               '.nwt',
-               '.oc',
-               '.rch',
-               '.sfr',
-               '.upw',
-               '.wel'
-               ]
+    if zip_input_data:
+        zip_ext = ['.bas',
+                   '.dis',
+                   '.drn',
+                   '.nwt',
+                   '.oc',
+                   '.rch',
+                   '.sfr',
+                   '.upw',
+                   '.wel'
+                   ]
+    else:
+        zip_ext = []
+
     if include_list:
         zip_ext.append('.list')
     if other_files is not None:
@@ -398,12 +410,12 @@ def zip_non_essential_files(model_dir, include_list=False, other_files=None):
     zip_names = []
     for path in paths:
         if '.' + path.split('.')[-1] in zip_ext:
-            zip_paths.append(os.path.join(model_dir,path))
+            zip_paths.append(os.path.join(model_dir, path))
             zip_names.append(path)
 
     print('creating zip archive')
     with zipfile.ZipFile(os.path.join(model_dir, "non_essential_components.zip"), "w") as ZipFile:
-        for path,name in zip(zip_paths,zip_names):
+        for path, name in zip(zip_paths, zip_names):
             ZipFile.write(path, arcname=name, compress_type=zipfile.ZIP_DEFLATED)
             ZipFile.fp.flush()
         os.fsync(ZipFile.fp.fileno())
@@ -415,19 +427,20 @@ def zip_non_essential_files(model_dir, include_list=False, other_files=None):
 
 if __name__ == '__main__':
     testtype = 5
-    if testtype ==5:
+    if testtype == 5:
         m = import_gns_model('AshOpt', 'ftl_test', r"C:\Users\MattH\Desktop\ftl_test2", False, True)
         m.write_name_file()
         m.write_input()
         m.run_model()
     if testtype == 4:
-        zip_non_essential_files(r"C:\Users\MattH\Desktop\test_sd30\opt_turn_on_M35_0122_sd30 - Copy",other_files='.hds')
+        zip_non_essential_files(r"C:\Users\MattH\Desktop\test_sd30\opt_turn_on_M35_0122_sd30 - Copy",
+                                other_files='.hds')
     if testtype == 3:
         m = import_gns_model('StrOpt', 'test', r"C:\Users\MattH\Desktop\test_zipping")
         m.write_input()
         m.write_name_file()
         m.run_model()
-    if testtype==2:
+    if testtype == 2:
         zip_non_essential_files(r"C:\Users\MattH\Desktop\opt_test_zipping - Copy")
     if testtype == 1:
         temp_id = 'opt'
@@ -455,5 +468,3 @@ if __name__ == '__main__':
         m.write_input()
         m.run_model()
         print('done')
-
-

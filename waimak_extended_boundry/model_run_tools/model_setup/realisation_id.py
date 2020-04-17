@@ -18,14 +18,49 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from copy import deepcopy
 import pandas as pd
 
-#todo look through documentation
 
 def get_base_well(model_id, org_pumping_wells, recalc=False):
     """
-    applies the NSMC pumping mulitpliers
-    :param model_id: the NSMC realisation
-    :param org_pumping_wells: if True use the model peiod wells if false use the 2014-2015 usage
-    :param recalc: depreciated
+    load the base well data and applies the NSMC pumping mulitpliers
+    metadata: the dataset of all wells in the model domain including:
+              pumping, races, southern streams, and boundary fluxes
+              pumping wells are for the modelled period and these are the pumping rates used in the optimisation
+
+              'aquifer_in_confined': aquifer in the confiend system
+              'cav_flux': conseted anual volume flux, probably in m3/day
+              'col': model col
+              'consent': consent numbers for a given WAP
+              'cwms': CWMS zone:  'selwyn', 'waimak', 'chch'
+              'd_in_m': used to develop flux, produced by Mike EK
+              'flux':  flux rate, read by modflow
+              'layer': layer in the model, made such that pumping wells that ended up in the aquitard in the
+                       confined system were moved to the proper noted aquifer (e.g. well in the ricciton
+                       (from our database) that happens to fall in the chch formation(layer 0) due to our
+                       geology simplification will be moved to layer 1 which is the modelled version of the
+                       ricciton gravel
+              'layer_by_aq': layer by which aquifer it is in (from leapfrog model)
+              'layer_by_depth': the layer in the model by the depth (used unless in the confined system)
+              'mon_allo_m3': monthly allocation in m3
+              'mx': center of model cell x
+              'my': center of model cell y
+              'row': model row
+              'type': one of:
+                      'race': injection well for water races (e.g. WIL)
+                      'boundry_flux': injection wells used to model the northern boundary fluxes
+                      'well': pumping well
+                      'river': injection well used to model river losses in Selwyn
+                      'llr_boundry_flux': well BC used to model the Lower Little Rakaia boundary (southeast bound)
+                      'ulr_boundry_flux': well BC used to model the Upper Little Rakaia boundary (southwest bound)
+              'usage_est': used to develop flux, produced by Mike EK
+              'use_type': one of 'injection'(e.g. for races), 'irrigation-sw', 'other'
+              'x': NZTM x location actual
+              'y': NZTM Y location actual
+              'z': elevation of well, actual
+              'zone': one of 'n_wai', 's_wai' to indicate whether the well is north or south of the Waimkariri R.
+
+    :param model_id: the NSMC realisation 'NsmcReal{nsmc_num:06d}'
+    :param org_pumping_wells: if True use the model period wells if false use the 2014-2015 usage estimates
+    :param recalc: depreciated, keep set to False
     :return:
     """
     well_path = os.path.join(sdp_required, 'base_well_data.hdf')
@@ -47,7 +82,6 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
     well_adds = {}
     for a in ['llrzf', 'ulrzf']:
         well_adds[a] = float(dataset.variables[a][nidx])
-
 
     all_wells.loc[:, 'nsmc_type'] = ''
 
@@ -79,11 +113,11 @@ def get_base_well(model_id, org_pumping_wells, recalc=False):
 
 def get_rch_multipler(model_id):
     """
-    get the recharge multipler if it does not exist in the file then create it with fac2real
-    :param model_id: the NSMC realisation
-    :return:
+    get the recharge multipler for a given model realisation
+    :param model_id: 'NsmcReal{nsmc_num:06d}'
+    :return: rch multiplier array (smt.rows, smt.cols)
     """
-    dataset = nc.Dataset(os.path.join(sdp_required, 'post_filter1_recharge_mult.nc'))
+    dataset = nc.Dataset(os.path.join(sdp_required, 'recharge_mult.nc'))  # todo make this for all realisations...
     nsmc_num = int(model_id[-6:])
     nidx = np.where(dataset.variables['nsmc_num'][:] == nsmc_num)[0][0]
     outdata = np.array(dataset.variables['rch_mult'][nidx])
@@ -157,16 +191,19 @@ def get_model_name_path(model_id):
 
 def _get_nsmc_realisation(model_id, save_to_dir=False):
     """
-    wrapper to get model from a NSMC realisation saving the model takes c. 1.2 gb per model this includes many
-    duplicate files, but some  are used for additional functions
+    wrapper to get model from a NSMC realisation saving the model takes c. 300 mb per model
+    this will require writing multiple files to a temporary folder which is created by:
+        os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
+    this file will be c. 1.2 gb/model, but will be deleted when this is finished running
+    I would suggest running a couple of models to see how long this process will take.
+    Typically takes 4-15 min/model depending on computer specs
     :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
-    :param save_to_dir: boolean if true save a copy of the model for quicker reteval in the dir specified below
-    :param temp_int: a temp interger to make unique temporaty files only needed to handle multiprocessing applications
+    :param save_to_dir: boolean if true save a copy of the model for quicker retrieval
+                        saved in the directory defined by env.loaded_model_realisation_dir
     :return:
     """
     # todo in future this could be simplified to only pull from the netcdfs instead of the converter dirs,
     # todo this would allow significant savings in time.
-
 
     assert 'NsmcReal' in model_id, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
     assert len(model_id) == 14, 'unknown model id: {}, expected NsmcReal(nsmc_num:06d)'.format(model_id)
@@ -174,8 +211,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
     # check if the model has previously been saved to the save dir, and if so, load from there
     save_dir = loaded_model_realisation_dir
     if save_dir is None:
-        raise ValueError(
-            'loaded model realisation dir is NONE, please set in env/sdp.py')
+        raise ValueError('loaded model realisation dir is NONE, please set in env/sdp.py')
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -320,7 +356,7 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)  # remove old files to prevent file mix ups
         m._set_name(name)
-        m.lmt6.output_file_name = '{}.ftl'.format(name) # set the ftl output name, so it's simple.
+        m.lmt6.output_file_name = '{}.ftl'.format(name)  # set the ftl output name, so it's simple.
 
         m.exe_name = "{}/models_exes/MODFLOW-NWT_1.1.2/MODFLOW-NWT_1.1.2/bin/MODFLOW-NWT_64.exe".format(sdp_required)
         units = deepcopy(m.output_units)
@@ -353,8 +389,16 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
 def get_model(model_id, save_to_dir=False):
     """
     load a flopy model instance of the model id
+    saving the model takes c. 300 mb per model
+    this will require writing multiple files to a temporary folder which is created by:
+        os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
+    this file will be c. 1.2 gb/model, but will be deleted when this is finished running
+    I would suggest running a couple of models to see how long this process will take.
+    Typically takes 4-15 min/model depending on computer specs on the inital save,
+    loading from the previously saved it takes c. 18s depending on computer specs
     :param model_id: "NsmcReal{nsmc_num:06d}"
-    :param save_to_dir: boolean only for nsmc realisations save the model to dir?
+    :param save_to_dir: boolean only for nsmc realisations, if True save the model for quicker retrieval
+                        saved in the directory defined by env.loaded_model_realisation_dir
     :return: m flopy model instance
     """
     # check well packaged loads appropriately! yep this is a problem because we define the iface value,
@@ -391,8 +435,10 @@ def get_model(model_id, save_to_dir=False):
 
 def get_stocastic_set(return_model_ids=True):
     """
-    a quick wrapper to get all of the 165 stocastic models
-    :return:
+    a quick wrapper to get all of the 165 stocastic models used for plan change 7
+    :param return_model_ids: boolean if true return the model ids e.g. 'NsmcReal{:06d}'
+                             otherwise, return list of model id numbers (ints)
+    :return: list
     """
     nsmc_nums = [5, 17, 18, 26, 37, 44, 72, 103, 117, 133, 142,
                  204, 233, 240, 258, 271, 278, 308, 314, 388, 391, 439,
@@ -418,6 +464,9 @@ def get_stocastic_set(return_model_ids=True):
 
 
 if __name__ == '__main__':
-    t = get_model_name_path('NsmcReal{:06d}'.format(17))
-    print t
+    import time
+
+    t = time.time()
+    m = get_model_name_path('NsmcReal{:06d}'.format(17))
+    print t - time.time()
     print('done')

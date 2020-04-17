@@ -16,9 +16,9 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.cwms_index impor
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import \
     get_rch_multipler
 
-#todo look through documentation
 
-rch_data_path = os.path.join(env.sdp_required,'recharge_arrays.nc')
+rch_data_path = os.path.join(env.sdp_required, 'recharge_arrays.nc')
+
 
 def get_optimisation_recharge():
     """
@@ -29,10 +29,10 @@ def get_optimisation_recharge():
     data = np.array(nc.Dataset(rch_data_path).variables['opt_rch'])
     return data
 
+
 def get_rch_fixer():
     """
     an array to index the abnormal recharge in chch and te waihora 1 = tewaihora and coastal, 0 = chch, all others nan
-    :param recalc: boolean whether to recalc (True) or load from pickle if avalible
     :return:
     """
     data = np.array(nc.Dataset(rch_data_path).variables['recharge_fixer'])
@@ -42,29 +42,47 @@ def get_rch_fixer():
 def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period=None,
                     amag_type=None, cc_to_waimak_only=False, super_gmp=False):
     """
-    get the rch for the forward runs #todo this could actually use more documentation... it's a bit confusing
-    :param model_id: which NSMC realisation to use
-    :param naturalised: boolean if True then get rch for
-    :param rcm: regional Climate model identifier
-    :param rcp: representetive carbon pathway identifier
-    :param period: e.g. 2010, 2020, ect
-    :param amag_type: the amalgamation type one of: 'tym': twenty year mean, was 10 but changed on 20/09/2017
-                                                    'min': minimum annual average,
-                                                    'low_3_m': average of the 3 lowest consecutive years
-                                                    'mean': full data mean
-                                                    None: then use 'mean'
+    get the rch array for the forward model runs this applies the PEST multiplier to rch zones
+    :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
+    :param naturalised: boolean if True then get rch for a no irrigation scenario
+    :param rcm: regional Climate model identifier one of:
+                    [None, 'BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
+    :param rcp: representetive carbon pathway identifier one of:
+                    [None, 'RCPpast', 'RCP4.5', 'RCP8.5']
+    :param period:  None: for the vcsn where rcm and rcp is None,
+                    1980: for rcp = 'RCPpast'
+                    range(2010, 2100, 20) for climate change scenarios (all other combinations of rcp and rcm)
+    :param amag_type: the amalgamation type
+                      one of: 'tym': twenty year mean centered on the period, was 10 but changed on 20/09/2017
+                              'period_mean': same as tym
+                              'min': minimum annual average for the period for zonal sum
+                              'lowest_year': same as min
+                              'low_3_m': average of the 3 lowest consecutive years for zonal sum
+                              '3_lowest_con_mean': same as low_3_m
+                              'mean': full data mean
+                               None: then use 'mean'
     :param pc5: boolean if true use assumed PC5 efficency (only applied to the WILS and {something} areas)
-    :param cc_to_waimak_only: if true only apply the cc rch to the waimakairi zone (use the vcsn data other wise (keep senario)
+    :param cc_to_waimak_only: if true only apply the climate change rch to the waimakairi zone
+                              (use the vcsn data other wise (keep senario).
+                              applying climate change recharge to led to model instability, not recommended
     :param super_gmp: boolean if True then use the larger reduction to the will command area
-    :return: rch array (11,364,365)
+                      used to examine a specific problem/question not well tested
+    :return: rch array (364,365)
     """
     # I think I need to apply everything as a percent change or somehow normalise the rch so that I do not get any big
     # changes associated with changes in models which created the recharge array.
 
     # get rch array from LSRM
 
-    amalg_dict = {None: 'mean', 'mean': 'mean', 'tym': 'period_mean', 'low_3_m': '3_lowest_con_mean',
-                  'min': 'lowest_year'}
+    amalg_dict = {None: 'mean',
+                  'mean': 'mean',
+                  'tym': 'period_mean',
+                  'period_mean': 'period_mean',
+                  'low_3_m': '3_lowest_con_mean',
+                  '3_lowest_con_mean': '3_lowest_con_mean',
+                  'min': 'lowest_year',
+                  'lowest_year': 'lowest_year',
+                  }
 
     method = amalg_dict[amag_type]  # some of these naming conventions will not owrk now. see _create_all_lsrm_arrays
     sen = 'current'
@@ -79,9 +97,9 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
         assert sen == 'current', 'for super gmp senario must be current'
         assert all([e is None for e in [rcp,
                                         rcm]]), 'rcp, rcm, must all be None, no support for climate change scenarios'
-        mult = smt.shape_file_to_model_array(os.path.join(env.sdp_required,"shp/cmp_gmp_point_sources_n.shp"),
+        mult = smt.shape_file_to_model_array(os.path.join(env.sdp_required, "shp/cmp_gmp_point_sources_n.shp"),
                                              'drn_change', True)
-        mult[np.isnan(mult)]=1
+        mult[np.isnan(mult)] = 1
 
         rch_array *= mult
 
@@ -108,9 +126,10 @@ def get_forward_rch(model_id, naturalised, pc5=False, rcm=None, rcp=None, period
     rch_array[~no_flow.astype(bool)] = 0
     return rch_array
 
+
 def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
     """
-    get the LSR comparison period
+    get the LSR comparison period, for relative comparisons.
 
     :param sen: the senario, senarios = ['pc5', 'nat', 'current']
     :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
@@ -133,38 +152,37 @@ def get_lsr_base_period_inputs(sen, rcp, rcm, per, at):
 def get_lsrm_base_array(sen, rcp, rcm, per, at):
     """
     get the lsr array see below for requirments
-    :param sen:
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
+    :param sen: the senario, senarios = ['pc5', 'nat', 'current']
+    :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
+    :param rcm: rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
+    :param per: None(vcsn), 1980(RCPpast),  periods = range(2010, 2100, 20) (climate change)
+    :param at: ['period_mean', '3_lowest_con_mean', 'lowest_year'] (climate change) ['mean'] vcsn
     :return:
     """
-    return _get_rch_ird(sen,rcp,rcm,per,at,recharge=True)
-
+    return _get_rch_ird(sen, rcp, rcm, per, at, recharge=True)
 
 
 def get_ird_base_array(sen, rcp, rcm, per, at):
     """
     get the irrigation demand array
-    :param sen: see above
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
+    :param sen: the senario, senarios = ['pc5', 'nat', 'current']
+    :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
+    :param rcm: rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
+    :param per: None(vcsn), 1980(RCPpast),  periods = range(2010, 2100, 20) (climate change)
+    :param at: ['period_mean', '3_lowest_con_mean', 'lowest_year'] (climate change) ['mean'] vcsn
     :return:
     """
-    return _get_rch_ird(sen,rcp,rcm,per,at,recharge=False)
+    return _get_rch_ird(sen, rcp, rcm, per, at, recharge=False)
 
 
 def _get_rch_ird(sen, rcp, rcm, per, at, recharge):
     """
 
-    :param sen:
-    :param rcp:
-    :param rcm:
-    :param per:
-    :param at:
+    :param sen: the senario, senarios = ['pc5', 'nat', 'current']
+    :param rcp: rcps = ['RCPpast', 'RCP4.5', 'RCP8.5']
+    :param rcm: rcms = ['BCC-CSM1.1', 'CESM1-CAM5', 'GFDL-CM3', 'GISS-EL-R', 'HadGEM2-ES', 'NorESM1-M']
+    :param per: None(vcsn), 1980(RCPpast),  periods = range(2010, 2100, 20) (climate change)
+    :param at: ['period_mean', '3_lowest_con_mean', 'lowest_year'] (climate change) ['mean'] vcsn
     :param recharge:boolean if True then Recharge else IRD
     :return:
     """
@@ -223,9 +241,12 @@ def _get_rch_ird(sen, rcp, rcm, per, at, recharge):
 
     return out
 
-# deprecidated functions and opperations
+
+# depreciated functions and operations, these will not work and are left here for documentation
+# purposes only
 
 rch_idx_shp_path = env.gw_met_data("niwa_netcdf/lsrm/lsrm_results/test/output_test2.shp")
+
 
 def _get_rch_hdf_path(base_dir, naturalised, pc5, rcm, rcp):
     """
@@ -371,4 +392,3 @@ def _create_all_lsrm_arrays():
 if __name__ == '__main__':
     # tests
     pass
-

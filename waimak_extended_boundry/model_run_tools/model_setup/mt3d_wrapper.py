@@ -18,11 +18,10 @@ from warnings import warn
 from traceback import format_exc
 from env import sdp_required
 
-#todo look through documentation
 
 def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 ssm_crch=None, ssm_stress_period_data=None,
-                sft_spd=None, obs_sf=range(1, 1228 + 1),
+                sft_spd=None, obs_sf=tuple(range(1, 1228 + 1)),
                 adv_sov=0, adv_percel=1,
                 btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                 dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
@@ -31,7 +30,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                 ssflag=None, dt0=0, mxstrn=50000, ttsmult=1.0, ttsmax=0,  # these can be either value of list of values
                 gcg_isolve=1, gcg_inner=50, gcg_outer=1):
     """
-
+    create a mt3d model
     :param ftl_path: path to the FTL file to use with MT3D
     :param mt3d_name: the name for all mt3d files if none name will mirror that of the modflow model name
     :param mt3d_ws: working directory for the MT3D model
@@ -42,12 +41,15 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     :param obs_sf: the stream network observation points.  default saves at every stream reach
 
     below here can generally be added by the default mt3d dictionary
-    :param adv_sov: is an integer flag for the advection solution option. MIXELM = 0, the standard finite-difference
-                    method with upstream or central-in-space weighting, depending on the value of NADVFD; = 1,
-                    the forward-tracking method of characteristics (MOC); = 2, the backward-tracking modified method
-                    of characteristics (MMOC); = 3, the hybrid method of characteristics (HMOC) with MOC or MMOC
-                    automatically and dynamically selected; = -1, the third-order TVD scheme (ULTIMATE).
-                    set up for -1 or 0
+    :param adv_sov: is an integer flag for the advection solution option.
+                       0: the standard finite-difference method with upstream or central-in-space weighting,
+                          depending on the value of NADVFD;
+                       1: the forward-tracking method of characteristics (MOC)
+                       2: the backward-tracking modified method of characteristics (MMOC)
+                       3: the hybrid method of characteristics (HMOC) with MOC or MMOC
+                          automatically and dynamically selected
+                       -1: the third-order TVD scheme (ULTIMATE).
+                    currently set up for only -1 or 0
     :param adv_percel: PERCEL is the Courant number (i.e., the number of cells, or a fraction of a cell)
                        advection will be allowed in any direction in one transport step. For implicit finite-difference
                        or particle-tracking-based schemes, there is no limit on PERCEL, but for accuracy reasons, it is
@@ -80,15 +82,21 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     :param ssflag:  If SSFlag is set to SSTATE (case insensitive), the steady-state transport simulation is
                     automatically activated. (see mt3dms_V5_ supplemental for more info) must be an iterable otherwise
                     only the first letter will be written
-    :param dt0:
-    :param mxstrn:
-    :param ttsmult:
-    :param ttsmax:
-    :param gcg_isolve:
-    :param gcg_inner:
-    :param gcg_outer:
-
-
+    :param dt0: The user-specified initial transport step size within each time-step of the flow solution.
+    :param mxstrn: The maximum number of transport steps allowed within one time step of the flow solution.
+    :param ttsmult: The multiplier for successive transport steps within a flow time-step if the GCG solver is used
+                    and the solution option for the advection term is the standard finite-difference method.
+    :param ttsmax: The maximum transport step size allowed when transport step size multiplier TTSMULT > 1.0.
+    :param gcg_isolve: is the type of preconditioners to be used with the Lanczos/ORTHOMIN acceleration scheme:
+                       1: Jacobi
+                       2: SSOR
+                       3: Modified Incomplete Cholesky (MIC)
+                         (MIC usually converges faster, but it needs significantly more memory)
+    :param gcg_inner: is the maximum number of inner iterations;
+                      a value of 30-50 should be adequate for most problems. (default is 50)
+    :param gcg_outer: is the maximum number of outer iterations;
+                      it should be set to an integer greater than one only when a nonlinear sorption isotherm
+                      is included in simulation. (default is 1)
     :return: mt3d instance
     """
     # to add the parameters that are missing
@@ -117,8 +125,9 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                              ftlfilename=ftl_name,
                              ftlfree=True,  # formatted FTL to handle bug
                              version='mt3d-usgs',
-                             exe_name=os.path.join(sdp_required, "models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
-                                      "mt3d-usgs-1.0.exe"),
+                             exe_name=os.path.join(sdp_required,
+                                                   "models_exes/mt3d_usgs_brioch_comp/"  # standard compilation did not converge
+                                                   "mt3d-usgs-1.0.exe"),
                              structured=True,
                              # defualt probably fine, though a point of weakness I don't know what it is
                              listunit=500,
@@ -289,7 +298,7 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
 def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower_n_bnd_flux_con=2,
                                well_stream_con=0, llrzf_con=0, ulrzf_con=0, s_race_con=0, chb_con=0):
     """
-    get data for teh ssm package from wells.  cmp pathway is the default values
+    get data for the ssm package from wells.  cmp pathway is the default values
     :param wil_race_con: concentration to apply to will race
     :param upper_n_bnd_flux_con: from the gorge to ~ glentui terrace
     :param lower_n_bnd_flux_con: from the glen tui terrace to broad road
@@ -335,7 +344,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
     :param ash_gorge: Ashely R. at gorge
     :param cust: top of the cust
     :param cust_biwash: WIL race biwash
-    :param ash_tribs: None or value to set for all of the asley tribs (below), if None then the below must be set
+    :param ash_tribs: None or value to set for all of the asley tribs (below), if None then the below must be set:
     :param glen_tui: glen tui at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
     :param garry: garray at teh ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
     :param bullock: bullock at the ashley, must be None if ash_tribs is float or must be float if ash_tribs is None
@@ -356,7 +365,6 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         okuku = ash_tribs
         makerikeri = ash_tribs
 
-
     sft_spd = np.recarray((11), flopy.mt3d.Mt3dSft.get_default_dtype())
     nodes = [
         # main inflows
@@ -364,7 +372,7 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
         77,  # waimakariri inflow
         262,  # ashley inflow
         347,  # cust inflow
-        203, # eyre mar inflow
+        203,  # eyre mar inflow
         # ashley tribs
 
         373,  # glen tui
@@ -397,6 +405,10 @@ def get_sft_stress_period_data(eyre=0.35, waimak=0.1, ash_gorge=0.1, cust=0.35, 
 
 
 def get_default_mt3d_kwargs():
+    """
+    get the default mt3d parameters for most arguments that do not need to be changed for create_mt3d
+    :return: dictionary of kwargs
+    """
     default_mt3d_dict = {
         'adv_sov': 0,  # matches brioch
         'adv_percel': 1,  # matcheds brioch
@@ -407,7 +419,7 @@ def get_default_mt3d_kwargs():
         'dsp_lon': 10,  # modified to match brioch
         'dsp_trpt': 0.1,  # modified to match brioch
         'dsp_trpv': 0.01,  # modified to match brioch
-        'nper': 1,  #  tried to modified to match brioch but didn't run so set back to 1
+        'nper': 1,  # tried to modified to match brioch but didn't run so set back to 1
         'perlen': 7.3050E5,  # modified to match brioch's
         'nstp': 1,  # modified to match briochs
         'tsmult': 1,  # modified to match briochs
@@ -424,6 +436,11 @@ def get_default_mt3d_kwargs():
 
 
 def reduce_sobs(sobs_path):
+    """
+    reduce the stream obs so that only the last time step is saved (otherwise the files get huge)
+    :param sobs_path: path to the strobs
+    :return:
+    """
     data = pd.read_table(sobs_path, skiprows=1, delim_whitespace=True)
     data = data.loc[np.isclose(data.TIME, data.TIME.max())]
     data.to_csv(sobs_path, sep='\t', index=False)
@@ -431,7 +448,7 @@ def reduce_sobs(sobs_path):
 
 def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
                    ssm_crch=None, ssm_stress_period_data=None,
-                   sft_spd=None, obs_sf=range(1, 1228 + 1),
+                   sft_spd=None, obs_sf=tuple(range(1, 1228 + 1)),
                    adv_sov=0, adv_percel=1,
                    btn_porsty=0.05, btn_scon=0, btn_nprs=0, btn_timprs=None,
                    dsp_lon=0.1, dsp_trpt=0.1, dsp_trpv=0.01,
@@ -492,13 +509,25 @@ def setup_run_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     conv = mt3d_converged(os.path.join(mt3d_ws, '{}.list'.format(mt3d_name)))
     return conv
 
+
 def mt3d_converged(list_path):
+    """
+    check if mt3d run converged
+    :param list_path: path to the MT3D list
+    :return:
+    """
     with open(list_path) as f:
         lines = f.readlines()
     converged = ' | 3 D | END OF MODEL OUTPUT\n' in lines
     return converged
 
+
 def setup_run_mt3d_mp(kwargs):
+    """
+    wrapper for multiprocessing
+    :param kwargs: see setup_run_mt3d for kwargs
+    :return:
+    """
     name = kwargs['mt3d_name']
     try:
         conv = setup_run_mt3d(**kwargs)

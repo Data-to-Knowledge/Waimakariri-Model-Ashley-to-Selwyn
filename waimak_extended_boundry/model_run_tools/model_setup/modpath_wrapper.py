@@ -15,12 +15,16 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
     modflow_converged
 from traceback import format_exc
 
-#todo look through documentation
 
 # make something to run modpath simulations with particles in the top most active cells.
 
 
 def get_cbc_mp(kwargs):
+    """
+    multiprocessing version of get cbc
+    :param kwargs: dict see get_cbc for kwargs
+    :return:
+    """
     try:
         get_cbc(**kwargs)
         success = 'converged'
@@ -30,6 +34,14 @@ def get_cbc_mp(kwargs):
 
 
 def get_cbc(model_id, base_dir, recalc=False):
+    """
+    run a modflow model id to get the cbc needed for modpath, modifying the modflow model is not implemented,
+    but this could be relatively easily done
+    :param model_id: 'NsmcReal{nsmc_num:06d}'
+    :param base_dir: directory to save all of the cbcs
+    :param recalc: boolean if recalc, then rerun all of the flow models
+    :return:
+    """
     # if I wanted to split layers I would need to do it here...
     cbc_path = os.path.join(base_dir, '{}_for_modpath'.format(model_id), '{}_for_modpath.cbc'.format(model_id))
 
@@ -42,6 +54,7 @@ def get_cbc(model_id, base_dir, recalc=False):
     m.run_model()
     con = modflow_converged(os.path.join(m.model_ws, '{}.list'.format(m.name)))
     if not con:
+        os.remove(cbc_path)  # to prevent it loading in the future
         raise ValueError('model did not converge')
     return cbc_path
 
@@ -53,7 +66,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
     """
     create a modpath simulation which derives particles from point data.  assumptions are listed below
     :param particle_data: record array of particle data, Note that the label must be explicitly passed (cannot be '')
-    :param m: modflow object which has been run or None
+    :param m: modflow object which has been run or None, if this is none then need to pass hdfile, budfile, disfile
     :param mp_ws: the directory to save the modpath files and output
     :param hdfile: the full path to the head file, or None
     :param budfile: the full path to the budget file or None
@@ -66,6 +79,9 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
     :param capt_weak_s: if True weak sources/sinks capture particles
     :param time_pts:  either int of number of time points to calculate or array of time points see TimePointOption for
                      documentation
+    :param hnoflo: the modflow key for no flow, this should not need to change
+    :param hdry: the modflow hdry value, this should not need to change
+    :param laytype:  the layer type of the model, this should not change
     :return: modpath model
     """
     model_passed = (isinstance(m, flopy.modflow.Modflow) and hdfile is None and budfile is None and disfile is None)
@@ -89,7 +105,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
         flopy.modflow.ModflowUpw(m)
 
     mp = flopy.modpath.Modpath(modelname=mp_name,
-                               exe_name=os.path.join(sdp_required,"models_exes/modpath.6_0/bin/mp6.exe"),
+                               exe_name=os.path.join(sdp_required, "models_exes/modpath.6_0/bin/mp6.exe"),
                                modflowmodel=m,
                                model_ws=mp_ws,
                                listunit=6,
@@ -195,7 +211,7 @@ def create_mp_slf(particle_data, m=None, mp_ws=None, hdfile=None, budfile=None, 
 
 def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
     """
-    export paths to a shapefile
+    export paths to a shapefile, poorly done and slow.
     :param paths_file:
     :param shape_file:
     :param particle_ids:
@@ -214,6 +230,7 @@ def export_paths_to_shapefile(paths_file, shape_file, particle_ids=None):
         particle_ids = np.atleast_1d(particle_ids)
         pathdata = [paths.get_data(e) for e in particle_ids]
         paths.write_shapefile(particle_data=pathdata, shpname=shape_file, sr=spatial_ref)
+
 
 def pathline_file_to_hdf():
     # tod this would cut the stored size in half with no compression...  plus you can query data within the store
