@@ -4,9 +4,8 @@
  """
 import warnings
 
-#todo look through documentation
 
-base_sd_dir = None
+base_sd_dir = None # a directory for the base models
 
 if base_sd_dir is None:
     warnings.warn('base sd is not set in '
@@ -14,7 +13,7 @@ if base_sd_dir is None:
                   'this will cause problems with stream depletion modelling'
                   )
 
-starting_heads_dir = None
+starting_heads_dir = None # a directory to save starting head values
 
 if starting_heads_dir is None:
     warnings.warn('starting head dir is not set in '

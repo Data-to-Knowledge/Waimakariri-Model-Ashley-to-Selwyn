@@ -397,7 +397,7 @@ class ModelTools(object):
             vmin = np.nanmin(array)
 
         if ax is None:
-            fig, (ax) = plt.subplots(figsize=(18.5, 9.5))
+            fig, (ax) = plt.subplots(figsize=(12, 8))
             if title is not None:
                 ax.set_title(title)
             ax.set_aspect('equal')

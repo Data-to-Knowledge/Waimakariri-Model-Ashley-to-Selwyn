@@ -14,7 +14,6 @@ import numpy as np
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
 from stream_depletion_sdp import starting_heads_dir
 
-#todo look through documentation
 
 def get_sd_starting_hds(model_id, sd_version):
     if sd_version == 'sd7':

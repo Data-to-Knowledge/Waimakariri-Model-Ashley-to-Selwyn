@@ -22,7 +22,6 @@ from waimak_extended_boundry.model_run_tools.data_extraction.ucn_netcdf import \
     make_ucn_netcd
 from waimak_extended_boundry.model_run_tools.data_extraction.cell_budget_netcdf import make_cellbud_netcdf
 
-#todo look through documentation
 
 def start_process():
     """
@@ -37,10 +36,11 @@ def start_process():
 
 def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir, increase_eyre=0):
     """
+    wrapper to set up a pc5 ftl directory
 
-    :param model_ids:
-    :param ftl_dir:
-    :param base_modelling_dir:
+    :param model_ids: nsmcnums
+    :param ftl_dir: where to put the dir
+    :param base_modelling_dir: where to run the models, the data is then copied to the ftl dir
     :param increase_eyre: a value to increase the eyre river flow in cumics
     :return:
     """
@@ -84,6 +84,18 @@ def setup_pc5_ftl_repository(model_ids, ftl_dir, base_modelling_dir, increase_ey
 
 def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_data, sft_spd, dt0=None, ttsmax=None,
                          scon=None):
+    """
+    setup and run a multiprocessed dataset
+    :param base_mt3d_dir: where to run the models
+    :param ftl_repo: repository for FTLS, every ftl will have a mt3d model run for it
+    :param ssm_crch: recharge concentration
+    :param ssm_stress_period_data: stress period for things like wells
+    :param sft_spd: stress period data for the sft package
+    :param dt0: see setup run mt3d
+    :param ttsmax: see setup run mt3d
+    :param scon: see setup run mt3d
+    :return:
+    """
     if not os.path.exists(base_mt3d_dir):
         os.makedirs(base_mt3d_dir)
     runs = []
@@ -127,6 +139,15 @@ def setup_run_mt3d_suite(base_mt3d_dir, ftl_repo, ssm_crch, ssm_stress_period_da
 
 
 def extract_data(base_mt3d_dir, outfile, description, nname='mednload', units='g/m3'):
+    """
+    extract data from a set of model runs into a netcdf for future querrying
+    :param base_mt3d_dir: directory for the mt3d runs
+    :param outfile: where to save the netcdf
+    :param description: descritpion for the netcdf
+    :param nname: the name of the variable
+    :param units: units (to add as metadata to the netcdf)
+    :return:
+    """
     ucn_paths = np.array(glob(os.path.join(base_mt3d_dir, '*', '*.ucn')))
     conv = [mt3d_converged(e.replace('001.UCN', '.list')) for e in ucn_paths]
     ucn_paths = ucn_paths[conv]
@@ -143,6 +164,14 @@ def extract_data(base_mt3d_dir, outfile, description, nname='mednload', units='g
 
 
 def extract_cbc_data(base_modflow_dir, description, nc_path, zlib=False):
+    """
+    extract teh cbc data into a netcdf for future use, needed for stream and drain concentration data
+    :param base_modflow_dir: directory with the modflow file s
+    :param description: description to add to the netcdf
+    :param nc_path: path to write netcdf
+    :param zlib: boolean if True compress
+    :return:
+    """
     sfo_paths = np.array(glob(os.path.join(base_modflow_dir, '*', '*.sfo')))
     conv = np.array([zipped_modflow_converged(e.replace('.sfo', '.nam')) for e in sfo_paths])
     cbc_paths = np.array([e.replace('.sfo', '.cbc') for e in sfo_paths])[conv]

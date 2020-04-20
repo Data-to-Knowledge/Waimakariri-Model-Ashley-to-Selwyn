@@ -21,7 +21,6 @@ import itertools
 import netCDF4 as nc
 import sys
 
-#todo look through documentation
 
 sw_site_groups = {
     'cust': ['cust_oxford',  # cust at oxford often goes dry, check in new set of simlulations
@@ -110,7 +109,7 @@ def extract_forward_run(name_file_path):
 def extract_forward_metadata(forward_run_dir, outpath):
     """
     extract and save the metadata senario, convergence, path, name, rcp ect...
-    :param forward_run_dir:
+    :param forward_run_dir: directory with the forward runs
     :param outpath: path to save the data at
     :return: outpath
     """
@@ -177,6 +176,7 @@ def extract_and_save_all_forward_runs(forward_run_dir, outpath, readme_txt=None)
     extract and save all of the forward run data as absolute flow and hds
     :param forward_run_dir: directory with the forward run
     :param outpath: the path to save the csv
+    :param readme_txt: text to add to the readme line at the top of the csv
     :return: outpath
     """
     paths = glob(os.path.join(forward_run_dir, '*/*.nam'))
@@ -331,6 +331,14 @@ def plt_drawdown(meta_data_path, outdir,raise_non_converged=True):
             plt.close(fig)
 
 def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
+    """
+    put the drawdown values against the reference into a netcdfs
+    :param meta_data_path: path to the metadata, which has the heads file path in it
+    :param outpath: path to save the new netcdf
+    :param readme: text to add to teh nc description
+    :param raise_non_converged: raise if a model has not converged
+    :return:
+    """
 
     meta_data = pd.read_csv(meta_data_path, index_col=0)
     data = {}
@@ -411,7 +419,7 @@ def netcdf_drawdown (meta_data_path, outpath, readme, raise_non_converged=True):
 
 def gen_all_outdata_forward_runs(forward_run_dir, outdir, plt_dd=False):
     """
-    a wrapper to extract all data from the forward runs
+    a wrapper to extract all data from the forward runs, this is the thing to use!
     :param forward_run_dir: the directory that holds the forward runs
     :param outdir: the directory to save all teh data in
     :param plt_dd: boolean if True plot the drawdown for each senario

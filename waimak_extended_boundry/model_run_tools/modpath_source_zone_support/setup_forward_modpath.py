@@ -12,12 +12,11 @@ from waimak_extended_boundry.model_run_tools.model_setup.modpath_wrapper import 
 import os
 import pandas as pd
 
-#todo look through documentation
 
 def _part_group_cell_mapper(bd_type):
     """
     build a partical grouping cell mapper form a boundary type option... a interal function
-    :param bd_type:
+    :param bd_type: array of boundary types
     :return:
     """
     js, iss = np.meshgrid(range(smt.cols), range(smt.rows))  # zero indexed to agree with python interpretation

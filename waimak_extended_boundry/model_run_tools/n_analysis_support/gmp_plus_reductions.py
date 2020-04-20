@@ -26,6 +26,13 @@ emma_dir = os.path.join(env.sdp_required, 'emma_for_n_adjustment')
 
 
 def get_alpine_fractions(site=None, return_paths=False, number=1000):
+    """
+    # todo
+    :param site:
+    :param return_paths:
+    :param number:
+    :return:
+    """
     # number is the number of samples to pull out
     # if path then just send out the data (to replace alpine fraction so that I can patch this thing
     # if site is not None get teh value
@@ -232,6 +239,10 @@ sites = {
 
 
 def get_well_nums_for_group():
+    """
+    # todo
+    :return:
+    """
     str_ids = get_str_ids()
     wells = get_well_ids()
     zone_sets = [set(wells.Zone[wells.Zone.notnull()]),
@@ -257,6 +268,20 @@ def get_well_nums_for_group():
 
 def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=pc5_ftl_repo, dt0=1e4, ttsmax=1e5,
                        ssm_kwargs=None, sft_kwargs=None):
+    """
+    This sets up, runs, extracts data to a nc, basically the first half of the N modelling process goes from a
+    ftl repo and other inputs into a a netcdf.
+    :param rch_con: recharge concentration array
+    :param base_mt3d_dir: directory to save the models
+    :param out_nc: path to the Netcdf to create
+    :param nc_description: netcdf discription
+    :param ftl_repo: repository of FTLs, all ftls in teh repository will have transport modelling run on them
+    :param dt0: see setup run mt3d in base mt3d wrapper
+    :param ttsmax: see setup run mt3d in base mt3d wrapper
+    :param ssm_kwargs: see get_ssm_stress_period_data in base mt3d wrapper
+    :param sft_kwargs: see get_sft_stress_period_data in base mt3d wrapper
+    :return:
+    """
     if ssm_kwargs is None:
         ssm = get_ssm_stress_period_data()
     else:
@@ -282,7 +307,7 @@ def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=
 
 def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     """
-
+    #todo
     :param scenario_paths: dictionary scenario:path to nc file;  scenario must have gmp or cmp in the scenario name
     :param cbc_paths: either the path to the cbc_netcdf (string) or a dictionary scenario and path to teh cbc_netcdf
     :return:
@@ -404,6 +429,12 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 
 
 def add_stocastic_load(site, base_data):
+    """
+    #todo
+    :param site:
+    :param base_data:
+    :return:
+    """
     base_data = np.atleast_1d(base_data)
     if site in get_str_ids():
         # stream  # cmp as gmp has a reduction associated
@@ -424,6 +455,15 @@ def add_stocastic_load(site, base_data):
 
 
 def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
+    """
+    # todo
+    :param site:
+    :param waimak_data:
+    :param n_data:
+    :param well_sites:
+    :param plot_dir:
+    :return:
+    """
     print(site)
     warn('correcting data for EMMA results please review plots in: {}'.format(plot_dir))
     if site in get_str_ids():

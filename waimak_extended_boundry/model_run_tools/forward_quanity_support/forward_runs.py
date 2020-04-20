@@ -16,15 +16,14 @@ import datetime
 import psutil
 from env import log_dir
 
-#todo look through documentation
 
-def run_cc_senarios(base_kwargs, cc_to_waimak_only=False):
+def set_cc_senarios(base_kwargs, cc_to_waimak_only=False):
     """
-    set up a sweet of climate change runs from a base run
+    set up a suite of climate change runs from a base run
     :param base_kwargs: the base run to run through climate change senairos
     :param cc_to_waimak_only: boolean if True then only apply the LSR changes to the waimakariri esle apply to whole
                               model domain pumping is only applied to waimakariri as there is too much uncertainty in
-                              teh selwyn due to central plains
+                              teh selwyn due to central plains, applying cc to selwyn make the models quite unstable
     :return: list of runs
     """
     runs = []
@@ -330,13 +329,13 @@ def setup_run_args(model_id, forward_run_dir, cc_to_waimak_only=False, cc_runs=T
     if cc_runs:
         # climate change senarios (lots of runs)
         # nat + cc
-        runs.extend(run_cc_senarios(nat, cc_to_waimak_only=cc_to_waimak_only))
+        runs.extend(set_cc_senarios(nat, cc_to_waimak_only=cc_to_waimak_only))
 
         # climate change
-        runs.extend(run_cc_senarios(current, cc_to_waimak_only=cc_to_waimak_only))
+        runs.extend(set_cc_senarios(current, cc_to_waimak_only=cc_to_waimak_only))
 
         # climate change + pc5 + will efficieny
-        runs.extend(run_cc_senarios(pc5_80_will_eff, cc_to_waimak_only=cc_to_waimak_only))
+        runs.extend(set_cc_senarios(pc5_80_will_eff, cc_to_waimak_only=cc_to_waimak_only))
 
         if not os.path.exists(forward_run_dir):
             os.makedirs(forward_run_dir)

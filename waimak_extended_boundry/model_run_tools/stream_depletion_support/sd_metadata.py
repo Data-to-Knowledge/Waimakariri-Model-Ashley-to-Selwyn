@@ -10,7 +10,6 @@ from glob import glob
 import pandas as pd
 import os
 
-#todo look through documentation
 
 def save_sd_metadata(outpath, data_dir):
     """

@@ -13,13 +13,13 @@ import itertools
 import numpy as np
 import os
 
-#todo look through documentation
 
 def particle_loc_from_grid(grid_locs, group, root3_num_part=2):
     """
     create evenly spaced particles in cells defined by gridlocs (np.recarray)
     :param grid_locs: a list of tuples(k,i,j) or tuple (k,i,j)
-    :param group: a list of groups of same length gridlocs
+    :param group: a list of groups of same length gridlocs, strings of any length, converted to numbers for
+                  the particle data, the mapping between groupname, group is in the groupmapper
     :param root3_num_part: the cubed root of the number of particles to put in each cell
     :return: groupmapper, starting location data
     """
@@ -64,7 +64,9 @@ def setup_run_backward_modpath(mp_ws, mp_name, cbc_file, indexes,
     :param mp_name: name of the modpath simulation
     :param cbc_file: path to the cbc file (other necissary files are assumed to be in teh same folder with
                      the same naming conventions
-    :param indexes: a dictionary of smt.layer,row,col boolean arrays
+    :param indexes: a dictionary of smt.layer,row,col boolean arrays, keys are strings of any length, these strings are
+                    mapped to integers for the Modpath data, mapping values are stored in teh group mapper, which
+                    is saved at: os.path.join(mp_ws,'{}_group_mapper.csv'.format(mp_name))
     :param root3_num_part: the cubic root of the number of particles (placed evenly in the cell) e.g.
                            root3_num_part of 2 places 8 particles in each cell
     :param capt_weak_s: bool if True terminate particles at weak sources

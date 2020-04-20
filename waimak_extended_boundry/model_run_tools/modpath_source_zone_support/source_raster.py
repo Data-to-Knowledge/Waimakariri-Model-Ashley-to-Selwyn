@@ -22,18 +22,21 @@ from waimak_extended_boundry.model_run_tools.modpath_source_zone_support.setup_f
 from waimak_extended_boundry.model_run_tools.model_setup.modpath_wrapper import get_cbc, get_cbc_mp
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modpath_converged
 import gc
+import env
 
-#todo look through documentation
 
 def define_source_from_forward(emulator_path, bd_type_path, indexes, return_packed_bits=False):
     """
-    defines the source area for a given integer array
-    :param emulator_path: path to the emulator (hdf)
+    defines the source area array for a given integer array, values of the sourcea area array are counts and includes
+    all particles which pass through cells flagged as an area of interest.
+    this just extracts data from pre-run forward models
+    :param emulator_path: path to the emulator (hdf) of forward modpath data
     :param bd_type: the boundary type assement from defineing particles, should be saved with the model run as a text
                     array.
-    :param index: a dictionary of boolean arrays of areas of interest False delneates no interest
+    :param index: a dictionary of boolean arrays of areas of interest False delneates no interest, keys strings of any length
     :param return_packed_bits: bool if True return a boolean array as a packed bits array
-    :return: dictionary of arrays of shape (smt.layers, rows, cols) with a particle count from source
+    :return: dictionary of arrays of shape (rows, cols) with a particle count of the number of particles that
+             originated in that cell that pass through the True index cell
     """
     # run some checks on inputs
     bd_type = np.loadtxt(bd_type_path).astype(int)
@@ -52,7 +55,7 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
     t = time()
 
     # get general area of interest
-    print('calculating area of interest')
+    print('calculating area of interest') # todo this could be improved by querrying the hdf store
     index = smt.get_empty_model_grid(True)
     for value in indexes.values():
         index += value
@@ -73,6 +76,8 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
         temp_emulator = emulator.loc[temp]
         temp_emulator = temp_emulator.reset_index()
         temp = temp_emulator.groupby('Particle_Group').aggregate({'fraction': np.sum})
+        # I assume that I set particle group to the flattened cell number with only active cells hence the need
+        # for the boundary type array, clever.
 
         # populate array
         outdata = smt.get_empty_model_grid(False)
@@ -92,8 +97,8 @@ def define_source_from_forward(emulator_path, bd_type_path, indexes, return_pack
 def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_part=1, capt_weak_s=False, recalc=False,
                                 return_packed_bits=False):
     """
-    define the source area for an integer index
-    :param indexes: a dictionary of boolean arrays
+    define the source area for an integer index, this creates and runs the models as well as extracts data
+    :param indexes: a dictionary of boolean arrays, keys are strs of any length
     :param mp_ws: path for the modpath model
     :param mp_name: name of the modpath model
     :param cbc_file: cbc_file for the base modflow model of interest
@@ -125,8 +130,17 @@ def define_source_from_backward(indexes, mp_ws, mp_name, cbc_file, root3_num_par
 
 def _run_forward_em_one_mp(kwargs):
     """
-    a wrapper to run the modpath as a multiprocessing (not that the multiprocessing was used
-    :param kwargs:
+    a wrapper to run the modpath as a multiprocessing
+    (not that the multiprocessing was used as it was really IO and memory limited)
+    used internally to run_forward_emulators
+    :param kwargs:'model_id':
+                  'mp_runs_dir':
+                  'emulator_dir':
+                  'modflow_dir':
+                  'min_part':
+                  'max_part':
+                  'capt_weak_s':
+                  'keep_org_files':
     :return:
     """
     model_id = kwargs['model_id']
@@ -162,7 +176,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
                           capt_weak_s=False, notes=''):
     """
     runs the forward emulators for the model ids
-    :param model_ids: a list of model ids to run
+    :param model_ids: a list of model ids to run 'NsmcReal{nsmc_num:06d}'
     :param results_dir: the dir to put the modpath models and the results
     :param modflow_dir: the dir to put the necissary modflow models for modpath
     :param keep_org_files: bool if True keep all modpath files else delete the big ones
@@ -204,7 +218,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
         outputs.append(_run_forward_em_one_mp(kwarg))
     now = datetime.datetime.now()
     with open(
-            "{}/forward_run_log/{}_forward_modpath_{:02d}_{:02d}_{:02d}_{:02d}.txt".format(smt.sdp, now.year, now.month,
+            "{}/forward_run_log/{}_forward_modpath_{:02d}_{:02d}_{:02d}_{:02d}.txt".format(env.log_dir, now.year, now.month,
                                                                                            now.day, now.hour,
                                                                                            now.minute), 'w') as f:
         f.write(str(notes) + '\n')
@@ -220,6 +234,7 @@ def run_forward_emulators(model_ids, results_dir, modflow_dir, keep_org_files=Tr
 def get_all_cbcs(model_ids, modflow_dir, sleep_time=1, recalc=False):
     """
     a quick multiprocessing wrapper to run all the NSMC realisations I need
+    note modifying the modpath model is not implmented, this only runs on the base model
     :param model_ids: list of model ids to pass to the get cbc
     :param modflow_dir: overall directory to save everything
     :param sleep_time: the sleep time between printing number of runs left (mostly for debugging purposes)

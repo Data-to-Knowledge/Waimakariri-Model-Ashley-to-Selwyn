@@ -15,7 +15,6 @@ from waimak_extended_boundry.model_run_tools.data_extraction.con_from_netcdf imp
 from waimak_extended_boundry.model_run_tools.model_bc_data.all_well_layer_col_row import \
     get_all_well_row_col
 
-#todo look through documentation
 
 def get_well_ids():
     """

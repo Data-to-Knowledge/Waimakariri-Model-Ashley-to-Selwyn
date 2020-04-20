@@ -14,11 +14,10 @@ from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_chec
 from waimak_extended_boundry.model_run_tools.data_extraction.data_from_streams import get_flux_at_points, get_samp_points_df
 from waimak_extended_boundry.model_run_tools.stream_depletion_support.grid_sd_support.ss_grid_sd_setup import grid_wells, get_base_grid_sd_path
 
-#todo look through documentation
 
 def calc_stream_dep_grid(model_path):
     """
-    calculate a dataframe for the stream depletion
+    calculate a dataframe for the stream depletion percentages
     :param model_path: path to the modflow model namefile with or without extension
     :return: series with index of sites defined below
     """
@@ -70,7 +69,7 @@ def calc_stream_dep_grid(model_path):
 
 def calc_str_dep_all_wells_grid(out_path, base_path):
     """
-
+    calculate the stream depletion for each well in the gridded data
     :param out_path: the path to save the csv to
     :param base_path: path to the well by well stream depletion folder
     :return: saves dataframe with index fo wells (defined from file names) and columns of sites defined in calc_stream_dep

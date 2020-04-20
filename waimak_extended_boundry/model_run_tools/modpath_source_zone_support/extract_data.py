@@ -10,7 +10,6 @@ from waimak_extended_boundry import smt
 import numpy as np
 import flopy_mh as flopy
 
-#todo look through documentation
 
 # particle id moves to 0 indexed
 # particle id links the endpoint file and path file
@@ -23,6 +22,11 @@ import flopy_mh as flopy
 # it looks like every cell occurance that the particle passes through is in teh pathline file maybe confirm with brioch/mike
 
 def open_path_file_as_df(path):
+    """
+    a quick wrapper to open the particle data as a dataframe
+    :param path: path to modpath pathline file
+    :return: pd.DataFrame
+    """
     names = ['Particle_ID',
              'Particle_Group',
              'Time_Point_Index',
@@ -55,7 +59,9 @@ def _get_group_num(x):
 
 def extract_forward_data(path):
     """
-    extract the data and export as pd.DataFrame with index of cell_ref_id, Particle_Group and column of Particle_ID count
+    extract the data and export as pd.DataFrame with index of cell_ref_id, Particle_Group and column of
+    Particle_ID count.  This was done so that the particle data could be quickly found. the cell ref id is
+    '{:02d}_{:03d}_{:03d}'.format(k, i, j), so that all partilces passing trough a given cell can be itentified.
     :param path: path to the pathline file
     :return:
     """
@@ -94,15 +100,23 @@ def extract_forward_data(path):
 
 
 def save_forward_data(path, outpath):
-    # save the data extracted above to an emulator netcdf
-    # keep the group id to locate cells, but make a linker (e.g. pass the dictionary to the dataframe)
+    """
+    save the data extracted above to an emulator netcdf
+    keep the group id to locate cells, but make a linker (e.g. pass the dictionary to the dataframe)
+    :param path: path to modpath Pathline file
+    :param outpath: path for HDF file
+    :return:
+    """
+
     data = extract_forward_data(path)
     data.to_hdf(outpath, 'emulator', mode='w')
 
 
 def extract_back_data(path_path, group_mapper_path, hds_path, return_packed_bits=False, verbose=False):
     """
-
+    extract a pathline file, keep only those particles locations in the top active layer, and export as a dictionary
+    of 2d model arrays where the dictionary keys is the groups (e.g. the starting receptcle,) and the value of the array
+    is the number of particles in each cell.
     :param path_path: the pathline file
     :param group_mapper_path: the file to the group mapper produced in set_up_reverse_modpath
     :param hds_path: path to the simulation heads file
@@ -151,7 +165,7 @@ def extract_back_data(path_path, group_mapper_path, hds_path, return_packed_bits
         temp = data.loc[(data.Particle_Group == g), ['Row', 'Column']]
         temp = temp.reset_index().groupby(['Row', 'Column']).count().reset_index().values
         temp_out = smt.get_empty_model_grid().astype(int)
-        temp_out[temp[:, 0], temp[:, 1]] = temp[:, 2]
+        temp_out[temp[:, 0], temp[:, 1]] = temp[:, 2] # set array to count of particles
         if return_packed_bits:
             temp_out = np.packbits(temp_out > 0)
         outdata[group_mapper[g]] = temp_out

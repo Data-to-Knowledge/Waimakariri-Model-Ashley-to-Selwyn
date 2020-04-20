@@ -117,7 +117,7 @@ def get_rch_multipler(model_id):
     :param model_id: 'NsmcReal{nsmc_num:06d}'
     :return: rch multiplier array (smt.rows, smt.cols)
     """
-    dataset = nc.Dataset(os.path.join(sdp_required, 'recharge_mult.nc'))  # todo make this for all realisations...
+    dataset = nc.Dataset(os.path.join(sdp_required, 'recharge_mult.nc'))
     nsmc_num = int(model_id[-6:])
     nidx = np.where(dataset.variables['nsmc_num'][:] == nsmc_num)[0][0]
     outdata = np.array(dataset.variables['rch_mult'][nidx])
@@ -466,7 +466,8 @@ def get_stocastic_set(return_model_ids=True):
 if __name__ == '__main__':
     import time
 
+    get_rch_multipler('NsmcReal{:06d}'.format(17))
+
     t = time.time()
-    m = get_model_name_path('NsmcReal{:06d}'.format(17))
     print t - time.time()
     print('done')

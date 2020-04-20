@@ -11,6 +11,7 @@ from copy import deepcopy
 import flopy_mh as flopy
 import os
 import sys
+from warnings import warn
 from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.metadata_managment.convergance_check import modflow_converged
 from waimak_extended_boundry.model_run_tools.model_bc_data.wells import get_full_consent, get_race_data
@@ -20,7 +21,10 @@ import pandas as pd
 import pickle
 from waimak_extended_boundry.model_run_tools.model_bc_data.drn_data import get_drn_no_ncarpet_spd
 
-#todo look through documentation
+sd_grid_storage_dir = None # a directory which holds things like the base model and the grid wells.
+if sd_grid_storage_dir is None:
+    warn('sd_grid_storage_dir is not set, must be set otherwise grid sd stuff will cause failures')
+
 
 def setup_and_run_ss_grid_stream_dep_multip(kwargs):
     """
@@ -142,7 +146,13 @@ def setup_and_run_ss_grid_stream_dep(model_id, name, base_dir, wells_to_turn_on,
 
 
 def grid_wells(flux, recalc=False):  # set up a grid
-    pickle_path = os.path.join(smt.temp_pickle_dir, 'grid_sd_wells.p')
+    """
+    set up the grid wells
+    :param flux: the flux to appply to each well
+    :param recalc:
+    :return:
+    """
+    pickle_path = os.path.join(sd_grid_storage_dir, 'grid_sd_wells.p')
 
     if os.path.exists(pickle_path) and not recalc:
         outdata = pickle.load(open(pickle_path))
@@ -189,13 +199,19 @@ def grid_wells(flux, recalc=False):  # set up a grid
 
 
 def get_base_grid_sd_path(model_id, recalc=False):
-    path = os.path.join(smt.temp_pickle_dir, '{}_grid_sd_base'.format(model_id), '{}_grid_sd_base.cbc'.format(model_id))
+    """
+    run the model with no wells
+    :param model_id:
+    :param recalc:
+    :return:
+    """
+    path = os.path.join(sd_grid_storage_dir, '{}_grid_sd_base'.format(model_id), '{}_grid_sd_base.cbc'.format(model_id))
     if os.path.exists(path) and not recalc:
         return path.replace('.cbc', '')
 
     name, success = setup_and_run_ss_grid_stream_dep(model_id=model_id,
                                      name='grid_sd_base',
-                                     base_dir=smt.temp_pickle_dir,
+                                     base_dir=sd_grid_storage_dir,
                                      wells_to_turn_on=None)
 
     if not os.path.exists(path):

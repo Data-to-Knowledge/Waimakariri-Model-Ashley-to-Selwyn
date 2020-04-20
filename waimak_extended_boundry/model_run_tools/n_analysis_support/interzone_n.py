@@ -14,9 +14,9 @@ from waimak_extended_boundry import smt
 from waimak_extended_boundry.model_run_tools.model_setup.realisation_id import get_stocastic_set
 import os
 import psutil
+from warnings import warn
 import geopandas as gpd
 
-#todo look through documentation
 
 base_receptors_path = os.path.join(env.sdp_required, 'shp', 'interzone_receptors.shp')
 
@@ -60,6 +60,10 @@ zone_nums = {
 
 
 def get_chch_area_zones():
+    """
+    get the boolean arrays of the zones
+    :return: dictionary of 2d arrays
+    """
     base_zone = smt.shape_file_to_model_array(base_receptors_path, 'zone', True)
     out_zones = {}
     for zone in zone_nums:
@@ -72,7 +76,7 @@ def get_chch_area_zones():
 
 def get_interzone_n(scenario_dict, outpath):
     """
-
+    get teh interzone N results from netcdf files
     :param scenario_dict: dictionary of scenario: path to netcdf file
     :param outpath: outpath for the csv
     :return:
@@ -101,6 +105,13 @@ def get_interzone_n(scenario_dict, outpath):
 
 
 def get_raw_model_results(scenario_path, layers, index):
+    """
+    get teh raw model results
+    :param scenario_path: path to nc
+    :param layers: layers to return the data for
+    :param index: boolean 2d array
+    :return:
+    """
     nsmc_nums = get_stocastic_set(False)
     data = nc.Dataset(scenario_path)
     nsmc_idx = np.in1d(data.variables['nsmc_num'][:], nsmc_nums)
@@ -110,6 +121,12 @@ def get_raw_model_results(scenario_path, layers, index):
 
 
 def apply_nload_uncertainty(raw_data, scenario):
+    """
+    apply nload uncertainty to the data
+    :param raw_data: the raw data, produced by get raw model results
+    :param scenario: the scenario name, uses cmp or gmp to get correct modifiers, otherwise doesnt apply uncertainty
+    :return:
+    """
     if 'gmp' in scenario:
         modifiers = np.loadtxt(os.path.join(env.sdp_required, 'nload_uncertainty',
                                             'nload_cmp_conservative_interzone.txt'))[
@@ -119,6 +136,7 @@ def apply_nload_uncertainty(raw_data, scenario):
                                             'ncon_cmp_conservative_interzone.txt'))[
                     0:1000]
     else:
+        warn('not applying uncertainty because gmp or cmp was not in the scenario name: {}'.format(scenario))
         return raw_data
     max_size = 2000 * 165 * 2
     raw_data = raw_data.astype(np.float32)
@@ -146,6 +164,13 @@ def _np_describe(ndarray, percentiles=(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 
 
 
 def make_shpfile_with_data(n_data_path, outdir, scenario_dict):
+    """
+    really a one off script
+    :param n_data_path: path to teh raw or uncertainty added csv
+    :param outdir: where to save the directory
+    :param scenario_dict:
+    :return:
+    """
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     names = {
@@ -188,7 +213,7 @@ def make_shpfile_with_data(n_data_path, outdir, scenario_dict):
             for scen, per in itertools.product(scenario_dict.keys(), ['50%', '95%']):
                 temp.loc[1, '{}_{}'.format(scen, per)] = all_data.loc[(lay_name, site), (scen, per)]
 
-            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp', 'interzone_50_red']:
+            for scen in ['interzone_8kgha', 'gmp', 'gmp_eyre_mar', 'cmp', 'interzone_50_red']: #todo this could cause problems in the future
                 for per in ['50%', '95%']:
                     temp.loc[1, 'chch_8kgha_plus_{}_{}'.format(scen, per)] = temp.loc[1, 'chch_8kgha_{}'.format(per)] + \
                                                                              temp.loc[1, '{}_{}'.format(scen, per)]
