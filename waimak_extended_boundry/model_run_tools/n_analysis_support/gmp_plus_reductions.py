@@ -19,18 +19,16 @@ from waimak_extended_boundry.model_run_tools.n_analysis_support.interzone_n impo
 from waimak_extended_boundry.model_run_tools.n_analysis_support.nitrate_at_key_receptors import \
     get_n_at_points_nc, get_str_ids, get_well_ids
 
-# todo it needs a touch more documenations, out of scope???
-#todo look through documentation
 
 emma_dir = os.path.join(env.sdp_required, 'emma_for_n_adjustment')
 
 
 def get_alpine_fractions(site=None, return_paths=False, number=1000):
     """
-    # todo
-    :param site:
-    :param return_paths:
-    :param number:
+    get the EMMA analysis of alpine river component
+    :param site: site to get the alpine data for
+    :param return_paths: bool if True return the path to the data otherwise return the sample of number n
+    :param number: the number of alpine fractions to randomly select from the distribution
     :return:
     """
     # number is the number of samples to pull out
@@ -240,7 +238,7 @@ sites = {
 
 def get_well_nums_for_group():
     """
-    # todo
+    gets teh well numbers associated with differnt targets
     :return:
     """
     str_ids = get_str_ids()
@@ -307,7 +305,9 @@ def setup_run_gmp_plus(rch_con, base_mt3d_dir, out_nc, nc_description, ftl_repo=
 
 def extract_receptor_data(scenario_paths, cbc_paths, outdir):
     """
-    #todo
+    extract data from the netcdfs for all of the predetermined sites (waimakarirri and interzone),
+     apply any alpine river EMMA corrections, add the uncertainty from the N load layer,
+     finally save the data and save more easily read quantiles.
     :param scenario_paths: dictionary scenario:path to nc file;  scenario must have gmp or cmp in the scenario name
     :param cbc_paths: either the path to the cbc_netcdf (string) or a dictionary scenario and path to teh cbc_netcdf
     :return:
@@ -430,9 +430,10 @@ def extract_receptor_data(scenario_paths, cbc_paths, outdir):
 
 def add_stocastic_load(site, base_data):
     """
-    #todo
-    :param site:
-    :param base_data:
+    adds the stocasitc N load to the data.  This is limited to already defined sites as this relies on analysis of the
+    n load layer and the source zone polygons
+    :param site: site to look at
+    :param base_data: N data
     :return:
     """
     base_data = np.atleast_1d(base_data)
@@ -456,12 +457,12 @@ def add_stocastic_load(site, base_data):
 
 def correct_alpine_river(site, waimak_data, n_data, well_sites, plot_dir):
     """
-    # todo
-    :param site:
-    :param waimak_data:
-    :param n_data:
-    :param well_sites:
-    :param plot_dir:
+    correct a given site for the alpine river component via linear regression
+    :param site: the site to correct
+    :param waimak_data: the alpine river data
+    :param n_data: the data to correct, uses linear regressions,
+    :param well_sites: well sites
+    :param plot_dir: directory to plot the linear regression to check later
     :return:
     """
     print(site)

@@ -194,9 +194,9 @@ def _get_nsmc_realisation(model_id, save_to_dir=False):
     wrapper to get model from a NSMC realisation saving the model takes c. 300 mb per model
     this will require writing multiple files to a temporary folder which is created by:
         os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
-    this file will be c. 1.2 gb/model, but will be deleted when this is finished running
+    this file will be c. 0.25 gb/model, but will be deleted when this is finished running
     I would suggest running a couple of models to see how long this process will take.
-    Typically takes 4-15 min/model depending on computer specs
+    Typically takes 4-15 min/model depending on computer specs loading from saved dir typically takes c. 15s
     :param model_id: identifier 'NsmcReal{nsmc_num:06d}'
     :param save_to_dir: boolean if true save a copy of the model for quicker retrieval
                         saved in the directory defined by env.loaded_model_realisation_dir
@@ -392,7 +392,7 @@ def get_model(model_id, save_to_dir=False):
     saving the model takes c. 300 mb per model
     this will require writing multiple files to a temporary folder which is created by:
         os.path.join(os.path.expanduser('~'), 'temp_nsmc_generation{}'.format(os.getpid()))
-    this file will be c. 1.2 gb/model, but will be deleted when this is finished running
+    this file will be c. 0.25 gb/model, but will be deleted when this is finished running
     I would suggest running a couple of models to see how long this process will take.
     Typically takes 4-15 min/model depending on computer specs on the inital save,
     loading from the previously saved it takes c. 18s depending on computer specs
@@ -466,8 +466,8 @@ def get_stocastic_set(return_model_ids=True):
 if __name__ == '__main__':
     import time
 
-    get_rch_multipler('NsmcReal{:06d}'.format(17))
 
     t = time.time()
+    get_model('NsmcReal{:06d}'.format(17))
     print t - time.time()
     print('done')
