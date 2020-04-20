@@ -1,13 +1,23 @@
-
-
-In the past the python environment has been somewhat unstables.  in order to combat this I have put togeather an
-Anaconda YML file, which lists all of the dependencies and should be able to load the environment for the foreseeable
-future. The biggest difficulty if maintaining the current flopy instance, which has been coppied into these scripts as
-flopy_mh as a number of edits were needed in order to fix bugs in the package.  unfortunately this requires numpy 1.13
+The python environment is the set of libraries used to interpret and run scripts.
+In the past the python environment for the Waimakariri Model has been somewhat unstable.
+In order to combat this I have put together an Anaconda YML file, which lists all of the dependencies
+and should be able to load the environment for the foreseeable future. The biggest difficulty in
+maintaining/updating the environment is the current flopy instance This has been copied into
+these scripts as flopy_mh as a number of edits were needed in order to fix bugs in the package and
+there was not time in our process to undergo a pull request.  Unfortunately this requires numpy 1.13.
 
 In order to install the environment:
 
 1) download miniconda (https://docs.conda.io/en/latest/miniconda.html)
 2) open the anaconda prompt and enter:
-        conda env create -f {path to environment.yml} # note exclude the {} and just enter the path
-3) the yml referenced here is the waimak_model_environment.yml in this folder.
+        conda env create -f {path to environment.yml}
+3) the yml referenced here is: ...\python_env\waimak_model_environment.yml
+
+In addition I have made a copy of the python environment in ...\python_env\Miniconda2.
+This folder can be copied to the local drive in order to be useful. This is not the best option for
+ creating and using the python environment but it is included here to provide additional redundancy
+ in this key step.  This was made on a windows 10 machine.
+
+If you are to use this pre-prepared python environment:
+1) move it to a high speed local drive (otherwise it is painfully slow)
+2) the interpreter you want is ..\Miniconda2\envs\waimak_model\python.exe
