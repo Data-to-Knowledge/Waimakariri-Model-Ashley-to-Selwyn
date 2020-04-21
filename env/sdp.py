@@ -33,20 +33,20 @@ import os
 import warnings
 
 #todo set to None for distribution
-sdp_required = r"D:\Waimakariri_model_input_data\required"
+sdp_required = None # todo set
 
 assert sdp_required is not None, 'you need to set sdp_required, this is the path to the waimak data catalog'
 assert os.path.exists(sdp_required), 'sdp_required does not exist, it must exist'
 
-sdp_recommended = r"D:\Waimakariri_model_input_data\recommended"
+sdp_recommended = None # todo set
 assert sdp_recommended is not None, 'you need to set sdp_recommended, this is the path to the waimak data catalog'
 assert os.path.exists(sdp_recommended), 'sdp_recommended does not exist, it must exist'
 
-temp_file_dir =r"C:\Users\Matt Hanson\Downloads\temp_waimak_files"
+temp_file_dir = None # todo set
 assert temp_file_dir is not None, 'temp file dir must be set'
 assert os.path.exists(temp_file_dir), 'temp file dir must exist'
 
-loaded_model_realisation_dir = r"C:\Users\Matt Hanson\Downloads\temp_loaded_realisations"
+loaded_model_realisation_dir = None # todo set
 assert loaded_model_realisation_dir is not None, 'loaded model realisation dir must be set'
 assert os.path.exists(loaded_model_realisation_dir), 'loaded model realisation dir must exist'
 
