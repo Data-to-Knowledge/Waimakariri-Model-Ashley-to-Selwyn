@@ -35,9 +35,9 @@ def create_mt3d(ftl_path, mt3d_name, mt3d_ws, num_species=1,
     :param mt3d_name: the name for all mt3d files if none name will mirror that of the modflow model name
     :param mt3d_ws: working directory for the MT3D model
     :param num_species: number of species to calculate
-    :param ssm_crch: the recharge concentration for species 1
-    :param ssm_stress_period_data: stress period data for other source/sinks
-    :param sft_spd: sft stress period data
+    :param ssm_crch: the recharge concentration for species 1 this must be a dict {stressperiod: crch}
+    :param ssm_stress_period_data: stress period data for other source/sinks  this must be a dict {stressperiod: ssm}
+    :param sft_spd: sft stress period data  this must be a dict {stressperiod: sft}
     :param obs_sf: the stream network observation points.  default saves at every stream reach
 
     below here can generally be added by the default mt3d dictionary
@@ -310,7 +310,7 @@ def get_ssm_stress_period_data(wil_race_con=0.1, upper_n_bnd_flux_con=0.1, lower
     :return:
     """
     cbc_cells = np.array(smt.model_where(smt.get_no_flow() < -0.1))
-    all_wells = get_race_data('NsmcBase')  # the model id parameter does not matter here as I only need the locations
+    all_wells = get_race_data('NsmcReal000017')  # the model id parameter does not matter here as I only need the locations
     all_wells.loc[all_wells.nsmc_type == 'llrzf', 'css'] = llrzf_con
     all_wells.loc[all_wells.nsmc_type == 'ulrzf', 'css'] = ulrzf_con
     all_wells.loc[all_wells.nsmc_type == 's_race', 'css'] = s_race_con
